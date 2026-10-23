@@ -1,0 +1,52 @@
+{
+    "version": "ewt-1",
+    "verified": true,
+    "files": [
+        {
+            "path": "tagger-manifest.json",
+            "sha256": "5cbd3f873eb61f6c079e3b7b1be3841f352a9227c4417760ed4cb3d7d4c9a212",
+            "bytes": 140288
+        },
+        {
+            "path": "weights/tagger.onnx",
+            "sha256": "5ab892928bc522f0fb824839652ae6e269f5b600cd9d075b19527ae5b5d595f7",
+            "bytes": 2628302
+        },
+        {
+            "path": "parser-manifest.json",
+            "sha256": "565ad67828553097047853003a9ad6fcb26b6cdd65b130d9f99507d217e0c7fa",
+            "bytes": 141479
+        },
+        {
+            "path": "weights/parser.onnx",
+            "sha256": "f1b239bb5a3a7f4d442c902e579f64783a786e8744002913d217f9da1adfeefa",
+            "bytes": 1383856
+        },
+        {
+            "path": "classifier-manifest.json",
+            "sha256": "ac86684b882d7270940e3e0e579b63711dc75656abd91b191bd9221b01720763",
+            "bytes": 3974
+        },
+        {
+            "path": "weights/error-classifier.onnx",
+            "sha256": "eb82abb8c8155230939c225d844194a3a5c4d8bf2e2383c0a31b96fbdd5c1b84",
+            "bytes": 908987
+        },
+        {
+            "path": "lexicon.json",
+            "sha256": "8ded97f69099d495a6871b7742ea5bbf2551bf89dfa25cf3c65b7cf8e68eb413",
+            "bytes": 1591003
+        },
+        {
+            "path": "dictionary.json",
+            "sha256": "26f2b4b2b612a8107586cff814c4af77f32a08e1dd20f706a04d1d380b864da9",
+            "bytes": 1418064
+        },
+        {
+            "path": "contextual.json",
+            "sha256": "4576ca1a6a04922e66d0c4851ce3d3acd7cacc27c393c7c337e242a82db2eece",
+            "bytes": 2289664
+        }
+    ],
+    "policy": "Syntax passed EWT accuracy and Python/ONNX parity gates. Grammar classifier calibrated on synthetic EWT mutations only; review-only until independent learner-essay validation."
+}
