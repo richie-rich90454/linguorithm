@@ -1,0 +1,155 @@
+{
+    "dataset": "content/regression.json",
+    "version": "1.0.0",
+    "provenance": "Original authored smoke fixtures. Development regression set, not an independent accuracy benchmark.",
+    "cases": 28,
+    "validControls": 17,
+    "falseControls": 0,
+    "falseControlRate": 0,
+    "spanIntegrity": true,
+    "metrics": [
+        {
+            "rule": "agreement",
+            "tp": 4,
+            "fp": 0,
+            "fn": 0,
+            "correct": 4,
+            "precision": 1,
+            "recall": 1,
+            "precisionInterval": {
+                "lower": 0.5100999795960008,
+                "upper": 1,
+                "method": "Wilson 95%"
+            },
+            "recallInterval": {
+                "lower": 0.5100999795960008,
+                "upper": 1,
+                "method": "Wilson 95%"
+            },
+            "independentReleaseGate": false,
+            "f05": 1,
+            "correctionAccuracy": 1
+        },
+        {
+            "rule": "verb-form",
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "correct": 2,
+            "precision": 1,
+            "recall": 1,
+            "precisionInterval": {
+                "lower": 0.34237195288961925,
+                "upper": 1,
+                "method": "Wilson 95%"
+            },
+            "recallInterval": {
+                "lower": 0.34237195288961925,
+                "upper": 1,
+                "method": "Wilson 95%"
+            },
+            "independentReleaseGate": false,
+            "f05": 1,
+            "correctionAccuracy": 1
+        },
+        {
+            "rule": "article-sound",
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "correct": 2,
+            "precision": 1,
+            "recall": 1,
+            "precisionInterval": {
+                "lower": 0.34237195288961925,
+                "upper": 1,
+                "method": "Wilson 95%"
+            },
+            "recallInterval": {
+                "lower": 0.34237195288961925,
+                "upper": 1,
+                "method": "Wilson 95%"
+            },
+            "independentReleaseGate": false,
+            "f05": 1,
+            "correctionAccuracy": 1
+        },
+        {
+            "rule": "spelling",
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "correct": 1,
+            "precision": 1,
+            "recall": 1,
+            "precisionInterval": {
+                "lower": 0.20654329147389294,
+                "upper": 1,
+                "method": "Wilson 95%"
+            },
+            "recallInterval": {
+                "lower": 0.20654329147389294,
+                "upper": 1,
+                "method": "Wilson 95%"
+            },
+            "independentReleaseGate": false,
+            "f05": 1,
+            "correctionAccuracy": 1
+        },
+        {
+            "rule": "comma-splice",
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "correct": 1,
+            "precision": 1,
+            "recall": 1,
+            "precisionInterval": {
+                "lower": 0.20654329147389294,
+                "upper": 1,
+                "method": "Wilson 95%"
+            },
+            "recallInterval": {
+                "lower": 0.20654329147389294,
+                "upper": 1,
+                "method": "Wilson 95%"
+            },
+            "independentReleaseGate": false,
+            "f05": 1,
+            "correctionAccuracy": 1
+        },
+        {
+            "rule": "repeated-word",
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "correct": 1,
+            "precision": 1,
+            "recall": 1,
+            "precisionInterval": {
+                "lower": 0.20654329147389294,
+                "upper": 1,
+                "method": "Wilson 95%"
+            },
+            "recallInterval": {
+                "lower": 0.20654329147389294,
+                "upper": 1,
+                "method": "Wilson 95%"
+            },
+            "independentReleaseGate": false,
+            "f05": 1,
+            "correctionAccuracy": 1
+        }
+    ],
+    "latencyMs": {
+        "p50": 0.23349999999999227,
+        "p95": 1.241299999999967
+    },
+    "memoryBytes": 19755696,
+    "environment": {
+        "node": "v24.19.0",
+        "platform": "win32",
+        "arch": "x64"
+    },
+    "warning": "Development smoke corpus only. Does not establish release precision, generalization, calibration, or comparative performance."
+}
