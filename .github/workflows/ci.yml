@@ -1,0 +1,32 @@
+name: Verify platform
+on:
+    push:
+    pull_request:
+    workflow_dispatch:
+permissions:
+    contents: read
+env:
+    npm_config_cache: ${{ github.workspace }}/.cache/npm
+    PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
+    PIP_CACHE_DIR: ${{ github.workspace }}/.cache/pip
+    XDG_CACHE_HOME: ${{ github.workspace }}/.cache/xdg
+jobs:
+    verify:
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        steps:
+            - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+            - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+              with:
+                  node-version: 24.13.0
+            - run: make install-pnpm
+            - run: make install
+            - run: make check
+            - run: make evaluate
+            - run: make content
+            - run: make build
+            - run: make validate-models
+            - run: make bundle
+            - run: make install-browsers
+            - run: make browser
+            - run: python -m py_compile training/*.py
