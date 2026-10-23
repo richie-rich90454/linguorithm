@@ -1,0 +1,6 @@
+{
+    "browser": "chromium",
+    "fixtures": 5,
+    "maximumDifference": 0.000003337860107421875,
+    "passed": true
+}
