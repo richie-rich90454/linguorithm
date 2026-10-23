@@ -1,0 +1,42 @@
+{
+    "reviews": [
+        {
+            "page": "Essay laboratory",
+            "width": 1440,
+            "violations": [],
+            "horizontalOverflow": false
+        },
+        {
+            "page": "Sentence workbench",
+            "width": 1440,
+            "violations": [],
+            "horizontalOverflow": false
+        },
+        {
+            "page": "Practice",
+            "width": 1440,
+            "violations": [],
+            "horizontalOverflow": false
+        },
+        {
+            "page": "Materials",
+            "width": 1440,
+            "violations": [],
+            "horizontalOverflow": false
+        },
+        {
+            "page": "Your progress",
+            "width": 1440,
+            "violations": [],
+            "horizontalOverflow": false
+        },
+        {
+            "page": "Mobile essay",
+            "width": 390,
+            "violations": [],
+            "horizontalOverflow": false
+        }
+    ],
+    "runtimeErrors": [],
+    "externalRequests": []
+}
