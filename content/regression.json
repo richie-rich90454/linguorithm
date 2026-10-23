@@ -1,0 +1,67 @@
+{
+    "version": "1.0.0",
+    "provenance": "Original authored smoke fixtures. Development regression set, not an independent accuracy benchmark.",
+    "cases": [
+        {
+            "text": "The collection of essays are on the desk.",
+            "errors": [{ "rule": "agreement", "original": "are", "correction": "is" }]
+        },
+        {
+            "text": "The students in the laboratory is ready.",
+            "errors": [{ "rule": "agreement", "original": "is", "correction": "are" }]
+        },
+        {
+            "text": "She walk to school.",
+            "errors": [{ "rule": "agreement", "original": "walk", "correction": "walks" }]
+        },
+        {
+            "text": "They goes home.",
+            "errors": [{ "rule": "agreement", "original": "goes", "correction": "go" }]
+        },
+        {
+            "text": "She has wrote three essays.",
+            "errors": [{ "rule": "verb-form", "original": "wrote", "correction": "written" }]
+        },
+        {
+            "text": "He can goes home.",
+            "errors": [{ "rule": "verb-form", "original": "goes", "correction": "go" }]
+        },
+        {
+            "text": "It is a hour away.",
+            "errors": [{ "rule": "article-sound", "original": "a", "correction": "an" }]
+        },
+        {
+            "text": "It is an useful book.",
+            "errors": [{ "rule": "article-sound", "original": "an", "correction": "a" }]
+        },
+        {
+            "text": "I recieve letters.",
+            "errors": [{ "rule": "spelling", "original": "recieve", "correction": "receive" }]
+        },
+        {
+            "text": "I work, she works.",
+            "errors": [{ "rule": "comma-splice", "original": ",", "correction": ";" }]
+        },
+        {
+            "text": "The the book is ready.",
+            "errors": [{ "rule": "repeated-word", "original": " the", "correction": "" }]
+        },
+        { "text": "The collection of essays is on the desk.", "errors": [] },
+        { "text": "The students in the laboratory are ready.", "errors": [] },
+        { "text": "She ate an apple.", "errors": [] },
+        { "text": "She wrote a book.", "errors": [] },
+        { "text": "If I were ready, I would go.", "errors": [] },
+        { "text": "You are ready.", "errors": [] },
+        { "text": "The team are celebrating.", "errors": [] },
+        { "text": "The book that the students borrowed is here.", "errors": [] },
+        { "text": "There are several reasons.", "errors": [] },
+        { "text": "They have had enough.", "errors": [] },
+        { "text": "I had had enough.", "errors": [] },
+        { "text": "I know that that is correct.", "errors": [] },
+        { "text": "An hour is enough.", "errors": [] },
+        { "text": "A university is nearby.", "errors": [] },
+        { "text": "Listen.", "errors": [] },
+        { "text": "They read books.", "errors": [] },
+        { "text": "The evidence is limited, but the conclusion is convincing.", "errors": [] }
+    ]
+}
