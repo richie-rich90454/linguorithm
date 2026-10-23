@@ -1,0 +1,101 @@
+{
+    "schemaVersion": 1,
+    "version": "ewt-1",
+    "archive": "ewt-1.tar.gz",
+    "sha256": "ef22468cfe02166db1d3be8f9380cf6b90a168da46cc64eb2556832b070b708d",
+    "compressedBytes": 9714247,
+    "uncompressedBytes": 25033216,
+    "files": [
+        {
+            "path": "classifier-manifest.json",
+            "bytes": 3974,
+            "sha256": "ac86684b882d7270940e3e0e579b63711dc75656abd91b191bd9221b01720763"
+        },
+        {
+            "path": "contextual.json",
+            "bytes": 2289664,
+            "sha256": "4576ca1a6a04922e66d0c4851ce3d3acd7cacc27c393c7c337e242a82db2eece"
+        },
+        {
+            "path": "dictionary.json",
+            "bytes": 1418064,
+            "sha256": "26f2b4b2b612a8107586cff814c4af77f32a08e1dd20f706a04d1d380b864da9"
+        },
+        {
+            "path": "lexicon.json",
+            "bytes": 1591003,
+            "sha256": "8ded97f69099d495a6871b7742ea5bbf2551bf89dfa25cf3c65b7cf8e68eb413"
+        },
+        {
+            "path": "licenses/dictionary-notices.txt",
+            "bytes": 15731,
+            "sha256": "2a7e8d8ae9e8facc84818546ae2a8d83aec5e9c80a675ff789acd1c338b53b3d"
+        },
+        {
+            "path": "licenses/ewt-CC-BY-SA-4.0.txt",
+            "bytes": 20014,
+            "sha256": "b3d1b0f4c6ae151f7eb78738f46ebd5ee140f8a7f76501ba26af123140d35ae7"
+        },
+        {
+            "path": "licenses/ewt-attribution.md",
+            "bytes": 18569,
+            "sha256": "099677d6938869b4e855e6ec6548fc24ffeb5fce90e1cd985847f7049664f29e"
+        },
+        {
+            "path": "licenses/onnxruntime-MIT.txt",
+            "bytes": 1073,
+            "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c"
+        },
+        {
+            "path": "metrics.json",
+            "bytes": 282,
+            "sha256": "cf2a251dacf291421f24a1a812934a17bca9817cfd11a380322543b357723504"
+        },
+        {
+            "path": "parity.json",
+            "bytes": 192216,
+            "sha256": "fb2f8b3b7422c44d23e55c1d7fbeb08ed842245a30a54c1327bd91f4157466a9"
+        },
+        {
+            "path": "parser-manifest.json",
+            "bytes": 141479,
+            "sha256": "565ad67828553097047853003a9ad6fcb26b6cdd65b130d9f99507d217e0c7fa"
+        },
+        {
+            "path": "registry.json",
+            "bytes": 927,
+            "sha256": "1db907d9f8b1de77555ec9bb18d3fa4f2a3124362a5c4151f1c685dc7c71e242"
+        },
+        {
+            "path": "runtime/ort-wasm-simd-threaded.mjs",
+            "bytes": 24381,
+            "sha256": "e13f7f94fc51b4ca72b12faeb1ee95f4ace6dfbc8939bc718aabdc0a27c4299b"
+        },
+        {
+            "path": "runtime/ort-wasm-simd-threaded.wasm",
+            "bytes": 14239897,
+            "sha256": "3398c10d07d229bd91b364548e130e0e51a8e5704b88c7c083ebbeb78842dee2"
+        },
+        {
+            "path": "tagger-manifest.json",
+            "bytes": 140288,
+            "sha256": "5cbd3f873eb61f6c079e3b7b1be3841f352a9227c4417760ed4cb3d7d4c9a212"
+        },
+        {
+            "path": "weights/error-classifier.onnx",
+            "bytes": 908987,
+            "sha256": "eb82abb8c8155230939c225d844194a3a5c4d8bf2e2383c0a31b96fbdd5c1b84"
+        },
+        {
+            "path": "weights/parser.onnx",
+            "bytes": 1383856,
+            "sha256": "f1b239bb5a3a7f4d442c902e579f64783a786e8744002913d217f9da1adfeefa"
+        },
+        {
+            "path": "weights/tagger.onnx",
+            "bytes": 2628302,
+            "sha256": "5ab892928bc522f0fb824839652ae6e269f5b600cd9d075b19527ae5b5d595f7"
+        }
+    ],
+    "licenseNotices": "licenses/ inside the archive; preserve all corpus, dictionary, and runtime notices"
+}
