@@ -1,0 +1,52 @@
+{
+    "cases": 28,
+    "results": {
+        "rulesOnly": {
+            "tp": 11,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1,
+            "recall": 1,
+            "falseControls": 0,
+            "spanIntegrity": true
+        },
+        "hybridConservative": {
+            "tp": 10,
+            "fp": 0,
+            "fn": 1,
+            "precision": 1,
+            "recall": 0.9090909090909091,
+            "falseControls": 0,
+            "spanIntegrity": true
+        },
+        "hybridReview": {
+            "tp": 11,
+            "fp": 4,
+            "fn": 0,
+            "precision": 0.7333333333333333,
+            "recall": 1,
+            "falseControls": 2,
+            "spanIntegrity": true
+        },
+        "hybridWithoutClassifierFindings": {
+            "tp": 11,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1,
+            "recall": 1,
+            "falseControls": 0,
+            "spanIntegrity": true
+        },
+        "hybridWithoutDictionaryFindings": {
+            "tp": 11,
+            "fp": 4,
+            "fn": 0,
+            "precision": 0.7333333333333333,
+            "recall": 1,
+            "falseControls": 2,
+            "spanIntegrity": true
+        }
+    },
+    "scope": "Original authored development regression cases; exact rule/span matching; no independent natural-essay accuracy claim",
+    "method": "Real rules-only and hybrid runs; component-output ablations remove findings without retraining other components, so they do not establish causal training ablations"
+}
