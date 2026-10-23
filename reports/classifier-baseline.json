@@ -1,0 +1,43 @@
+{
+    "task": "Controlled synthetic EWT errors; not learner-essay evaluation",
+    "model": "Sparse logistic SGD baseline",
+    "seed": 1729,
+    "alphaSelectedOnValidation": 0.0001,
+    "validationAccuracy": 0.941755768148565,
+    "test": {
+        "clean": {
+            "precision": 0.9868507560815253,
+            "recall": 0.8865918487891317,
+            "f1": 0.9340385812072184,
+            "support": 1693
+        },
+        "agreement": {
+            "precision": 0.6971608832807571,
+            "recall": 0.9567099567099567,
+            "f1": 0.8065693430656934,
+            "support": 462
+        },
+        "verb-form": { "precision": 1.0, "recall": 1.0, "f1": 1.0, "support": 4 },
+        "spelling": { "precision": 1.0, "recall": 1.0, "f1": 1.0, "support": 1227 },
+        "punctuation": { "precision": 0.0, "recall": 0.0, "f1": 0.0, "support": 0 }
+    },
+    "neuralComparator": {
+        "agreement": {
+            "precision": 0.993421052631579,
+            "recall": 0.9805194805194806,
+            "f1": 0.9869281045751634,
+            "brier": 0.002770890947431326,
+            "positives": 462,
+            "predictions": 456
+        },
+        "spelling": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "brier": 8.778732990322169e-6,
+            "positives": 1227,
+            "predictions": 1227
+        }
+    },
+    "policy": "Baseline argmax and neural calibrated precision thresholds have different operating points; compare per category and do not infer natural-essay superiority"
+}
