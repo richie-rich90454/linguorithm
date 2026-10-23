@@ -1,0 +1,12 @@
+{
+    "$schema": "./node_modules/oxlint/configuration_schema.json",
+    "plugins": ["typescript", "unicorn", "oxc"],
+    "categories": { "correctness": "error" },
+    "rules": {
+        "typescript/no-explicit-any": "error",
+        "no-unused-vars": "error",
+        "no-unreachable": "error",
+        "no-async-promise-executor": "error"
+    },
+    "ignorePatterns": ["dist/**", "node_modules/**", "playwright-report/**", "test-results/**"]
+}
