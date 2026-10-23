@@ -1,0 +1,31 @@
+{
+    "schemaVersion": 2,
+    "version": "ewt-1",
+    "tagger": {
+        "path": "tagger-manifest.json",
+        "sha256": "5cbd3f873eb61f6c079e3b7b1be3841f352a9227c4417760ed4cb3d7d4c9a212"
+    },
+    "parser": {
+        "path": "parser-manifest.json",
+        "sha256": "565ad67828553097047853003a9ad6fcb26b6cdd65b130d9f99507d217e0c7fa"
+    },
+    "lexicon": {
+        "path": "lexicon.json",
+        "sha256": "8ded97f69099d495a6871b7742ea5bbf2551bf89dfa25cf3c65b7cf8e68eb413"
+    },
+    "contextual": {
+        "path": "contextual.json",
+        "sha256": "4576ca1a6a04922e66d0c4851ce3d3acd7cacc27c393c7c337e242a82db2eece"
+    },
+    "classifier": {
+        "path": "classifier-manifest.json",
+        "sha256": "ac86684b882d7270940e3e0e579b63711dc75656abd91b191bd9221b01720763"
+    },
+    "dictionary": {
+        "path": "dictionary.json",
+        "sha256": "26f2b4b2b612a8107586cff814c4af77f32a08e1dd20f706a04d1d380b864da9"
+    },
+    "policy": "Syntax passed EWT accuracy and Python/ONNX parity gates. Grammar classifier calibrated on synthetic EWT mutations only; review-only until independent learner-essay validation.",
+    "assetDirectory": "apps/web/public/models",
+    "promotionPolicy": "Float syntax passed EWT/parity gates. Natural essay neural findings remain review-only. Int8 candidates require separate browser promotion checks."
+}
