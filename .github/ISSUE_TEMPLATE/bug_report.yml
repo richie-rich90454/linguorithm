@@ -1,0 +1,32 @@
+name: Bug report
+description: Report a reproducible problem with a synthetic example.
+title: "[Bug] "
+body:
+    - type: markdown
+      attributes:
+          value: "Do not include essays, student data, backups, or private documents. For vulnerabilities, follow SECURITY.md."
+    - type: textarea
+      id: problem
+      attributes:
+          label: Problem and expected behavior
+      validations:
+          required: true
+    - type: textarea
+      id: reproduce
+      attributes:
+          label: Steps and minimal synthetic example
+          description: Include commands or a short invented sentence, plus model/fallback status where relevant.
+      validations:
+          required: true
+    - type: textarea
+      id: environment
+      attributes:
+          label: Environment
+          description: Revision, OS, browser/version, and relevant local tool versions.
+      validations:
+          required: true
+    - type: textarea
+      id: evidence
+      attributes:
+          label: Error output or screenshots
+          description: Redact private data and review traces before attaching them.
