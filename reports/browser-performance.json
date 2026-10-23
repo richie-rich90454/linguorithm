@@ -1,0 +1,72 @@
+{
+    "words": 2505,
+    "sentences": 167,
+    "samples": [
+        {
+            "roundtripMs": 3653.7000000476837,
+            "engineMs": 2440.4000000953674,
+            "diagnostics": 0
+        },
+        {
+            "roundtripMs": 60.89999985694885,
+            "engineMs": 47,
+            "diagnostics": 0
+        },
+        {
+            "roundtripMs": 71.40000009536743,
+            "engineMs": 57.5,
+            "diagnostics": 0
+        },
+        {
+            "roundtripMs": 66.79999995231628,
+            "engineMs": 50.200000047683716,
+            "diagnostics": 0
+        },
+        {
+            "roundtripMs": 59.200000047683716,
+            "engineMs": 43.89999985694885,
+            "diagnostics": 0
+        },
+        {
+            "roundtripMs": 62.200000047683716,
+            "engineMs": 49,
+            "diagnostics": 0
+        },
+        {
+            "roundtripMs": 62.299999952316284,
+            "engineMs": 46,
+            "diagnostics": 0
+        },
+        {
+            "roundtripMs": 63.200000047683716,
+            "engineMs": 46.700000047683716,
+            "diagnostics": 0
+        },
+        {
+            "roundtripMs": 59.40000009536743,
+            "engineMs": 43,
+            "diagnostics": 0
+        },
+        {
+            "roundtripMs": 58.700000047683716,
+            "engineMs": 42.200000047683716,
+            "diagnostics": 0
+        },
+        {
+            "roundtripMs": 85.29999995231628,
+            "engineMs": 66.70000004768372,
+            "diagnostics": 0
+        }
+    ],
+    "coldWorkerMs": 3653.7000000476837,
+    "warmMs": {
+        "p50": 62.299999952316284,
+        "p95": 85.29999995231628
+    },
+    "domInteractiveMs": 36.09999990463257,
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+    "sampledPageHeapBytes": 15200000,
+    "cpu": "Intel(R) Core(TM) Ultra 7 255H",
+    "platform": "win32",
+    "limitations": "Synthetic distinct numbered paragraphs on local desktop Chromium; ten warm samples; cold includes model initialization from local cache; DOM interactive excludes full model readiness; page heap sample excludes worker/WASM/native memory and is not peak; physical phone/connection performance unmeasured"
+}
