@@ -1,0 +1,21 @@
+{
+    "workload": "Original synthetic valid prose with repeated paragraphs; favorable to paragraph caching",
+    "words": 2618,
+    "samples": 30,
+    "coldMs": {
+        "p50": 0.5181999999999789,
+        "p95": 1.9284999999999854
+    },
+    "warmMs": {
+        "p50": 0.17370000000005348,
+        "p95": 0.33809999999994034
+    },
+    "sampledPeakProcessHeapBytes": 23845680,
+    "environment": {
+        "node": "v24.19.0",
+        "platform": "win32",
+        "arch": "x64",
+        "cpu": "Intel(R) Core(TM) Ultra 7 255H"
+    },
+    "limitations": "Node engine timing only. Not browser worker roundtrip, actual peak memory, model initialization, representative essay distribution, or mobile performance."
+}
