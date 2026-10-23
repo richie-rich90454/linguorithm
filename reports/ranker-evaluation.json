@@ -1,0 +1,11 @@
+{
+    "seed": 1729,
+    "metrics": {
+        "train": { "groups": 7055, "top1Accuracy": 0.984975194897236 },
+        "dev": { "groups": 785, "top1Accuracy": 0.8114649681528663 },
+        "test": { "groups": 769, "top1Accuracy": 0.8153446033810143 }
+    },
+    "smoothing": "Interpolated absolute-discount Kneser-Ney bigram",
+    "discount": 0.7566461355056626,
+    "scope": "EWT controlled single-deletion candidates; train-only pairwise logistic fit; not natural correction accuracy"
+}
