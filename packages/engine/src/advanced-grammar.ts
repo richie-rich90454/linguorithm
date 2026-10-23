@@ -1,0 +1,760 @@
+import type { Dependency, Diagnostic, Sentence, Token } from "./domain";
+import { finding, type GrammarRule } from "./grammar";
+
+const hasQuotes = (s: Sentence) => /[“”"]/u.test(s.text);
+const subjectRelation = (relation: string) => ["nsubj", "nsubj:pass"].includes(relation);
+const stableEdge = (s: Sentence, edge: Dependency) =>
+    !s.ambiguous &&
+    (s.alternatives ?? []).every((alternative) =>
+        alternative.graph.some(
+            (candidate) =>
+                candidate.head === edge.head &&
+                candidate.dependent === edge.dependent &&
+                candidate.relation === edge.relation,
+        ),
+    );
+const finite = (token: Token) =>
+    ["VERB", "AUX"].includes(token.pos) &&
+    token.analyses.some((a) => a.pos === token.pos && a.finite === true) &&
+    !token.analyses.some(
+        (a) =>
+            a.pos === token.pos &&
+            (a.finite === false || /^(Inf|Part|Ger)$/u.test(a.verbForm ?? "")),
+    );
+
+const subjectCase: GrammarRule = {
+    id: "subject-case",
+    version: "1.0.0",
+    skill: "pronouns",
+    description: "Subject-case constraints on parsed subject dependencies",
+    evaluate(s) {
+        if (s.ambiguous) return [];
+        return s.graph
+            .filter((e) => e.relation === "nsubj")
+            .flatMap((edge) => {
+                const token = s.tokens[edge.dependent]!,
+                    replacement = (
+                        { me: "I", him: "He", her: "She", us: "We", them: "They" } as Record<
+                            string,
+                            string
+                        >
+                    )[token.text.toLowerCase()];
+                const predicate = s.tokens[edge.head]!;
+                const auxiliaries = s.graph
+                    .filter(
+                        (e) =>
+                            e.head === edge.head && ["cop", "aux", "aux:pass"].includes(e.relation),
+                    )
+                    .map((e) => s.tokens[e.dependent]!);
+                // Accusative subjects of infinitives ("I saw him leave") are licensed.
+                return replacement &&
+                    stableEdge(s, edge) &&
+                    !hasQuotes(s) &&
+                    (finite(predicate) || auxiliaries.some(finite)) &&
+                    !s.graph.some(
+                        (e) => e.dependent === edge.head && ["xcomp", "ccomp"].includes(e.relation),
+                    )
+                    ? [
+                          finding(
+                              s,
+                              this.id,
+                              this.skill,
+                              token,
+                              "Grammar",
+                              "Check the pronoun’s subject form",
+                              `The parse assigns “${token.text}” the subject role. In an ordinary finite clause, that role uses “${replacement}”.`,
+                              [
+                                  replacement === "I" || token.start === s.start
+                                      ? replacement
+                                      : replacement.toLowerCase(),
+                              ],
+                              "Possible issue",
+                              [
+                                  { start: token.start, end: token.end, label: "Parsed subject" },
+                                  {
+                                      start: s.tokens[edge.head]!.start,
+                                      end: s.tokens[edge.head]!.end,
+                                      label: "Predicate",
+                                  },
+                              ],
+                          ),
+                      ]
+                    : [];
+            });
+    },
+};
+const comparison: GrammarRule = {
+    id: "double-comparison",
+    version: "1.0.0",
+    skill: "usage",
+    description: "Redundant comparative degree on an adjective dependency",
+    evaluate(s) {
+        return s.graph
+            .filter((e) => e.relation === "advmod")
+            .flatMap((edge) => {
+                const modifier = s.tokens[edge.dependent]!,
+                    head = s.tokens[edge.head]!;
+                const matches =
+                    (modifier.text.toLowerCase() === "more" &&
+                        /^(better|worse|lesser)$/iu.test(head.text)) ||
+                    (modifier.text.toLowerCase() === "most" && /^(best|worst)$/iu.test(head.text));
+                return matches &&
+                    stableEdge(s, edge) &&
+                    modifier.end <= head.start &&
+                    !/[“”"]/u.test(s.text)
+                    ? [
+                          finding(
+                              s,
+                              this.id,
+                              this.skill,
+                              { start: modifier.start, end: head.start },
+                              "Usage",
+                              "Express comparative degree once",
+                              `“${head.text}” already expresses this degree of comparison. An extra “${modifier.text}” is usually unnecessary in standard American English.`,
+                              [""],
+                              "Likely error",
+                          ),
+                      ]
+                    : [];
+            });
+    },
+};
+const boundaries: GrammarRule = {
+    id: "parsed-boundary",
+    version: "1.0.0",
+    skill: "boundaries",
+    description: "Independent-clause boundaries from parataxis and subject edges",
+    evaluate(s) {
+        if (s.ambiguous || /[“”"]/u.test(s.text)) return [];
+        return s.graph
+            .filter((e) => e.relation === "parataxis")
+            .flatMap((edge) => {
+                const a = s.graph.find(
+                        (e) => e.relation.startsWith("nsubj") && e.head === edge.head,
+                    ),
+                    b = s.graph.find(
+                        (e) => e.relation.startsWith("nsubj") && e.head === edge.dependent,
+                    );
+                if (
+                    !a ||
+                    !b ||
+                    !stableEdge(s, edge) ||
+                    !stableEdge(s, a) ||
+                    !stableEdge(s, b) ||
+                    b.dependent <= edge.head
+                )
+                    return [];
+                const first = s.tokens[edge.head]!,
+                    second = s.tokens[b.dependent]!;
+                const between = s.tokens.filter(
+                    (t) => t.start >= first.end && t.end <= second.start,
+                );
+                if (
+                    between.some(
+                        (t) => t.pos === "CCONJ" || t.pos === "SCONJ" || /[;:.!?]/u.test(t.text),
+                    )
+                )
+                    return [];
+                const comma = between.find((t) => t.text === ",");
+                const span = comma ?? { start: second.start, end: second.start };
+                return [
+                    finding(
+                        s,
+                        comma ? "comma-splice" : "run-on",
+                        this.skill,
+                        span,
+                        "Punctuation",
+                        comma
+                            ? "Check the boundary between independent clauses"
+                            : "Add a boundary between independent clauses",
+                        "The parser identifies two predicates with their own subjects. Review whether these independent clauses need a semicolon, a period, or a coordinating conjunction. Dialogue and intentional rhetoric may differ.",
+                        [comma ? ";" : "; "],
+                        "Possible issue",
+                        [
+                            {
+                                start: s.tokens[a.dependent]!.start,
+                                end: first.end,
+                                label: "First subject–predicate relationship",
+                            },
+                            {
+                                start: second.start,
+                                end: s.tokens[edge.dependent]!.end,
+                                label: "Second subject–predicate relationship",
+                            },
+                        ],
+                    ),
+                ];
+            });
+    },
+};
+const parallel: GrammarRule = {
+    id: "parallel-forms",
+    version: "1.0.0",
+    skill: "verb-forms",
+    description: "Verb-form parallelism within a shared governed coordination",
+    evaluate(s) {
+        if (s.ambiguous || hasQuotes(s)) return [];
+        return s.graph
+            .filter((e) => e.relation === "conj")
+            .flatMap((edge) => {
+                const head = s.tokens[edge.head]!,
+                    dependent = s.tokens[edge.dependent]!;
+                const governor = s.graph.find(
+                    (e) => e.dependent === edge.head && ["xcomp", "obj"].includes(e.relation),
+                );
+                if (
+                    !governor ||
+                    !stableEdge(s, edge) ||
+                    !/^(enjoy|avoid|consider|finish)$/iu.test(
+                        s.tokens[governor.head]!.analyses.find((a) => a.pos === "VERB")?.lemma ??
+                            "",
+                    ) ||
+                    !s.graph.some(
+                        (e) => e.relation === "cc" && [edge.head, edge.dependent].includes(e.head),
+                    ) ||
+                    s.graph.some((e) => e.head === edge.dependent && subjectRelation(e.relation))
+                )
+                    return [];
+                const form = (token: Token) => {
+                    const forms = [
+                        ...new Set(
+                            token.analyses
+                                .filter((a) => a.pos === "VERB")
+                                .map((a) =>
+                                    a.verbForm === "Inf"
+                                        ? "infinitive"
+                                        : /^(Part|Ger)$/u.test(a.verbForm ?? "") &&
+                                            /ing$/iu.test(token.text)
+                                          ? "gerund"
+                                          : undefined,
+                                ),
+                        ),
+                    ];
+                    return forms.length === 1 ? forms[0] : undefined;
+                };
+                const formA = form(head),
+                    formB = form(dependent);
+                if (
+                    !formA ||
+                    !formB ||
+                    formA === formB ||
+                    !s.graph.some(
+                        (e) =>
+                            [edge.head, edge.dependent].includes(e.head) &&
+                            e.relation === "mark" &&
+                            s.tokens[e.dependent]!.text.toLowerCase() === "to",
+                    )
+                )
+                    return [];
+                return [
+                    finding(
+                        s,
+                        this.id,
+                        this.skill,
+                        dependent,
+                        "Grammar",
+                        "Check the parallel verb forms",
+                        `“${head.text}” and “${dependent.text}” share a governing construction but have different verb forms. Check whether both items should follow the same pattern.`,
+                        [],
+                        "Possible issue",
+                        [
+                            { start: head.start, end: head.end, label: formA },
+                            { start: dependent.start, end: dependent.end, label: formB },
+                        ],
+                    ),
+                ];
+            });
+    },
+};
+const modifier: GrammarRule = {
+    id: "modifier-attachment",
+    version: "1.0.0",
+    skill: "sentence",
+    description: "Potential dangling introductory participles with explicit inanimate subjects",
+    evaluate(s) {
+        if (s.ambiguous || hasQuotes(s)) return [];
+        const opening = s.graph.find((e) => e.relation === "advcl" && e.dependent < e.head);
+        if (!opening || !stableEdge(s, opening) || opening.dependent > 2) return [];
+        const action = s.tokens[opening.dependent]!;
+        if (
+            action.pos !== "VERB" ||
+            !action.analyses.some(
+                (a) =>
+                    a.pos === "VERB" &&
+                    /^(Part|Ger)$/u.test(a.verbForm ?? "") &&
+                    /^(walk|read|write|analyze|examine|study|review)$/u.test(a.lemma),
+            ) ||
+            s.graph.some(
+                (e) => e.head === opening.dependent && /^(nsubj|csubj)(:|$)/u.test(e.relation),
+            )
+        )
+            return [];
+        const subject = s.graph.find((e) => e.head === opening.head && e.relation === "nsubj");
+        if (
+            !subject ||
+            !/^(report|result|experiment|data|conclusion|essay|evidence)$/iu.test(
+                s.tokens[subject.dependent]!.analyses.find((a) => a.pos === "NOUN")?.lemma ?? "",
+            ) ||
+            !s.tokens.some(
+                (t) =>
+                    t.text === "," &&
+                    t.start > action.end &&
+                    t.end <= s.tokens[subject.dependent]!.start,
+            )
+        )
+            return [];
+        return [
+            finding(
+                s,
+                this.id,
+                this.skill,
+                s.tokens[opening.dependent]!,
+                "Grammar",
+                "Check who performs the opening action",
+                "An introductory participial clause normally relates to the main-clause subject. This parse links the opening action to an inanimate subject; check the intended actor rather than accepting an automatic rewrite.",
+                [],
+                "Possible issue",
+                [
+                    {
+                        start: s.tokens[opening.dependent]!.start,
+                        end: s.tokens[opening.dependent]!.end,
+                        label: "Opening action",
+                    },
+                    {
+                        start: s.tokens[subject.dependent]!.start,
+                        end: s.tokens[subject.dependent]!.end,
+                        label: "Main-clause subject",
+                    },
+                ],
+            ),
+        ];
+    },
+};
+const neuralAgreement: GrammarRule = {
+    id: "neural-agreement",
+    version: "1.0.0",
+    skill: "agreement",
+    description:
+        "Finite lexical and auxiliary agreement over UD subjects and copula/auxiliary edges",
+    evaluate(s) {
+        if (
+            s.ambiguous ||
+            s.syntaxSource !== "neural" ||
+            hasQuotes(s) ||
+            /\b(if|wish|would|could|should|might|may)\b/iu.test(s.text)
+        )
+            return [];
+        return s.graph
+            .filter((e) => ["nsubj", "nsubj:pass"].includes(e.relation))
+            .flatMap((edge) => {
+                const subject = s.tokens[edge.dependent]!;
+                if (
+                    !stableEdge(s, edge) ||
+                    s.graph.some(
+                        (e) =>
+                            (e.head === edge.dependent || e.dependent === edge.dependent) &&
+                            e.relation === "conj",
+                    ) ||
+                    /^(there|who|what|which|none|all|some|most|data|news|series|species|means|police|staff|team|family|committee|number|lot|percent|pair|part|half|majority)$/iu.test(
+                        subject.text,
+                    )
+                )
+                    return [];
+                // Agreement on a nonfinite auxiliary, or in a mandative clause, is not licensed.
+                if (
+                    s.graph.some(
+                        (e) =>
+                            e.head === edge.head &&
+                            e.relation === "aux" &&
+                            /^(can|could|will|would|shall|should|must|may|might)$/iu.test(
+                                s.tokens[e.dependent]!.text,
+                            ),
+                    ) ||
+                    s.graph.some(
+                        (e) =>
+                            e.dependent === edge.head &&
+                            e.relation === "ccomp" &&
+                            s.tokens[e.head]!.analyses.some((a) =>
+                                /^(suggest|recommend|insist|demand|require|ask|urge|propose)$/u.test(
+                                    a.lemma,
+                                ),
+                            ),
+                    )
+                )
+                    return [];
+                const numbers = [...new Set(subject.analyses.map((a) => a.number).filter(Boolean))];
+                if (numbers.length !== 1) return [];
+                const auxiliaries = s.graph
+                    .filter(
+                        (e) =>
+                            e.head === edge.head && ["cop", "aux", "aux:pass"].includes(e.relation),
+                    )
+                    .map((e) => e.dependent);
+                // A finite auxiliary carries the agreement; its lexical complement stays nonfinite.
+                const finiteAuxiliaries = auxiliaries.filter((index) => finite(s.tokens[index]!));
+                const verbIndices = finiteAuxiliaries.length
+                    ? finiteAuxiliaries
+                          .slice()
+                          .sort((a, b) => a - b)
+                          .slice(0, 1)
+                    : [edge.head];
+                return verbIndices.flatMap((index) => {
+                    const verb = s.tokens[index]!,
+                        word = verb.text.toLowerCase();
+                    const replacements: Record<string, string> =
+                        subject.text.toLowerCase() === "i"
+                            ? { is: "am", are: "am", were: "was", has: "have", does: "do" }
+                            : numbers[0] === "plural" || subject.text.toLowerCase() === "you"
+                              ? { is: "are", was: "were", has: "have", does: "do" }
+                              : { are: "is", were: "was", have: "has", do: "does" };
+                    let replacement = replacements[word];
+                    const lexicalPairs: readonly [string, string][] = [
+                        ["walk", "walks"],
+                        ["run", "runs"],
+                        ["eat", "eats"],
+                        ["write", "writes"],
+                        ["work", "works"],
+                        ["study", "studies"],
+                        ["think", "thinks"],
+                        ["know", "knows"],
+                        ["make", "makes"],
+                        ["go", "goes"],
+                        ["say", "says"],
+                        ["play", "plays"],
+                        ["seem", "seems"],
+                        ["need", "needs"],
+                        ["like", "likes"],
+                        ["live", "lives"],
+                        ["help", "helps"],
+                        ["arrive", "arrives"],
+                    ];
+                    const singularThird =
+                        numbers[0] === "singular" && !/^(i|you)$/iu.test(subject.text);
+                    if (!replacement && verb.pos === "VERB") {
+                        const pair = lexicalPairs.find(
+                            ([base, third]) => word === (singularThird ? base : third),
+                        );
+                        if (pair) replacement = pair[singularThird ? 1 : 0];
+                    }
+                    if (!replacement || !finite(verb)) return [];
+                    return [
+                        finding(
+                            s,
+                            this.id,
+                            this.skill,
+                            verb,
+                            "Grammar",
+                            "Review the parsed subject–verb agreement",
+                            `The neural parse connects “${subject.text}” to the predicate containing “${verb.text}”. Its unambiguous lexical number suggests “${replacement}”. Review the parse and intended meaning before applying.`,
+                            [
+                                /^[A-Z]/u.test(verb.text)
+                                    ? replacement[0]!.toUpperCase() + replacement.slice(1)
+                                    : replacement,
+                            ],
+                            "Possible issue",
+                            [
+                                {
+                                    start: subject.start,
+                                    end: subject.end,
+                                    label: "Parsed grammatical subject",
+                                },
+                                {
+                                    start: verb.start,
+                                    end: verb.end,
+                                    label: "Finite verb, auxiliary, or copula",
+                                },
+                            ],
+                        ),
+                    ];
+                });
+            });
+    },
+};
+const clausePunctuation: GrammarRule = {
+    id: "clause-punctuation",
+    version: "1.0.0",
+    skill: "punctuation",
+    description:
+        "Initial finite adverbial clauses and punctuation splitting parsed complements or predicates.",
+    evaluate(s) {
+        if (s.ambiguous || s.syntaxSource !== "neural" || hasQuotes(s)) return [];
+        const results: Diagnostic[] = [];
+        for (const edge of s.graph) {
+            if (!stableEdge(s, edge)) continue;
+            const head = s.tokens[edge.head]!,
+                dependent = s.tokens[edge.dependent]!;
+            if (
+                edge.relation === "advcl" &&
+                edge.dependent < edge.head &&
+                finite(dependent) &&
+                s.graph.some((e) => e.head === edge.dependent && subjectRelation(e.relation))
+            ) {
+                const subject = s.graph.find(
+                    (e) => e.head === edge.head && subjectRelation(e.relation),
+                );
+                const marker = s.graph.find(
+                    (e) =>
+                        e.head === edge.dependent &&
+                        e.relation === "mark" &&
+                        /^(although|because|when|while|unless|after|before|since|if)$/iu.test(
+                            s.tokens[e.dependent]!.text,
+                        ),
+                );
+                if (
+                    !subject ||
+                    !marker ||
+                    marker.dependent !== 0 ||
+                    dependent.end >= s.tokens[subject.dependent]!.start
+                )
+                    continue;
+                // Follow the subordinate subtree rather than guessing that its verb ends the clause.
+                const members = new Set([edge.dependent]);
+                for (let pass = 0, changed = true; changed && pass < s.tokens.length; pass++) {
+                    changed = false;
+                    for (const child of s.graph)
+                        if (
+                            members.has(child.head) &&
+                            !members.has(child.dependent) &&
+                            child.relation !== "root"
+                        ) {
+                            members.add(child.dependent);
+                            changed = true;
+                        }
+                }
+                const end = Math.max(...[...members].map((i) => s.tokens[i]!.end));
+                const mainSubject = s.tokens[subject.dependent]!;
+                if (
+                    end > mainSubject.start ||
+                    s.tokens.some(
+                        (t) =>
+                            t.start >= dependent.end &&
+                            t.end <= mainSubject.start &&
+                            /[,;:—]/u.test(t.text),
+                    )
+                )
+                    continue;
+                results.push(
+                    finding(
+                        s,
+                        "introductory-clause-comma",
+                        this.skill,
+                        { start: end, end },
+                        "Punctuation",
+                        "Review the boundary after the introductory clause",
+                        "The parse identifies an opening subordinate clause with its own subject and finite verb. A comma normally separates it from the main clause; very short introductions may vary.",
+                        [","],
+                        "Possible issue",
+                        [
+                            {
+                                start: s.tokens[marker.dependent]!.start,
+                                end,
+                                label: "Opening subordinate clause",
+                            },
+                            { start: mainSubject.start, end: head.end, label: "Main clause" },
+                        ],
+                    ),
+                );
+            }
+            if (
+                edge.relation === "obj" &&
+                finite(head) &&
+                head.end <= dependent.start &&
+                /^(include|includes|included|need|needs|needed)$/iu.test(head.text) &&
+                s.graph.some((e) => e.head === edge.head && subjectRelation(e.relation))
+            ) {
+                const index = s.tokens.indexOf(head),
+                    colon = s.tokens[index + 1];
+                if (
+                    colon?.text !== ":" ||
+                    colon.start >= dependent.start ||
+                    s.tokens.filter((t) => t.text === ":").length !== 1 ||
+                    !s.tokens.some((t) => t.text === "," && t.start > colon.start)
+                )
+                    continue;
+                results.push(
+                    finding(
+                        s,
+                        "colon-complement",
+                        this.skill,
+                        colon,
+                        "Punctuation",
+                        "Review the colon before the verb’s object",
+                        "This parse puts the list directly in the verb’s object position. In ordinary prose, a colon normally follows a complete introduction rather than separating this verb from its object. Headings may differ.",
+                        [""],
+                        "Possible issue",
+                        [
+                            {
+                                start: head.start,
+                                end: head.end,
+                                label: "Verb requiring its object",
+                            },
+                            {
+                                start: dependent.start,
+                                end: dependent.end,
+                                label: "Parsed object after the colon",
+                            },
+                        ],
+                    ),
+                );
+            }
+            if (
+                edge.relation === "conj" &&
+                finite(head) &&
+                finite(dependent) &&
+                edge.head < edge.dependent &&
+                s.graph.some((e) => e.head === edge.head && subjectRelation(e.relation)) &&
+                !s.graph.some((e) => e.head === edge.dependent && subjectRelation(e.relation)) &&
+                !s.tokens.some((t) => t.text === ",") &&
+                s.tokens.filter((t) => t.text === ";").length === 1
+            ) {
+                const coordinator = s.graph.find(
+                    (e) =>
+                        [edge.head, edge.dependent].includes(e.head) &&
+                        e.relation === "cc" &&
+                        /^(and|but|or)$/iu.test(s.tokens[e.dependent]!.text),
+                );
+                const semicolon = s.tokens.find(
+                    (t) => t.text === ";" && t.start >= head.end && t.end < dependent.start,
+                );
+                if (
+                    !coordinator ||
+                    !semicolon ||
+                    s.tokens[coordinator.dependent]!.start < semicolon.end
+                )
+                    continue;
+                results.push(
+                    finding(
+                        s,
+                        "semicolon-shared-subject",
+                        this.skill,
+                        semicolon,
+                        "Punctuation",
+                        "Review the semicolon inside the shared predicate",
+                        "The coordinated verbs share one parsed subject. A semicolon usually joins independent clauses; a simple shared-subject predicate normally needs no semicolon. Deliberate rhetorical pauses may differ.",
+                        [""],
+                        "Possible issue",
+                        [
+                            { start: head.start, end: head.end, label: "First predicate" },
+                            {
+                                start: dependent.start,
+                                end: dependent.end,
+                                label: "Predicate sharing the subject",
+                            },
+                        ],
+                    ),
+                );
+            }
+        }
+        return results;
+    },
+};
+
+export const advancedRules: readonly GrammarRule[] = [
+    neuralAgreement,
+    subjectCase,
+    comparison,
+    boundaries,
+    parallel,
+    modifier,
+    clausePunctuation,
+];
+
+export function documentRelationships(
+    sentences: readonly Sentence[],
+    style: boolean,
+): Diagnostic[] {
+    const findings: Diagnostic[] = [];
+    for (let i = 1; i < sentences.length; i++) {
+        const current = sentences[i]!,
+            previous = sentences[i - 1]!;
+        const pronoun = current.tokens[0];
+        if (
+            pronoun &&
+            /^(he|she|it|they)$/iu.test(pronoun.text) &&
+            !previous.ambiguous &&
+            !current.ambiguous &&
+            previous.syntaxSource === "neural" &&
+            current.syntaxSource === "neural" &&
+            !hasQuotes(previous) &&
+            !hasQuotes(current) &&
+            current.graph.some((e) => subjectRelation(e.relation) && e.dependent === 0)
+        ) {
+            const word = pronoun.text.toLowerCase();
+            const person = (t: Token) =>
+                t.pos === "PROPN" ||
+                t.analyses.some(
+                    (a) =>
+                        a.pos === "NOUN" &&
+                        /^(student|teacher|researcher|writer|reader|child|person|man|woman|boy|girl|scientist|doctor|nurse|parent|friend)$/u.test(
+                            a.lemma,
+                        ),
+                );
+            const antecedents = previous.graph
+                .filter((e) => ["nsubj", "nsubj:pass", "obj", "iobj"].includes(e.relation))
+                .map((e) => previous.tokens[e.dependent]!)
+                .filter(
+                    (t, index, all) =>
+                        all.findIndex((other) => other.start === t.start) === index &&
+                        ["NOUN", "PROPN"].includes(t.pos) &&
+                        (word === "they"
+                            ? t.analyses.some((a) => a.number === "plural") || person(t)
+                            : t.analyses.some((a) => a.number === "singular") &&
+                              (word === "it" ? !person(t) : person(t))),
+                );
+            if (antecedents.length > 1)
+                findings.push(
+                    finding(
+                        current,
+                        "pronoun-reference",
+                        "pronouns",
+                        pronoun,
+                        "Grammar",
+                        "Review the pronoun’s reference",
+                        "The preceding sentence contains multiple grammatically compatible noun phrases. Context may resolve the reference; use the intended noun explicitly if a reader could be unsure.",
+                        [],
+                        "Possible issue",
+                        antecedents.map((t) => ({
+                            start: t.start,
+                            end: t.end,
+                            label: "Possible preceding reference; compatibility is not identity",
+                        })),
+                    ),
+                );
+        }
+        if (style) {
+            const previousFinite = previous.tokens.filter((t) =>
+                    t.analyses.some((a) => a.finite && a.tense),
+                ),
+                currentFinite = current.tokens.filter((t) =>
+                    t.analyses.some((a) => a.finite && a.tense),
+                );
+            const past =
+                previousFinite.length > 0 &&
+                previousFinite.every((t) => t.analyses.some((a) => a.tense === "Past"));
+            if (
+                past &&
+                currentFinite.some((t) => t.analyses.some((a) => a.tense === "Pres")) &&
+                !/\b(now|today|always|generally|currently)\b/iu.test(current.text)
+            )
+                findings.push(
+                    finding(
+                        current,
+                        "document-tense",
+                        "verb-forms",
+                        currentFinite[0]!,
+                        "Style",
+                        "A passage changes tense",
+                        "A preceding sentence uses past tense and this one includes present tense. This may be intentional: check the time relationship in the passage before changing it.",
+                        [],
+                        "Style suggestion",
+                        [...previousFinite.slice(0, 2), ...currentFinite.slice(0, 2)].map((t) => ({
+                            start: t.start,
+                            end: t.end,
+                            label: "Tense evidence in the passage",
+                        })),
+                    ),
+                );
+        }
+    }
+    return findings;
+}
