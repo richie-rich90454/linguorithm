@@ -1,0 +1,32 @@
+{
+    "id": "ud-english-ewt-2.16",
+    "source": "https://github.com/UniversalDependencies/UD_English-EWT/tree/4c89b5833a70aa5ed3a00bad2f23f57992cc7df8",
+    "release": "r2.16",
+    "commit": "4c89b5833a70aa5ed3a00bad2f23f57992cc7df8",
+    "license": "CC-BY-SA-4.0",
+    "permittedUse": "Use, redistribution and adaptation with attribution and share-alike conditions; original license retained",
+    "attribution": "Universal Dependencies English Web Treebank contributors; see retained README and LICENSE",
+    "files": {
+        "LICENSE.txt": {
+            "url": "https://raw.githubusercontent.com/UniversalDependencies/UD_English-EWT/4c89b5833a70aa5ed3a00bad2f23f57992cc7df8/LICENSE.txt",
+            "sha256": "b3d1b0f4c6ae151f7eb78738f46ebd5ee140f8a7f76501ba26af123140d35ae7"
+        },
+        "README.md": {
+            "url": "https://raw.githubusercontent.com/UniversalDependencies/UD_English-EWT/4c89b5833a70aa5ed3a00bad2f23f57992cc7df8/README.md",
+            "sha256": "099677d6938869b4e855e6ec6548fc24ffeb5fce90e1cd985847f7049664f29e"
+        },
+        "en_ewt-ud-train.conllu": {
+            "url": "https://raw.githubusercontent.com/UniversalDependencies/UD_English-EWT/4c89b5833a70aa5ed3a00bad2f23f57992cc7df8/en_ewt-ud-train.conllu",
+            "sha256": "3fb78e2b55482c8ee00caa653af436c88c9e5bc9a73ce26e4ae3ddc79d2b7e7b"
+        },
+        "en_ewt-ud-dev.conllu": {
+            "url": "https://raw.githubusercontent.com/UniversalDependencies/UD_English-EWT/4c89b5833a70aa5ed3a00bad2f23f57992cc7df8/en_ewt-ud-dev.conllu",
+            "sha256": "531a54ff90d6ab12201c5a50c3e78e6ddac4de69abc4bce5d275d3cd29efe2b6"
+        },
+        "en_ewt-ud-test.conllu": {
+            "url": "https://raw.githubusercontent.com/UniversalDependencies/UD_English-EWT/4c89b5833a70aa5ed3a00bad2f23f57992cc7df8/en_ewt-ud-test.conllu",
+            "sha256": "e266e515a0a7547657ed3d90d9ba46487d6bd251f27ad4269d4e8a427c8555cd"
+        }
+    },
+    "splitPolicy": "Official train/dev/test. Document IDs and exact sentences checked for leakage; author/prompt identities are not fully available."
+}
