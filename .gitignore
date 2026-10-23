@@ -1,0 +1,17 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+coverage/
+.env*
+__pycache__/
+.venv/
+.tools/
+.cache/
+.ruff_cache/
+apps/web/public/models/
+training/datasets/raw/
+training/__pycache__/
+reports/browser-profile/
+models/generated/*
+!models/generated/.gitkeep
