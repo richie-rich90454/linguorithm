@@ -1,0 +1,55 @@
+name: Evaluate model candidates
+on:
+    workflow_dispatch:
+permissions:
+    contents: read
+env:
+    npm_config_cache: ${{ github.workspace }}/.cache/npm
+    PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
+    PIP_CACHE_DIR: ${{ github.workspace }}/.cache/pip
+    TORCH_HOME: ${{ github.workspace }}/.cache/torch
+    PYTHONNOUSERSITE: "1"
+    SYNTAX_MODEL_SOURCE: candidate
+    PYTHONUTF8: "1"
+jobs:
+    candidate:
+        runs-on: windows-latest
+        timeout-minutes: 60
+        steps:
+            - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+            - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+              with:
+                  node-version: 24.13.0
+            - name: Create contained tool environment
+              shell: pwsh
+              run: |
+                  New-Item -ItemType Directory -Force .tools/node,.cache/tmp | Out-Null
+                  Copy-Item -LiteralPath (Get-Command node).Source -Destination .tools/node/node.exe
+                  npm install --prefix .tools/package-manager --no-save pnpm@12.14.0
+                  "$pwd/.tools/package-manager/node_modules/.bin" >> $env:GITHUB_PATH
+                  py -3.12 -m venv .venv
+            - run: pnpm install --frozen-lockfile
+            - name: Install isolated training dependencies
+              run: ./.venv/Scripts/python.exe -m pip install --extra-index-url https://download.pytorch.org/whl/cpu -r training/requirements.lock.txt
+            - name: Train and evaluate candidates
+              shell: pwsh
+              run: |
+                  $PSNativeCommandUseErrorActionPreference = $true
+                  $ErrorActionPreference = "Stop"
+                  $env:TEMP = "$pwd/.cache/tmp"
+                  $env:TMP = $env:TEMP
+                  ./.venv/Scripts/python.exe training/ingest_ewt.py
+                  ./.venv/Scripts/python.exe training/ingest_dictionary.py
+                  ./.venv/Scripts/python.exe training/train_release.py --epochs 12 --parser-epochs 6
+                  ./.venv/Scripts/python.exe training/train_errors.py
+                  ./.venv/Scripts/python.exe training/train_ranker.py
+                  ./.venv/Scripts/python.exe training/evaluate_baseline.py
+                  ./.venv/Scripts/python.exe training/package_models.py
+                  ./.venv/Scripts/python.exe training/evaluate_quantization.py
+            - run: pnpm validate:models
+            - run: pnpm check
+            - run: pnpm build
+            - run: pnpm exec playwright install chromium firefox webkit
+            - run: pnpm test:browser
+            - name: Candidate report
+              run: Write-Output "Candidates are evaluated in this disposable checkout. Review reports and artifact/license manifests before promoting; this workflow never pushes or replaces a released model."
