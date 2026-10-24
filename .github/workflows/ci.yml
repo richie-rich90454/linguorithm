@@ -29,4 +29,5 @@ jobs:
             - run: make bundle
             - run: make install-browsers
             - run: make browser
+            - run: make generalization
             - run: python -m py_compile training/*.py
