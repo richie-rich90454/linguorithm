@@ -67,14 +67,42 @@ test("the production analyzer distinguishes a comma splice from coordinated clau
     await page.getByRole("button", { name: "Analyze essay" }).click();
     const splice = page
         .locator(".finding-item")
-        .filter({ hasText: "Give two clauses a stronger boundary" });
+        .filter({ hasText: "Check the boundary between independent clauses" });
     await expect(splice).toBeVisible({ timeout: 30_000 });
-    await expect(splice).toContainText("A semicolon can join these independent clauses");
+    await expect(splice.locator(".correction-preview")).toContainText(";");
+    await splice.getByRole("button", { name: "Apply correction" }).click();
+    await expect(page.getByLabel("Annotated essay")).toContainText(
+        "I work hard; she studies daily.",
+    );
 
     await page.getByRole("button", { name: "Edit text" }).click();
     await page.getByLabel("Essay text").fill("I work hard, and she studies daily.");
     await page.getByRole("button", { name: "Analyze essay" }).click();
     await expect(
-        page.locator(".finding-item").filter({ hasText: "Give two clauses a stronger boundary" }),
+        page
+            .locator(".finding-item")
+            .filter({ hasText: "Check the boundary between independent clauses" }),
+    ).toHaveCount(0);
+
+    await page.getByRole("button", { name: "Edit text" }).click();
+    await page
+        .getByLabel("Essay text")
+        .fill("The storm damaged the lighthouse, the keeper repaired the lamp.");
+    await page.getByRole("button", { name: "Analyze essay" }).click();
+    await expect(
+        page
+            .locator(".finding-item")
+            .filter({ hasText: "Check the boundary between independent clauses" }),
+    ).toBeVisible({ timeout: 30_000 });
+
+    await page.getByRole("button", { name: "Edit text" }).click();
+    await page
+        .getByLabel("Essay text")
+        .fill("When the storm damaged the lighthouse, the keeper repaired the lamp.");
+    await page.getByRole("button", { name: "Analyze essay" }).click();
+    await expect(
+        page
+            .locator(".finding-item")
+            .filter({ hasText: "Check the boundary between independent clauses" }),
     ).toHaveCount(0);
 });
