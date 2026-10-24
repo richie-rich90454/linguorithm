@@ -66,6 +66,7 @@ export function Practice(props: {
                 performance.now() - started,
                 q.type === "repair" ? response() : undefined,
             );
+            if (props.question !== q) return;
             setAnswered(true);
             setSession({
                 attempted: session().attempted + 1,
