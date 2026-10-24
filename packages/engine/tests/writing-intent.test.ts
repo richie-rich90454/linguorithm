@@ -1,4 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { advancedRules } from "../src/advanced-grammar";
+import { rules } from "../src/grammar";
+import { detectableGoalIds, goalByRule } from "../src/goal-rules";
 import {
     EssayDocument,
     attachGoalMetadata,
@@ -9,6 +12,51 @@ import {
 } from "../src";
 
 describe("writing intent and goal metadata", () => {
+    it("derives detection coverage only from real rule associations", () => {
+        const knownGoals = new Set(writingGoals.map((goal) => goal.id));
+        for (const [ruleId, goalIds] of Object.entries(goalByRule)) {
+            expect(goalIds.length, ruleId).toBeGreaterThan(0);
+            expect(new Set(goalIds).size, ruleId).toBe(goalIds.length);
+            for (const goalId of goalIds) expect(knownGoals.has(goalId), ruleId).toBe(true);
+        }
+        for (const goal of writingGoals) {
+            expect(goal.detection, goal.id).toBe(
+                detectableGoalIds.has(goal.id) ? "implemented-unvalidated" : "not-yet-detectable",
+            );
+        }
+        // These registry entries dispatch multiple concrete rule IDs instead of emitting their own.
+        const dispatchers = new Set(["punctuation", "clause-punctuation"]);
+        for (const rule of [...rules, ...advancedRules]) {
+            if (!dispatchers.has(rule.id)) expect(goalByRule[rule.id], rule.id).toBeDefined();
+        }
+    });
+
+    it("does not overclaim broad revision from a repeated sentence opening", () => {
+        const report = createPipeline().analyze(
+            "We can always walk home. We can always read books. We can always share stories.",
+            1,
+            true,
+        );
+        const repeated = report.diagnostics.find(
+            (diagnostic) => diagnostic.ruleId === "document-repetition",
+        );
+        expect(repeated?.goalId).toBe("writing.sentence-variety");
+        expect(report.goalMetadata?.find((goal) => goal.id === "writing.revision")?.detection).toBe(
+            "not-yet-detectable",
+        );
+        expect(
+            report.goalMetadata?.find((goal) => goal.id === "writing.revision")?.diagnosticIds,
+        ).toEqual([]);
+        expect(
+            report.goalMetadata?.find((goal) => goal.id === "writing.sentence-variety")
+                ?.diagnosticIds,
+        ).toContain(repeated?.id);
+        for (const goalId of ["writing.editing", "writing.list-punctuation"]) {
+            expect(writingGoals.find((goal) => goal.id === goalId)?.detection).toBe(
+                "implemented-unvalidated",
+            );
+        }
+    });
     it("loads old document records without an intent and preserves the choice in new records", () => {
         const original = EssayDocument.create("She walk home.", "A draft");
         const legacy = documentSchema.parse({
@@ -78,6 +126,7 @@ describe("writing intent and goal metadata", () => {
 
     it("links every emitted detector rule ID to its learner-facing goal", () => {
         const ruleGoals = [
+            ["count-noun-number", "writing.plural"],
             ["agreement", "writing.agreement"],
             ["neural-agreement", "writing.agreement"],
             ["verb-form", "writing.irregular"],
@@ -99,7 +148,7 @@ describe("writing intent and goal metadata", () => {
             ["contextual-usage", "writing.homophones"],
             ["parallel-forms", "writing.parallelism"],
             ["modifier-attachment", "writing.modifiers"],
-            ["document-repetition", "writing.revision"],
+            ["document-repetition", "writing.sentence-variety"],
             ["repeated-word", "writing.concision"],
             ["introductory-comma", "writing.introductory-comma"],
             ["introductory-clause-comma", "writing.introductory-comma"],
