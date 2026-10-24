@@ -1,20 +1,16 @@
 # Development verification
 
-Environment: Windows x64, project-local Node 24.19.0 / pnpm 12.14.0 / Python 3.12.14; local Python environment and browser binaries.
+Environment: Windows x64 with the project-contained Node runtime, Python environment, dependencies, model assets, and browser binaries. Workflows use GNU Make.
 
-- 189 engine unit/property/regression tests pass.
-- 156 browser checks passed across Chromium, Firefox, WebKit, and mobile Chromium emulation, including model integrity/offline loading, database migration, bounded archive expansion, PPTX/XLSX import, and review regression checks. Includes cross-browser cache/retry/restore reliability coverage and laptop viewport checks.
-- Actual Python/ONNX emissions agree within 0.0002 in all four browser configurations.
-- 18 authored MCQs plus 88 controlled mutation repairs validate, including exact restoration of the target sentence and unique answer keys.
-- Oxlint, exact Oxfmt configuration, strict TypeScript, production build, and Python Ruff checks pass.
-- Full held-out syntax evaluation: 1,962 sentences / 24,859 tokens. POS 94.47%; parser UAS 81.66%, LAS 77.27%. Full float/int8 comparison and size measurements are saved.
-- Separately, the 2026-10-24 production-browser report in [generalization.json](generalization.json) measures 300 held-out EWT sentences / 3,659 gold tokens across five source genres. All-gold POS/UAS/LAS are 92.18%/80.16%/76.09%; unmatched/fallback tokens count as incorrect. Exact sentence tokenization matches on 229/300 sentences; 3,561/3,659 gold tokens align to neural spans. Per-genre results and the sampling method are documented in the [model card](../docs/model-card.md#production-browser-generalization-check). This remains within-corpus evidence, not independent learner-essay validation.
-- The same report records no active classifier category: classifier-only emitted findings detect 0/63 controlled agreement mutations; the complete hybrid detects 47/63 and misses 16/63. Both have zero target-token false positives on 63 source controls. On 26 authored clean probes, conservative false positives are zero and one case has a review warning. These small controlled/development sets cannot establish natural-error precision or recall. All 411 evaluated cases pass source/edit integrity checks over 151 proposals; the report binds evidence to served resource and worker hashes without changing weights.
-- Correction ranker: 769 controlled held-out examples, 81.53% top-1; synthetic-task scope is explicit.
-- Initial entry JavaScript is approximately 104 KiB gzip against a 250 KiB budget. This excludes deferred worker/import/model/WASM assets.
-- Model manifests record provenance, SHA-256, split limitations, actual training environment, metrics, calibration scope, and unavailable categories.
-- Code review identified and fixed assessment navigation, pre-answer source disclosure, unavailable material references, and active-state refresh after backup restore.
+- `make check` passes lint, formatting, strict TypeScript, and 261 engine tests across 17 files.
+- The latest full `make release` run passes all 176 Playwright checks across Chromium, Firefox, WebKit, and mobile Chromium emulation. Coverage includes actual local-model inference, feature parity, offline reload, document persistence and restore, import security, keyboard access, responsive layouts, and the production comma-splice correction flow.
+- Content validation passes for 106 authored and verified-mutation exercises. The model release check verifies all 18 model resources, clean restoration, repair of a changed asset, and rejection of a corrupt archive.
+- The production build succeeds. Initial JavaScript is 84.0 KiB gzip against the 104.7 KiB budget; secondary views and the analysis worker are lazy-loaded. Runtime model inference and document analysis remain local.
+- Shipped full EWT component evidence remains 94.47% POS, 81.66% UAS, and 77.27% LAS across 1,962 sentences / 24,859 tokens. These model weights did not change in this work.
+- The current browser regression report measures 93.50%/81.91%/77.81% POS/UAS/LAS over 300 EWT sentences / 3,659 gold tokens. It aligns 3,610 tokens and exactly tokenizes 266 sentences. The sample spans five source genres and counts unmatched tokens as incorrect. It was inspected during tokenizer development, so it is not an untouched confirmatory test.
+- The fixed browser scores improve 1.31/1.75/1.72 absolute points over the original POS/UAS/LAS baselines, below the requested five-point floor. The full EWT parser goals and the million-token POS claim remain unmet.
+- The goal map contains 97 general writing goals: 27 connected to unvalidated local detectors and 70 still labeled `not-yet-detectable`. No pattern has independent evidence for the requested precision, recall, valid-control, and correction-acceptability gates.
+- On the 63 controlled agreement mutations, the complete hybrid detects 47 and misses 16, with zero target false positives on 63 source controls; classifier-only findings detect none. On 26 authored clean probes, there are zero conservative false positives and one review warning. These authored and synthetic checks do not establish learner-writing accuracy.
+- The latest generalization run checks source/edit integrity on all 411 cases and 219 proposed edits. Correction integrity verifies source spans and edit transactions; it does not establish that a proposed change preserves meaning.
 
-The interface inspection script writes current screenshots and axe/privacy/overflow results. The regression evaluation contains Wilson 95% category intervals, explicitly marked as development evidence. Performance reports distinguish Node, browser, sampled memory, and device emulation.
-
-Independent learner-error accuracy, educator approval, competitor comparisons, and student learning effects remain unestablished. See ../docs/release-status.md and ../docs/model-card.md for scope.
+Full benchmark methods, intervals, per-genre results, model provenance, and remaining limitations are recorded in the [model card](../docs/model-card.md), [release gates](../docs/release-gates-2026-10-24.md), and [reproducible report](generalization.json). The passing software checks do not change the unmet model and pattern-quality thresholds.
