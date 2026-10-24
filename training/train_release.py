@@ -13,6 +13,7 @@ import numpy as np
 import onnxruntime as ort
 import torch
 from torch import nn
+from ewt_splits import verified_corpus_manifest
 
 ROOT = Path(__file__).resolve().parents[1]
 TAGS = [
@@ -331,6 +332,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, default=12)
     parser.add_argument("--parser-epochs", type=int, default=6)
+    parser.add_argument("--lexicon-only", action="store_true")
     args = parser.parse_args()
     random.seed(SEED)
     np.random.seed(SEED)
@@ -339,7 +341,9 @@ def main():
     out = ROOT / "models/generated/ewt-1"
     out.mkdir(parents=True, exist_ok=True)
     corpus = ROOT / "training/datasets/raw/ewt"
-    provenance = json.loads((ROOT / "training/datasets/ewt-manifest.json").read_text())
+    provenance, _ = verified_corpus_manifest(ROOT)
+    # The manifest is provenance only when the bytes being trained on still match
+    # the pinned release. Check before either full training or lexicon-only output.
     seen, groups, splits, excluded = set(), set(), {}, {}
     for split, suffix in [("train", "train"), ("validation", "dev"), ("test", "test")]:
         rows = read_corpus(corpus / f"en_ewt-ud-{suffix}.conllu")
@@ -381,6 +385,8 @@ def main():
                 item["number"] = (
                     "singular" if features["Number"] == "Sing" else "plural"
                 )
+            if features.get("Person") in {"1", "2", "3"}:
+                item["person"] = int(features["Person"])
             if pos in {"AUX", "VERB"}:
                 item["finite"] = features.get("VerbForm") == "Fin"
                 item["verbForm"] = features.get("VerbForm", "")
@@ -394,6 +400,11 @@ def main():
         "frequency": dict(frequency),
     }
     write_json(out / "lexicon.json", lexicon)
+    if args.lexicon_only:
+        print(
+            json.dumps({"event": "lexicon", "forms": len(lexicon["forms"])}), flush=True
+        )
+        return
     model, crf = Tagger(len(vocabulary), len(characters)), CRF()
     optimizer = torch.optim.AdamW(
         list(model.parameters()) + list(crf.parameters()), lr=0.003
