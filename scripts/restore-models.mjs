@@ -43,7 +43,8 @@ if (tar.length !== manifest.uncompressedBytes)
     throw new Error("Invalid model archive expansion size.");
 const expected = new Map(manifest.files.map((record) => [record.path, record]));
 if (expected.size !== manifest.files.length) throw new Error("Duplicate model release paths.");
-const output = resolve(root, "apps/web/public/models");
+const output = resolve(root, process.env.SYNTAX_MODEL_OUTPUT ?? "apps/web/public/models");
+if (!inside(root, output)) throw new Error("Model destination escapes the project.");
 const ensureDirectory = (directory) => {
     let existing = directory;
     while (!existsSync(existing)) existing = dirname(existing);
