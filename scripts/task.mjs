@@ -3,6 +3,8 @@ import { spawn } from "node:child_process";
 import { dirname, join, resolve, delimiter } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
+import { createHash } from "node:crypto";
+import { createServer } from "node:net";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const require = createRequire(import.meta.url);
@@ -79,6 +81,41 @@ async function run(executable, args, cwd = root) {
 }
 const tool = (pkg, command, args = [], cwd = root) => run(node, [bin(pkg, command), ...args], cwd);
 const script = (name, args = []) => run(node, [join(root, "scripts", name), ...args]);
+async function availableLoopbackPort() {
+    const server = createServer();
+    await new Promise((accept, reject) => {
+        server.once("error", reject);
+        server.listen(0, "127.0.0.1", accept);
+    });
+    const address = server.address();
+    if (!address || typeof address === "string")
+        throw new Error("Unable to allocate a browser test port.");
+    const port = address.port;
+    await new Promise((accept, reject) =>
+        server.close((error) => (error ? reject(error) : accept())),
+    );
+    return port;
+}
+function requireClassifierScoreParity(weightPath) {
+    const report = JSON.parse(
+        readFileSync(join(root, "reports/classifier-score-parity.json"), "utf8"),
+    );
+    const digest = createHash("sha256").update(readFileSync(weightPath)).digest("hex");
+    if (
+        report.status !== "passed" ||
+        report.weightSha256 !== digest ||
+        !/^[a-f0-9]{64}$/.test(report.scoreFixtureSha256 ?? "") ||
+        !Number.isInteger(report.checkedTokens) ||
+        report.checkedTokens < 1 ||
+        report.tolerance !== 0.0001 ||
+        !Number.isFinite(report.maximumDifference) ||
+        report.maximumDifference < 0 ||
+        report.maximumDifference > report.tolerance
+    )
+        throw new Error(
+            'Classifier browser score parity is missing, failed, or stale. Run make check-classifier-features ARGS="--scores" for these classifier weights.',
+        );
+}
 function python() {
     const path = join(root, win ? ".venv/Scripts/python.exe" : ".venv/bin/python");
     if (!existsSync(path))
@@ -99,7 +136,7 @@ function pnpm() {
 const extra = process.argv.slice(3);
 const tasks = {
     help: () =>
-        console.log(`Syntax development commands (make TARGET ARGS="...")
+        console.log(`Linguorithm development commands (make TARGET ARGS="...")
 dev             Start local Vite development server
 check           Lint, formatting, TypeScript, unit tests
 build           Build production site in apps/web/dist
@@ -118,7 +155,18 @@ lint format typecheck benchmark-browser ablation compare
 Explicit network/setup commands: install-pnpm install install-browsers install-python
 release         Run source, content, model-bundle, build, budget, and browser release checks
 check-model-release  Verify a fresh model restore and corruption handling
+generalization  Evaluate held-out natural syntax and diverse development probes
+prepare-errors  Prepare classifier features from actual predicted syntax
+check-classifier-features  Verify Python/browser classifier feature parity
+train-errors    Train the classifier from prepared, parity-checked features
+test-training   Run project-local training data and provenance tests
+train-ranker    Fit the train-only contextual correction ranker
+evaluate-baseline  Evaluate the separately labeled oracle-feature reference
+package-models  Package licensed and parity-verified candidate model assets
+package-release-models  Promote parity-verified assets into the tracked model bundle
+evaluate-quantization  Compare candidate float32 and int8 syntax assets
 No command installs prerequisites implicitly. See docs/quickstart.md.`),
+    "social-preview": () => script("render-social-preview.mjs"),
     dev: async () => {
         await tasks.models();
         await tool("vite", "vite", ["--host", "127.0.0.1", ...extra], join(root, "apps/web"));
@@ -148,19 +196,50 @@ No command installs prerequisites implicitly. See docs/quickstart.md.`),
         await tasks.models();
         await tool("vite", "vite", ["build", ...extra], join(root, "apps/web"));
     },
-    browser: () => tool("@playwright/test", "playwright", ["test", ...extra]),
+    browser: async () => {
+        env.PLAYWRIGHT_PORT = String(await availableLoopbackPort());
+        await tool("@playwright/test", "playwright", ["test", ...extra]);
+    },
     evaluate: () => tool("tsx", "tsx", ["scripts/evaluate.ts", ...extra]),
     content: () => tool("tsx", "tsx", ["scripts/validate-content.ts", ...extra]),
     "validate-models": () => script("validate-models.mjs", extra),
     "check-model-release": () => script("check-model-release.mjs"),
+    generalization: () => script("evaluate-generalization.mjs", extra),
+    "prepare-errors": () =>
+        run(python(), [join(root, "training/train_errors.py"), "--prepare-features", ...extra]),
+    "check-classifier-features": () => script("check-classifier-features.mjs", extra),
+    "train-errors": () =>
+        run(python(), [join(root, "training/train_errors.py"), "--train", ...extra]),
+    "test-training": () =>
+        run(python(), [
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "training",
+            "-p",
+            "test_*.py",
+            ...extra,
+        ]),
+    "train-ranker": () => run(python(), [join(root, "training/train_ranker.py"), ...extra]),
+    "evaluate-baseline": () =>
+        run(python(), [join(root, "training/evaluate_baseline.py"), ...extra]),
+    "package-models": () => run(python(), [join(root, "training/package_models.py"), ...extra]),
+    "package-release-models": () => script("package-model-release.mjs", extra),
+    "evaluate-quantization": () =>
+        run(python(), [join(root, "training/evaluate_quantization.py"), ...extra]),
     release: async () => {
         await tasks.check();
         await tasks.content();
         await tasks["check-model-release"]();
         await tasks.build();
+        requireClassifierScoreParity(
+            join(root, "apps/web/public/models/weights/error-classifier.onnx"),
+        );
         await tasks["validate-models"]();
         await tasks.bundle();
         await tasks.browser();
+        await tasks.generalization();
     },
     bundle: () => script("check-bundle.mjs", extra),
     benchmark: () => tool("tsx", "tsx", ["scripts/benchmark.ts", ...extra]),
@@ -216,13 +295,17 @@ No command installs prerequisites implicitly. See docs/quickstart.md.`),
             ["ingest_ewt.py"],
             ["ingest_dictionary.py"],
             ["train_release.py", "--epochs", "12", "--parser-epochs", "6", ...extra],
-            ["train_errors.py"],
+            ["train_errors.py", "--prepare-features"],
+            ["check-classifier-features.mjs"],
+            ["train_errors.py", "--train"],
+            ["check-classifier-features.mjs", "--scores"],
             ["train_ranker.py"],
             ["evaluate_baseline.py"],
             ["package_models.py"],
             ["evaluate_quantization.py"],
         ])
-            await run(python(), [join(root, "training", name), ...args]);
+            if (name.endsWith(".mjs")) await script(name, args);
+            else await run(python(), [join(root, "training", name), ...args]);
     },
 };
 try {
