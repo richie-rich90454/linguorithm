@@ -1,4 +1,4 @@
-import { MAX_TEXT } from "@grammar/engine";
+import { MAX_TEXT } from "../../../packages/engine/src/domain";
 import { validateDocxArchive } from "./archive-safety";
 import { extractOfficeText } from "./office-import";
 
