@@ -169,7 +169,10 @@ export class LocalSyntaxRuntime {
             frequency: Record<string, number>;
         },
     ) {
-        this.tokenizer = new Tokenizer(new MorphologyAnalyzer(lexicon.forms));
+        this.tokenizer = new Tokenizer(
+            new MorphologyAnalyzer(lexicon.forms),
+            new Set(Object.keys(metadata.vocabulary)),
+        );
     }
     static async load(assetBase: string): Promise<LocalSyntaxRuntime> {
         const base = new URL("models/", assetBase);
