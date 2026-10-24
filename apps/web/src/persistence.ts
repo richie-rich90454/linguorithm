@@ -1,16 +1,17 @@
 import Dexie, { type EntityTable } from "dexie";
-import {
-    backupSchema,
-    MasteryModel,
-    type Attempt,
-    type Backup,
-    type DocumentRecord,
-    type Material,
-    type SkillState,
-    type Preference,
-    type Assessment,
-    type ModelRecord,
-} from "@grammar/engine";
+import { backupSchema } from "../../../packages/engine/src/domain";
+import type {
+    Attempt,
+    Backup,
+    DocumentRecord,
+    Material,
+    SkillState,
+    Preference,
+    Assessment,
+    ModelRecord,
+    AnalysisReport,
+} from "../../../packages/engine/src/domain";
+import { MasteryModel } from "../../../packages/engine/src/learning";
 
 const db = new Dexie("syntax-local") as Dexie & {
     documents: EntityTable<DocumentRecord, "id">;
@@ -25,7 +26,7 @@ const db = new Dexie("syntax-local") as Dexie & {
             id: string;
             documentId: string;
             revision: number;
-            report: import("@grammar/engine").AnalysisReport;
+            report: AnalysisReport;
             at: string;
         },
         "id"
