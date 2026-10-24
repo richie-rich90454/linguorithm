@@ -2,12 +2,56 @@
 
 import hashlib
 import json
+import math
 import re
 import shutil
 
 from onnxruntime.quantization import QuantType, quantize_dynamic
 from seal_manifests import main as seal_manifests
 from train_release import ROOT, write_json
+
+
+def require_classifier_score_parity(source, report_path):
+    """Reject unverified or changed classifier weights before packaging mutates assets."""
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        fixture_bytes = (source / "classifier-scores-parity.json").read_bytes()
+        fixture = json.loads(fixture_bytes)
+        weight_hash = hashlib.sha256(
+            (source / "error-classifier.onnx").read_bytes()
+        ).hexdigest()
+        difference = report.get("maximumDifference")
+        checked = report.get("checkedTokens")
+        valid = (
+            report.get("status") == "passed"
+            and report.get("weightSha256") == weight_hash
+            and fixture.get("weightSha256") == weight_hash
+            and report.get("scoreFixtureSha256")
+            == hashlib.sha256(fixture_bytes).hexdigest()
+            and type(checked) is int
+            and checked > 0
+            and report.get("tolerance") == 0.0001
+            and type(difference) in (int, float)
+            and math.isfinite(difference)
+            and 0 <= difference <= 0.0001
+        )
+    except (OSError, ValueError, TypeError, AttributeError) as error:
+        raise ValueError(
+            "Classifier browser score parity evidence is missing or invalid. "
+            'Run make check-classifier-features ARGS="--scores" before packaging.'
+        ) from error
+    if not valid:
+        raise ValueError(
+            "Classifier browser score parity failed or identifies stale weights/fixtures. "
+            'Run make check-classifier-features ARGS="--scores" before packaging.'
+        )
+    return report
+
+
+source = ROOT / "models/generated/ewt-1"
+classifier_score_parity = require_classifier_score_parity(
+    source, ROOT / "reports/classifier-score-parity.json"
+)
 
 # Verify dictionary inputs again at packaging time: ingestion may have happened
 # long before this release, and the packaged words must match their provenance.
@@ -23,13 +67,14 @@ for record in dictionary_provenance["files"]:
         raise ValueError(f"Dictionary hash changed: {target.name}")
 
 seal_manifests()
-source = ROOT / "models/generated/ewt-1"
 destination = ROOT / "apps/web/public/models"
 weights = destination / "weights"
 weights.mkdir(parents=True, exist_ok=True)
 licenses = destination / "licenses"
 licenses.mkdir(exist_ok=True)
-shutil.copy2(ROOT / "models/licenses/onnxruntime-MIT.txt", licenses / "onnxruntime-MIT.txt")
+shutil.copy2(
+    ROOT / "models/licenses/onnxruntime-MIT.txt", licenses / "onnxruntime-MIT.txt"
+)
 tagger = json.loads((source / "tagger-manifest.json").read_text(encoding="utf-8"))
 parser = json.loads((source / "parser-manifest.json").read_text(encoding="utf-8"))
 if (
@@ -37,7 +82,7 @@ if (
     or parser["evaluation"]["uas"] < 0.80
 ):
     raise ValueError(
-        "Syntax models failed the declared minimum held-out accuracy thresholds."
+        "The syntax model bundle failed the declared minimum held-out accuracy thresholds."
     )
 for model in ["tagger", "parser", "error-classifier"]:
     shutil.copy2(source / f"{model}.onnx", weights / f"{model}.onnx")
@@ -155,7 +200,7 @@ registry = {
     "contextual": resource("contextual.json"),
     "classifier": resource("classifier-manifest.json"),
     "dictionary": resource("dictionary.json"),
-    "policy": "Syntax passed EWT accuracy and Python/ONNX parity gates. Grammar classifier calibrated on synthetic EWT mutations only; review-only until independent learner-essay validation.",
+    "policy": "Linguorithm's syntax model passed EWT accuracy and Python/ONNX parity gates. The grammar classifier is calibrated on synthetic EWT mutations only and remains review-only until independent learner-essay validation.",
 }
 write_json(destination / "registry.json", registry)
 write_json(
@@ -174,6 +219,7 @@ write_json(
     ROOT / "reports/model-packaging.json",
     {
         "dictionaryForms": len(words),
+        "classifierBrowserScoreParity": classifier_score_parity,
         "resources": registry,
         "quantization": {
             name: {
