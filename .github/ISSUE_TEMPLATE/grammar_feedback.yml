@@ -1,0 +1,45 @@
+name: Grammar or practice feedback
+description: Improve a grammar finding, sentence analysis, or practice answer.
+title: "[Grammar] "
+body:
+    - type: markdown
+      attributes:
+          value: "Use invented examples only. Do not include essays, student records, or private documents. Alternative grammatical readings are welcome."
+    - type: dropdown
+      id: area
+      attributes:
+          label: Affected area
+          options:
+              - Essay finding or suggested correction
+              - Sentence analysis
+              - Practice question, hint, or answer
+      validations:
+          required: true
+    - type: textarea
+      id: example
+      attributes:
+          label: Minimal example and intended meaning
+          description: Include a short invented sentence or the practice question identifier and explain its intended reading.
+      validations:
+          required: true
+    - type: textarea
+      id: result
+      attributes:
+          label: Current result and expected result
+          description: Include the highlighted words, proposed correction, analysis, or answer that needs review.
+      validations:
+          required: true
+    - type: textarea
+      id: reasoning
+      attributes:
+          label: Grammatical explanation or reference
+          description: Explain why the result is questionable, including plausible alternative readings. Link a reliable reference if available.
+      validations:
+          required: true
+    - type: textarea
+      id: environment
+      attributes:
+          label: Revision and analysis status
+          description: Include the revision, browser/version, and visible model/fallback status where relevant.
+      validations:
+          required: true
