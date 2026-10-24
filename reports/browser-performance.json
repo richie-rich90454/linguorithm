@@ -1,72 +1,157 @@
 {
-    "words": 2505,
-    "sentences": 167,
-    "samples": [
-        {
-            "roundtripMs": 1101.9000000953674,
-            "engineMs": 599,
-            "diagnostics": 0
+    "desktop": {
+        "words": 2505,
+        "sentences": 167,
+        "samples": [
+            {
+                "roundtripMs": 1214.7000002861023,
+                "engineMs": 670.8999996185303,
+                "diagnostics": 0
+            },
+            {
+                "roundtripMs": 33.40000009536743,
+                "engineMs": 26.40000009536743,
+                "diagnostics": 0
+            },
+            {
+                "roundtripMs": 30.59999990463257,
+                "engineMs": 20.800000190734863,
+                "diagnostics": 0
+            },
+            {
+                "roundtripMs": 17.299999713897705,
+                "engineMs": 13.200000286102295,
+                "diagnostics": 0
+            },
+            {
+                "roundtripMs": 18.300000190734863,
+                "engineMs": 14.099999904632568,
+                "diagnostics": 0
+            },
+            {
+                "roundtripMs": 17,
+                "engineMs": 11.700000286102295,
+                "diagnostics": 0
+            },
+            {
+                "roundtripMs": 16.59999990463257,
+                "engineMs": 12.600000381469727,
+                "diagnostics": 0
+            },
+            {
+                "roundtripMs": 16.300000190734863,
+                "engineMs": 12.5,
+                "diagnostics": 0
+            },
+            {
+                "roundtripMs": 16.5,
+                "engineMs": 12.599999904632568,
+                "diagnostics": 0
+            },
+            {
+                "roundtripMs": 15.699999809265137,
+                "engineMs": 11.699999809265137,
+                "diagnostics": 0
+            },
+            {
+                "roundtripMs": 15.900000095367432,
+                "engineMs": 11.299999713897705,
+                "diagnostics": 0
+            }
+        ],
+        "coldWorkerMs": 1214.7000002861023,
+        "warmMs": {
+            "p50": 17,
+            "p95": 33.40000009536743
         },
-        {
-            "roundtripMs": 18.799999952316284,
-            "engineMs": 14.200000047683716,
-            "diagnostics": 0
+        "domInteractiveMs": 22.59999990463257,
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+        "sampledPageHeapBytes": 14300000,
+        "profile": "desktop Chromium",
+        "viewport": {
+            "width": 1280,
+            "height": 800
         },
-        {
-            "roundtripMs": 18.09999990463257,
-            "engineMs": 13.799999952316284,
-            "diagnostics": 0
-        },
-        {
-            "roundtripMs": 19,
-            "engineMs": 15.399999856948853,
-            "diagnostics": 0
-        },
-        {
-            "roundtripMs": 19.5,
-            "engineMs": 13.299999952316284,
-            "diagnostics": 0
-        },
-        {
-            "roundtripMs": 20.300000190734863,
-            "engineMs": 16.799999952316284,
-            "diagnostics": 0
-        },
-        {
-            "roundtripMs": 17.299999952316284,
-            "engineMs": 13.399999856948853,
-            "diagnostics": 0
-        },
-        {
-            "roundtripMs": 13.700000047683716,
-            "engineMs": 9.799999952316284,
-            "diagnostics": 0
-        },
-        {
-            "roundtripMs": 14.200000047683716,
-            "engineMs": 10,
-            "diagnostics": 0
-        },
-        {
-            "roundtripMs": 16,
-            "engineMs": 11.899999856948853,
-            "diagnostics": 0
-        },
-        {
-            "roundtripMs": 16.700000047683716,
-            "engineMs": 12.900000095367432,
-            "diagnostics": 0
-        }
-    ],
-    "coldWorkerMs": 1101.9000000953674,
-    "warmMs": {
-        "p50": 18.09999990463257,
-        "p95": 20.300000190734863
+        "deviceScaleFactor": 1,
+        "mobileEmulation": false
     },
-    "domInteractiveMs": 29.200000047683716,
-    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
-    "sampledPageHeapBytes": 15200000,
+    "mobile": {
+        "words": 2505,
+        "sentences": 167,
+        "samples": [
+            {
+                "roundtripMs": 1086.9000000953674,
+                "engineMs": 586.9000000953674,
+                "diagnostics": 0
+            },
+            {
+                "roundtripMs": 28.5,
+                "engineMs": 23.5,
+                "diagnostics": 0
+            },
+            {
+                "roundtripMs": 23.600000381469727,
+                "engineMs": 15.599999904632568,
+                "diagnostics": 0
+            },
+            {
+                "roundtripMs": 17.699999809265137,
+                "engineMs": 13.200000286102295,
+                "diagnostics": 0
+            },
+            {
+                "roundtripMs": 16.59999990463257,
+                "engineMs": 12.700000286102295,
+                "diagnostics": 0
+            },
+            {
+                "roundtripMs": 17.300000190734863,
+                "engineMs": 12.600000381469727,
+                "diagnostics": 0
+            },
+            {
+                "roundtripMs": 14.699999809265137,
+                "engineMs": 11,
+                "diagnostics": 0
+            },
+            {
+                "roundtripMs": 15,
+                "engineMs": 11.199999809265137,
+                "diagnostics": 0
+            },
+            {
+                "roundtripMs": 15.900000095367432,
+                "engineMs": 12.200000286102295,
+                "diagnostics": 0
+            },
+            {
+                "roundtripMs": 17.199999809265137,
+                "engineMs": 13.400000095367432,
+                "diagnostics": 0
+            },
+            {
+                "roundtripMs": 15.400000095367432,
+                "engineMs": 11.599999904632568,
+                "diagnostics": 0
+            }
+        ],
+        "coldWorkerMs": 1086.9000000953674,
+        "warmMs": {
+            "p50": 17.199999809265137,
+            "p95": 28.5
+        },
+        "domInteractiveMs": 22.899999618530273,
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+        "sampledPageHeapBytes": 14300000,
+        "profile": "mobile Chromium emulation",
+        "viewport": {
+            "width": 390,
+            "height": 844
+        },
+        "deviceScaleFactor": 2,
+        "mobileEmulation": true
+    },
     "cpu": "Intel(R) Core(TM) Ultra 7 255H",
     "platform": "win32",
-    "limitations": "Synthetic distinct numbered paragraphs on local desktop Chromium; ten warm samples; cold includes model initialization from local cache; DOM interactive excludes full model readiness; page heap sample excludes worker/WASM/native memory and is not peak; physical phone/connection performance unmeasured"
+    "limitations": "Synthetic distinct numbered paragraphs on desktop Chromium and mobile Chromium emulation; ten warm samples per profile; cold includes local model initialization; DOM interactive excludes full model readiness; page heap sample excludes worker/WASM/native memory and is not peak; physical phone/connection performance unmeasured"
 }
