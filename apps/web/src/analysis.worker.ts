@@ -1,4 +1,9 @@
-import { createPipeline, HybridAnalysisPipeline, type AnalysisReport } from "@grammar/engine";
+import {
+    createPipeline,
+    HybridAnalysisPipeline,
+    type AnalysisReport,
+    type WritingIntent,
+} from "@grammar/engine";
 import { LocalSyntaxRuntime } from "./local-syntax";
 
 const fallback = createPipeline();
@@ -24,6 +29,7 @@ self.onmessage = async (
         text: string;
         revision: number;
         style: boolean;
+        writingIntent?: WritingIntent;
         assetBase?: string;
         models?: boolean;
         personalDictionary?: string[];
@@ -36,6 +42,7 @@ self.onmessage = async (
         text,
         revision,
         style,
+        writingIntent = "general",
         models = true,
         assetBase = new URL("../", self.location.href).href,
         personalDictionary = [],
@@ -67,10 +74,12 @@ self.onmessage = async (
                 hybrid ??= loadRuntime(assetBase).then(
                     (model) => new HybridAnalysisPipeline(model),
                 );
-                report = await (await hybrid).analyze(text, revision, style, personalDictionary);
+                report = await (
+                    await hybrid
+                ).analyze(text, revision, style, personalDictionary, writingIntent);
             } catch (error) {
                 report = {
-                    ...fallback.analyze(text, revision, style),
+                    ...fallback.analyze(text, revision, style, writingIntent),
                     modelStatus: {
                         state: "unavailable",
                         detail:
@@ -83,7 +92,7 @@ self.onmessage = async (
             }
         } else
             report = {
-                ...fallback.analyze(text, revision, style),
+                ...fallback.analyze(text, revision, style, writingIntent),
                 modelStatus: {
                     state: "disabled",
                     detail: "Advanced local models are disabled by preference.",
