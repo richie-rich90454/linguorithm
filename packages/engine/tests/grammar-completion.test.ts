@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
-import { advancedRules, documentRelationships } from "../src/advanced-grammar";
+import { createAdvancedRules, documentRelationships } from "../src/advanced-grammar";
+import { PastParticipleInflections, PresentVerbInflections } from "../src/inflections";
 import { DiagnosticResolver, finding, GrammarConstraintEngine } from "../src/grammar";
 import { EssayDocument, type Morphology, type Sentence } from "../src/domain";
 import { createPipeline } from "../src/pipeline";
@@ -33,14 +34,278 @@ function parsed(text: string, edges: readonly Edge[], forms: Forms = {}, offset 
         syntaxSource: "neural",
     };
 }
-const constraints = new GrammarConstraintEngine(advancedRules);
+const observedForms: Forms = {
+    walk: {
+        lemma: "walk",
+        pos: "VERB",
+        finite: true,
+        verbForm: "Fin",
+        tense: "Pres",
+        number: "plural",
+        person: 3,
+    },
+    walks: {
+        lemma: "walk",
+        pos: "VERB",
+        finite: true,
+        verbForm: "Fin",
+        tense: "Pres",
+        number: "singular",
+        person: 3,
+    },
+};
+const constraints = new GrammarConstraintEngine(
+    createAdvancedRules(
+        new PresentVerbInflections(
+            Object.fromEntries(Object.entries(observedForms).map(([word, form]) => [word, [form]])),
+        ),
+    ),
+);
+const contextualAgreementForms: Record<string, Morphology[]> = {
+    walk: [
+        {
+            lemma: "walk",
+            pos: "VERB",
+            finite: true,
+            verbForm: "Fin",
+            tense: "Pres",
+            number: "plural",
+            person: 3,
+        },
+        { lemma: "walk", pos: "VERB", finite: false, verbForm: "Inf" },
+    ],
+    walks: [
+        {
+            lemma: "walk",
+            pos: "VERB",
+            finite: true,
+            verbForm: "Fin",
+            tense: "Pres",
+            number: "singular",
+            person: 3,
+        },
+    ],
+};
+const contextualAgreementConstraints = new GrammarConstraintEngine(
+    createAdvancedRules(new PresentVerbInflections(contextualAgreementForms)),
+);
 const diagnostics = (s: Sentence, rule: string) =>
     constraints.evaluate(s).filter((d) => d.ruleId === rule);
+const participleForms: Record<string, readonly Morphology[]> = {
+    chose: [{ lemma: "choose", pos: "VERB", finite: true, verbForm: "Fin", tense: "Past" }],
+    chosen: [{ lemma: "choose", pos: "VERB", finite: false, verbForm: "Part", tense: "Past" }],
+    drove: [{ lemma: "drive", pos: "VERB", finite: true, verbForm: "Fin", tense: "Past" }],
+    driven: [{ lemma: "drive", pos: "VERB", finite: false, verbForm: "Part", tense: "Past" }],
+    has: [{ lemma: "have", pos: "AUX", finite: true, verbForm: "Fin", tense: "Pres" }],
+    had: [{ lemma: "have", pos: "AUX", finite: true, verbForm: "Fin", tense: "Past" }],
+};
+const perfectFormConstraints = new GrammarConstraintEngine(
+    createAdvancedRules(
+        new PresentVerbInflections(participleForms),
+        new PastParticipleInflections(participleForms),
+    ),
+);
+const perfectFormDiagnostics = (s: Sentence) =>
+    perfectFormConstraints.evaluate(s).filter((d) => d.ruleId === "neural-perfect-form");
 const verb = (lemma: string): Morphology => ({ lemma, pos: "VERB", finite: true, verbForm: "Fin" });
 const noun = (lemma: string, number: "singular" | "plural" = "singular"): Morphology => ({
     lemma,
     pos: "NOUN",
     number,
+});
+
+describe("corpus-derived perfect verb forms", () => {
+    it.each([
+        ["The curator has chose a different portrait.", "chose", "has", "chosen"],
+        ["The engineers had drove beyond the ridge.", "drove", "had", "driven"],
+    ])("uses an observed unique participle for %s", (text, source, auxiliary, expected) => {
+        const forms = {
+            [source]: participleForms[source]![0]!,
+            [auxiliary]: participleForms[auxiliary]![0]!,
+        };
+        const issue = perfectFormDiagnostics(parsed(text, [[source, auxiliary, "aux"]], forms))[0];
+        expect(issue?.proposals[0]?.edits.map((edit) => edit.replacement)).toEqual([expected]);
+        expect(issue?.certainty).toBe("Possible issue");
+    });
+
+    it("abstains when the source is already an attested participle or the lemma is unseen", () => {
+        const correct = parsed("The curator has chosen a portrait.", [["chosen", "has", "aux"]], {
+            has: participleForms.has![0]!,
+            chosen: participleForms.chosen![0]!,
+        });
+        const unseen = parsed("The curator has quirked a portrait.", [["quirked", "has", "aux"]]);
+        expect(perfectFormDiagnostics(correct)).toEqual([]);
+        expect(perfectFormDiagnostics(unseen)).toEqual([]);
+    });
+});
+
+describe("contextually disambiguated present agreement", () => {
+    it.each([
+        ["She walk every morning.", "walks"],
+        ["she walk every morning.", "walks"],
+        ["SHE WALK EVERY MORNING.", "WALKS"],
+    ])("uses the neural subject edge to resolve the base-form ambiguity in %s", (text, target) => {
+        const sentence = parsed(
+            text,
+            [["walk", text.toLowerCase().includes("she") ? "she" : "SHE", "nsubj"]],
+            {
+                she: noun("she"),
+                walk: contextualAgreementForms.walk![0]!,
+            },
+        );
+        const issue = contextualAgreementConstraints
+            .evaluate(sentence)
+            .find((diagnostic) => diagnostic.ruleId === "neural-agreement");
+        expect(issue?.proposals[0]?.edits.map((edit) => edit.replacement)).toEqual([target]);
+    });
+
+    it("does not flag a plural subject using the ambiguous base form", () => {
+        const sentence = parsed("Students walk every morning.", [["walk", "students", "nsubj"]], {
+            students: noun("student", "plural"),
+            walk: contextualAgreementForms.walk![0]!,
+        });
+        expect(
+            contextualAgreementConstraints
+                .evaluate(sentence)
+                .some((diagnostic) => diagnostic.ruleId === "neural-agreement"),
+        ).toBe(false);
+    });
+
+    it("checks an unquoted clause despite an unrelated modal in the same sentence", () => {
+        const sentence = parsed(
+            "Darla are amazing, although Morgan would disagree.",
+            [
+                ["amazing", "Darla", "nsubj"],
+                ["amazing", "are", "cop"],
+                ["amazing", "amazing", "root"],
+                ["disagree", "Morgan", "nsubj"],
+                ["disagree", "would", "aux"],
+                ["disagree", "disagree", "root"],
+                ["amazing", "disagree", "advcl"],
+            ],
+            {
+                Darla: { lemma: "Darla", pos: "PROPN" },
+                are: { lemma: "be", pos: "AUX", finite: true, verbForm: "Fin", tense: "Pres" },
+                Morgan: { lemma: "Morgan", pos: "PROPN" },
+                would: { lemma: "will", pos: "AUX", finite: true, verbForm: "Fin", tense: "Past" },
+                disagree: { lemma: "disagree", pos: "VERB", finite: true, verbForm: "Fin" },
+                amazing: { lemma: "amazing", pos: "ADJ" },
+            },
+        );
+        const issues = contextualAgreementConstraints
+            .evaluate(sentence)
+            .filter((diagnostic) => diagnostic.ruleId === "neural-agreement");
+        expect(issues).toHaveLength(1);
+        expect(issues[0]?.proposals[0]?.edits[0]?.expected).toBe("are");
+        expect(issues[0]?.proposals[0]?.edits[0]?.replacement).toBe("is");
+    });
+
+    it("keeps subjunctive were in local if and wish clauses while checking quoted neighbors", () => {
+        const conditional = parsed(
+            "If I were there, Morgan would help.",
+            [
+                ["were", "I", "nsubj"],
+                ["were", "If", "mark"],
+                ["were", "were", "root"],
+                ["help", "Morgan", "nsubj"],
+                ["help", "would", "aux"],
+                ["help", "help", "root"],
+                ["were", "help", "advcl"],
+            ],
+            {
+                I: { lemma: "I", pos: "PRON", number: "singular" },
+                were: { lemma: "be", pos: "AUX", finite: true, verbForm: "Fin", tense: "Past" },
+                Morgan: { lemma: "Morgan", pos: "PROPN" },
+                would: { lemma: "will", pos: "AUX", finite: true, verbForm: "Fin", tense: "Past" },
+                help: { lemma: "help", pos: "VERB", finite: false, verbForm: "Inf" },
+            },
+        );
+        expect(
+            contextualAgreementConstraints
+                .evaluate(conditional)
+                .some((diagnostic) => diagnostic.ruleId === "neural-agreement"),
+        ).toBe(false);
+
+        const quoted = parsed(
+            "“Darla are amazing,” the guests is delighted.",
+            [
+                ["amazing", "Darla", "nsubj"],
+                ["amazing", "are", "cop"],
+                ["amazing", "amazing", "root"],
+                ["delighted", "guests", "nsubj"],
+                ["delighted", "is", "cop"],
+                ["delighted", "delighted", "root"],
+                ["amazing", "delighted", "conj"],
+            ],
+            {
+                Darla: { lemma: "Darla", pos: "PROPN" },
+                are: { lemma: "be", pos: "AUX", finite: true, verbForm: "Fin", tense: "Pres" },
+                guests: { lemma: "guest", pos: "NOUN", number: "plural" },
+                is: { lemma: "be", pos: "AUX", finite: true, verbForm: "Fin", tense: "Pres" },
+                amazing: { lemma: "amazing", pos: "ADJ" },
+                delighted: { lemma: "delighted", pos: "ADJ" },
+            },
+        );
+        const issues = contextualAgreementConstraints
+            .evaluate(quoted)
+            .filter((diagnostic) => diagnostic.ruleId === "neural-agreement");
+        expect(issues).toHaveLength(1);
+        expect(issues[0]?.proposals[0]?.edits[0]?.expected).toBe("is");
+        expect(issues[0]?.proposals[0]?.edits[0]?.replacement).toBe("are");
+    });
+
+    it.each([
+        [
+            "The archivist scrutinize each manuscript carefully.",
+            "archivist",
+            "archivist",
+            "scrutinize",
+            "scrutinizes",
+            "scrutinize",
+        ],
+        ["The student study every afternoon.", "student", "student", "study", "studies", "study"],
+        ["The watchman watch the entrance.", "watchman", "watchman", "watch", "watches", "watch"],
+        [
+            "The geologists examines each sample.",
+            "geologists",
+            "geologist",
+            "examines",
+            "examine",
+            "examine",
+        ],
+    ])(
+        "uses productive morphology with the parsed subject in %s",
+        (text, subject, subjectLemma, source, target, verbLemma) => {
+            const words = new Set([
+                "examine",
+                "examines",
+                "scrutinize",
+                "scrutinizes",
+                "study",
+                "studies",
+                "watch",
+                "watches",
+            ]);
+            const constraints = new GrammarConstraintEngine(
+                createAdvancedRules(new PresentVerbInflections({}, (word) => words.has(word))),
+            );
+            const sentence = parsed(
+                text,
+                [
+                    [source!, subject!, "nsubj"],
+                    [source!, source!, "root"],
+                ],
+                {
+                    [subject!.toLowerCase()]: { lemma: subjectLemma!.toLowerCase(), pos: "NOUN" },
+                    [source!.toLowerCase()]: { lemma: verbLemma!.toLowerCase(), pos: "VERB" },
+                },
+            );
+            const issue = constraints
+                .evaluate(sentence)
+                .find((diagnostic) => diagnostic.ruleId === "neural-agreement");
+            expect(issue?.proposals[0]?.edits[0]?.replacement).toBe(target);
+        },
+    );
 });
 
 describe("finite punctuation and usage constructions", () => {
@@ -154,8 +419,8 @@ describe("parsed subject and finite agreement constraints", () => {
             const edges: Edge[] = [[predicate!, subject!, "nsubj"]];
             if (predicate !== finiteWord) edges.push([predicate!, finiteWord!, "cop"]);
             expect(
-                diagnostics(parsed(text!, edges), "neural-agreement")[0]!.proposals[0]!.edits[0]!
-                    .replacement,
+                diagnostics(parsed(text!, edges, observedForms), "neural-agreement")[0]!
+                    .proposals[0]!.edits[0]!.replacement,
             ).toBe(correction);
         },
     );
