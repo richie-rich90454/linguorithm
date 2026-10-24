@@ -948,10 +948,16 @@ const intentMap: Record<GoalIntent, WritingIntent> = {
 
 const implementedGoalSlugs = new Set([
     "agreement",
+    "apostrophe",
     "articles",
     "comparison",
     "colons",
+    "capitals",
+    "boundaries",
+    "commas",
+    "contractions",
     "concision",
+    "endmarks",
     "fragments",
     "homophones",
     "introductory-comma",
@@ -960,11 +966,13 @@ const implementedGoalSlugs = new Set([
     "parallelism",
     "possessive",
     "pronouns",
+    "spacing",
     "quotes",
     "revision",
     "runons",
     "semicolons",
     "spelling",
+    "sentence",
     "tense",
 ]);
 const practiceSkillByGoal: Readonly<Record<string, SkillId>> = {
