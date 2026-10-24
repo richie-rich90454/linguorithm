@@ -61,6 +61,59 @@ db.version(2)
         await transaction.table("attempts").bulkPut(attempts);
     });
 export { db };
+// Explicit factual definitions support source recall, not evidence of grammar skill.
+// This identity is also available on older attempts imported from backups.
+export function contributesToGrammarMastery(exerciseId: string): boolean {
+    return !/^material:.*:explicit:\d+$/u.test(exerciseId);
+}
+async function replayGrammarMastery(
+    allAttempts: readonly Attempt[],
+    repairFactualOnly = false,
+): Promise<void> {
+    const mastery = new MasteryModel();
+    const replay = new Map<string, SkillState>();
+    const practiceCounts = new Map<string, number>();
+    const factualSkills = new Set<SkillState["skill"]>();
+    for (const attempt of allAttempts.filter((a) => (a.phase ?? "practice") === "practice")) {
+        practiceCounts.set(attempt.skill, (practiceCounts.get(attempt.skill) ?? 0) + 1);
+        if (!contributesToGrammarMastery(attempt.exerciseId)) factualSkills.add(attempt.skill);
+        else
+            replay.set(
+                attempt.skill,
+                mastery.update(
+                    replay.get(attempt.skill) ??
+                        mastery.initial(attempt.skill, new Date(attempt.at)),
+                    attempt,
+                ),
+            );
+    }
+    for (const state of replay.values()) {
+        if (repairFactualOnly && !factualSkills.has(state.skill)) continue;
+        const local = await db.skills.get(state.skill);
+        if (
+            !local ||
+            state.attempts >= local.attempts ||
+            (factualSkills.has(state.skill) &&
+                (practiceCounts.get(state.skill) ?? 0) >= local.attempts)
+        )
+            await db.skills.put(state);
+    }
+    // Older data may include grammar estimates derived from factual recall.
+    // Repair them when the recorded history fully accounts for their attempts.
+    for (const skill of factualSkills) {
+        if (replay.has(skill)) continue;
+        const local = await db.skills.get(skill);
+        if (local && (practiceCounts.get(skill) ?? 0) >= local.attempts)
+            await db.skills.delete(local.skill);
+    }
+}
+export async function reconcileGrammarMastery(): Promise<void> {
+    await db.transaction("rw", [db.skills, db.attempts], async () => {
+        const attempts = await db.attempts.toArray();
+        attempts.sort((a, b) => Date.parse(a.at) - Date.parse(b.at) || a.id.localeCompare(b.id));
+        await replayGrammarMastery(attempts, true);
+    });
+}
 export async function saveDocument(record: DocumentRecord): Promise<void> {
     await db.transaction("rw", db.documents, async () => {
         const saved = await db.documents.get(record.id);
@@ -198,21 +251,7 @@ export async function restoreBackup(raw: unknown): Promise<void> {
                 attempt.phase ??= "practice";
             }
             await db.attempts.bulkPut(allAttempts);
-            const mastery = new MasteryModel();
-            const replay = new Map<string, SkillState>();
-            for (const attempt of allAttempts.filter((a) => a.phase === "practice"))
-                replay.set(
-                    attempt.skill,
-                    mastery.update(
-                        replay.get(attempt.skill) ??
-                            mastery.initial(attempt.skill, new Date(attempt.at)),
-                        attempt,
-                    ),
-                );
-            for (const state of replay.values()) {
-                const local = await db.skills.get(state.skill);
-                if (!local || state.attempts >= local.attempts) await db.skills.put(state);
-            }
+            await replayGrammarMastery(allAttempts);
             for (const preference of data.preferences ?? []) {
                 const local = await db.preferences.get(preference.key);
                 if (!local || Date.parse(preference.updatedAt) > Date.parse(local.updatedAt))
