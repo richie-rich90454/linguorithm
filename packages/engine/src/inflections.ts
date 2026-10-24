@@ -3,6 +3,29 @@ import type { Morphology, Token } from "./domain";
 type Number = "singular" | "plural";
 type Forms = Readonly<Record<string, readonly Morphology[]>>;
 
+/** Learns countable noun lemmas from observed plural forms in the local training lexicon. */
+export class CountNounInflections {
+    private readonly countableLemmas = new Set<string>();
+
+    constructor(forms: Forms) {
+        for (const analyses of Object.values(forms))
+            for (const analysis of analyses)
+                if (analysis.pos === "NOUN" && analysis.number === "plural")
+                    this.countableLemmas.add(analysis.lemma.toLowerCase());
+    }
+
+    supports(token: Token): boolean {
+        return (
+            token.pos === "NOUN" &&
+            token.analyses.some(
+                (analysis) =>
+                    analysis.pos === "NOUN" &&
+                    this.countableLemmas.has(analysis.lemma.toLowerCase()),
+            )
+        );
+    }
+}
+
 function verbAnalyses(analyses: readonly Morphology[]): readonly Morphology[] {
     return analyses.filter((analysis) => analysis.pos === "VERB" || analysis.pos === "AUX");
 }
