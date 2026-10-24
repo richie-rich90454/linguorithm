@@ -6,6 +6,7 @@ import random
 from collections import Counter, defaultdict
 
 import numpy as np
+from ewt_splits import verified_splits
 from sklearn.linear_model import LogisticRegression
 from train_release import ROOT, SEED, read_corpus, write_json
 
@@ -14,14 +15,7 @@ def main():
     random.seed(SEED)
     out = ROOT / "models/generated/ewt-1"
     contextual = json.loads((out / "contextual.json").read_text(encoding="utf-8"))
-    splits = {
-        name: read_corpus(ROOT / f"training/datasets/raw/ewt/en_ewt-ud-{name}.conllu")
-        for name in ["train", "dev", "test"]
-    }
-    seen = {tuple(r["tokens"]) for r in splits["train"]}
-    for name in ["dev", "test"]:
-        splits[name] = [r for r in splits[name] if tuple(r["tokens"]) not in seen]
-        seen.update(tuple(r["tokens"]) for r in splits[name])
+    splits, provenance = verified_splits(ROOT, read_corpus)
     bigrams = Counter(
         (a.lower(), b.lower())
         for row in splits["train"]
@@ -128,6 +122,8 @@ def main():
         ROOT / "reports/ranker-evaluation.json",
         {
             "seed": SEED,
+            **provenance,
+            "splitPolicy": "Official splits; exact token sequences and document groups excluded against earlier splits; train-only fit, no test tuning",
             "metrics": metrics,
             "smoothing": "Interpolated absolute-discount Kneser-Ney bigram",
             "discount": discount,
