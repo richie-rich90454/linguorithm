@@ -33,6 +33,7 @@ export const goalByRule: Readonly<Record<string, readonly string[]>> = {
     "colon-complement": ["writing.colons"],
     "semicolon-shared-subject": ["writing.semicolons"],
     "document-tense": ["writing.tense"],
+    "gerund-complement": ["writing.gerunds"],
 };
 
 export const detectableGoalIds: ReadonlySet<string> = new Set(Object.values(goalByRule).flat());
