@@ -30,6 +30,7 @@ test("pretest resumes and completed assessment is isolated from mastery", async 
     await page.getByRole("button", { name: "pretest · Start or resume", exact: true }).click();
     await page.getByRole("radio").first().check();
     await page.getByRole("button", { name: "Check my reasoning" }).click();
+    await expect(page.locator(".answer-feedback")).toBeVisible();
     await page.reload();
     await page.getByRole("button", { name: "Your progress" }).click();
     await page.getByText("Measure retention and transfer", { exact: true }).click();
