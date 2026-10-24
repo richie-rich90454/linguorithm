@@ -31,25 +31,25 @@ pnpm-lock.yaml|build|dependencies|lock workspace dependency resolution|Record re
 pnpm-workspace.yaml|build|workspace|define package boundaries and installation policy|Connect the web application and engine packages without automatically reinstalling dependencies during tasks.
 tsconfig.json|build|typescript|establish shared TypeScript compiler settings|Provide the common type-checking contract inherited by workspace packages.
 playwright.config.ts|test|browser|configure cross-browser application verification|Define browser projects, test execution settings, and the application server contract used by end-to-end checks.
-README.md|docs|readme|introduce Syntax with evidence and reproducible setup|Present the product, interface screenshots, local-first workflow, measured capabilities, and contribution entry points without unsupported quality claims.
+README.md|docs|readme|introduce Linguorithm and guide writers to evidence and contribution paths|Describe Linguorithm as an English grammar checker and sentence analyzer, add audience-specific routes through the documentation, and invite concrete demonstrations and language feedback without unsupported claims or fabricated badges.
 LICENSE|docs|license|license project source under MIT|Record the user-selected MIT license while leaving third-party model, corpus, dictionary, and font notices separate.
 CHANGELOG.md|docs|community|document the initial platform release|Describe the delivered capabilities and release scope for readers evaluating the project history.
 CODE_OF_CONDUCT.md|docs|community|establish contributor conduct expectations|Define respectful participation and reporting guidance for the project community.
 CONTRIBUTING.md|docs|community|explain contribution and verification workflows|Describe local setup, contribution boundaries, and checks expected before proposing changes.
 SECURITY.md|docs|security|document vulnerability reporting and trust boundaries|Explain security reporting expectations and the application's handling of local documents and imported content.
 SUPPORT.md|docs|community|explain support requests and diagnostic context|Help users distinguish support questions from defects and provide useful reproducible information.
-apps/web/src/App.tsx|feat|web|integrate navigation documents settings and local restore|Connect the application views, document lifecycle, persisted preferences, assessments, and bounded backup restoration.
+apps/web/src/App.tsx|fix|web|preserve learning sessions and cancel stale essay analysis|Keep Practice mounted across navigation, cancel previous-document analysis before opening a blank essay, reconcile historical factual mastery before initial state loads, and guard asynchronous assessment updates against switching sessions. Exclude factual recall from grammar mastery and include all settings fields in the keyboard focus loop.
 apps/web/src/EssayLab.tsx|feat|editor|provide revision-aware essay analysis and corrections|Render the writing workspace, source-linked findings, correction review, and analysis controls around the current document revision.
 apps/web/src/Workbench.tsx|feat|syntax|render inspectable sentence relationships|Expose token-level syntax, labeled dependency arcs, parse alternatives, and sentence inspection controls.
-apps/web/src/Practice.tsx|feat|learning|deliver adaptive practice and assessment sessions|Present skill practice, answer feedback, source-linked exercises, and assessment flows while withholding answers before submission.
-apps/web/src/Progress.tsx|feat|progress|present learning history and portable progress|Show recorded skill evidence and learning activity with export and restoration controls.
+apps/web/src/Practice.tsx|fix|learning|ignore answer completion after the active question changes|Guard the asynchronous submission result with the original question identity so a completed write cannot mark a different question as answered or change its session feedback.
+apps/web/src/Progress.tsx|fix|progress|exclude factual recall from independent grammar accuracy|Keep imported factual-question attempts visible in history while excluding them from the first-attempt, unhinted grammar accuracy summary because they do not measure grammar ability.
 apps/web/src/styles.css|style|web|establish the professional editorial interface|Define Noto Sans typography, restrained functional colors, responsive workspaces, accessible controls, and bounded desktop reading panes.
 apps/web/src/icons.tsx|feat|web|provide a consistent interface icon vocabulary|Supply reusable vector icons for navigation and application actions within the established visual language.
 apps/web/src/main.tsx|feat|web|mount the Solid application and offline integration|Connect the application entry point, global styles, and production browser lifecycle.
 apps/web/src/env.d.ts|build|web|declare browser build environment types|Provide compile-time declarations needed by the Vite application and asset imports.
 apps/web/src/analysis.worker.ts|feat|analysis|isolate grammar analysis in a browser worker|Move analysis work off the interface thread and exchange typed requests and results with the application.
 apps/web/src/local-syntax.ts|feat|models|load and verify local neural syntax resources|Validate model hashes and compatibility, run local inference, and support bounded verified caching with retry after failed downloads.
-apps/web/src/persistence.ts|feat|storage|persist documents learning evidence and bounded backups|Manage Dexie schema evolution, chronological merges, capacity limits, and transactional local state restoration.
+apps/web/src/persistence.ts|fix|storage|reconcile grammar mastery without factual quiz evidence|Identify factual source-recall attempts from their persisted exercise identities and share chronological mastery replay between startup and backup restore. Repair contaminated cached estimates when the available history accounts for them while retaining attempt records and incomplete historical snapshots.
 apps/web/src/import.ts|feat|import|extract local learning materials from supported documents|Normalize supported text and document formats while preserving bounded import behavior and safe source references.
 apps/web/src/office-import.ts|feat|import|read ordered presentation and spreadsheet content|Extract slide and sheet text from OOXML without executing formulas, macros, external links, or active document content.
 apps/web/src/archive-safety.ts|feat|security|bound and validate document archive expansion|Enforce ZIP entry, decompression, integrity, and path constraints before imported office content reaches application parsing.
@@ -65,7 +65,7 @@ packages/engine/src/grammar.ts|feat|grammar|detect bounded grammatical patterns 
 packages/engine/src/advanced-grammar.ts|feat|grammar|analyze contextual clause and construction patterns|Extend conservative analysis across agreement, auxiliaries, comparisons, modifiers, references, and related sentence structures.
 packages/engine/src/spelling.ts|feat|spelling|retrieve bounded dictionary correction candidates|Implement spelling candidate search and edit-distance behavior for local lexical diagnostics.
 packages/engine/src/pipeline.ts|feat|analysis|coordinate deterministic analysis and diagnostic resolution|Combine analysis stages, source-linked findings, overlap handling, and correction behavior behind a shared engine interface.
-packages/engine/src/hybrid.ts|feat|analysis|combine neural syntax with conservative rule evidence|Integrate model-derived structures and review-only neural findings without suppressing independent overlapping diagnostics.
+packages/engine/src/hybrid.ts|fix|analysis|reject corrections that introduce new supported findings|Revalidate fallback, parsed-rule, and spelling proposals against deterministic constraints, reparsed dependencies, and contextual classifier findings. Match findings through edit-mapped source spans to catch equal-count relocation, retain complete lexical candidates above the neural token limit, and reuse bounded syntax caches for equivalent repairs.
 packages/engine/src/annotations.ts|feat|annotations|validate and preserve source-linked annotation data|Define annotation processing that retains document positions and checks imported evidence before it is used.
 packages/engine/src/assessment.ts|feat|assessment|record longitudinal and transfer assessment sessions|Model pre, post, delayed, and transfer evidence separately from practice mastery updates.
 packages/engine/src/learning.ts|feat|learning|update skill mastery and schedule targeted review|Implement knowledge tracing, repeat-aware evidence handling, and review selection across the supported skill families.
@@ -122,13 +122,38 @@ docs/model-card.md|docs|models|document model provenance metrics and limitations
 docs/research-data-models.md|docs|research|record data and model source research|Capture source selection, licensing considerations, and the evidence supporting the local inference approach.
 docs/design-audit.md|docs|design|record interface decisions and visual verification|Describe the professional workspace treatment, responsive behavior, and observed interface checks.
 docs/evaluation-protocol.md|docs|evaluation|define independent accuracy and learning evaluation|Specify the evidence needed for error detection, correction acceptability, comparison, and longitudinal learning claims.
+docs/github-discovery.md|docs|community|provide accurate repository discovery and publication guidance|Supply a ready-to-use About description, relevant implementation-backed topics, a social preview asset, and a maintainer checklist for verified links, community settings, and evidence-based sharing. Leave account-level settings untouched because no remote repository is configured.
 docs/images/workspace.png|docs|readme|illustrate the actual essay workspace|Provide the screenshot used to show the delivered editor and source-linked diagnostic interface.
 docs/images/workbench.png|docs|readme|illustrate the actual sentence workbench|Provide the screenshot used to show token inspection and labeled dependency relationships.
+docs/images/social-preview.svg|docs|brand|provide an editable repository social preview|Create a professional 1280 by 640 vector composition using the Linguorithm identity and implemented source-linked grammar workflow without fabricated adoption or accuracy claims.
+docs/images/social-preview.png|docs|brand|provide a GitHub-ready repository social preview|Render the reviewed vector composition to a 1280 by 640 PNG suitable for the repository social preview setting, retaining a local editable source alongside it.
+apps/web/public/.nojekyll|build|pages|serve the complete static app through GitHub Pages|Prevent Pages from treating published application resources as Jekyll input so the production asset tree remains intact.
+apps/web/public/apple-touch-icon.png|style|brand|provide the iOS home-screen icon|Render the flat Linguorithm vector mark at the 180-pixel Apple touch icon size for saved home-screen use.
+apps/web/public/favicon-16.png|style|brand|provide the compact browser tab icon|Render a dedicated 16-pixel fallback for browsers and surfaces that use a small raster favicon.
+apps/web/public/favicon-32.png|style|brand|provide the standard browser favicon|Render a 32-pixel raster fallback that remains legible in browser tabs and bookmark lists.
+apps/web/public/favicon-48.png|style|brand|provide a higher-density browser favicon|Render a 48-pixel raster fallback for browser launchers and high-density icon consumers.
+apps/web/public/favicon-64.png|style|brand|provide the large browser favicon fallback|Render a 64-pixel raster fallback for platforms requesting larger legacy favicon dimensions.
+apps/web/public/favicon.ico|style|brand|provide a multi-resolution legacy favicon|Package 16, 32, and 48-pixel 32-bit icon entries for browser and operating-system consumers that require ICO format.
+apps/web/public/icon-192.png|style|brand|provide the installable 192-pixel app icon|Render the project mark at the 192-pixel size referenced by the web application manifest.
+apps/web/public/icon-512.png|style|brand|provide the installable 512-pixel app icon|Render the project mark at the 512-pixel size referenced by the web application manifest and compatible install surfaces.
+.github/workflows/deploy-pages.yml|ci|pages|publish verified static builds to GitHub Pages|Build and deploy the relative-path web application through the supported Actions deployment contract after successful verification.
+content/generalization-syntax.ATTRIBUTION.md|docs|corpus|attribute the generalization syntax examples|Record dataset provenance, transformations, and attribution details for the checked-in syntax-generalization material.
+content/generalization-syntax.LICENSE.txt|docs|licenses|preserve the syntax source license terms|Ship the source dataset license required for use and redistribution of the derived generalization examples.
+content/generalization-syntax.json|test|corpus|add varied source-linked syntax generalization cases|Provide checked-in examples spanning tokenization, dependencies, inflection, and realistic sentence structures beyond the compact regression set.
+packages/engine/src/inflections.ts|feat|spelling|handle productive English inflection patterns|Implement data-driven spelling and mutation support for regular inflections and irregular forms with explicit boundary behavior.
+scripts/check-classifier-features.mjs|test|models|verify browser classifier feature parity|Compare the TypeScript runtime feature vectors with the training implementation on recorded fixtures to prevent silent inference drift.
+scripts/evaluate-generalization.mjs|test|evaluation|measure generalization on held-out syntax cases|Run the reproducible corpus and mutation evaluation and write scoped metrics for review without treating development evidence as learner-population accuracy.
+scripts/render-social-preview.mjs|build|brand|render cross-browser icon and repository image assets|Generate PNG, ICO, install-icon, and repository preview files from the editable SVG sources using only the project-local browser tooling.
+training/ewt_splits.py|feat|training|preserve official EWT document-level split provenance|Assign reproducible source splits before training and exclude exact duplicates without implying independent author or prompt separation.
+training/predicted_syntax.py|feat|training|generate contextual syntax candidates for error training|Use trained predictions to construct bounded non-hardcoded mutation candidates and preserve source metadata for evaluation.
+training/test_error_mutations.py|test|training|verify contextual grammar mutation generation|Check that generated candidates preserve source offsets and grammatical contrasts across varied sentence contexts.
+training/test_ewt_splits.py|test|training|verify reproducible corpus split boundaries|Exercise deterministic grouping, deduplication, and held-out partition invariants used by the training pipeline.
 .github/workflows/ci.yml|ci|verification|run the contained Make verification pipeline|Define hosted checks for setup, engine validation, content, production assets, and browser behavior without claiming a hosted run has occurred.
 .github/workflows/models.yml|ci|models|define explicit candidate model training and validation|Keep model candidate generation and evaluation separate from restoration of the frozen production bundle.
 .github/PULL_REQUEST_TEMPLATE.md|docs|community|guide reviewable change descriptions|Ask contributors for the concrete change, validation evidence, and relevant limitations when opening a pull request.
 .github/ISSUE_TEMPLATE/bug_report.yml|docs|community|collect reproducible defect reports|Structure bug reports around observed behavior, reproduction steps, and useful environment details.
 .github/ISSUE_TEMPLATE/feature_request.yml|docs|community|collect actionable feature proposals|Structure proposals around the user problem, expected behavior, and project fit.
+.github/ISSUE_TEMPLATE/grammar_feedback.yml|docs|community|collect reproducible grammar and practice feedback|Ask for a minimal invented sentence, expected analysis or answer, observed finding, and relevant context so language feedback can become a reviewed regression without collecting private essays.
 tests/fixtures/create_fixtures.py|test|import|generate controlled office and PDF fixtures|Create reproducible local documents for import verification without relying on external user files.
 tests/fixtures/blank.pdf|test|import|provide a blank PDF import fixture|Exercise handling of a valid PDF with no extractable learning text.
 tests/fixtures/essay.pdf|test|import|provide a text-bearing PDF import fixture|Exercise extraction and normalization of essay text from a controlled PDF document.
@@ -176,7 +201,7 @@ function Get-CommitDescription {
 function Get-ContentOutline {
     param([string]$Path)
     $extension = [IO.Path]::GetExtension($Path).ToLowerInvariant()
-    if ($extension -in @('.png', '.gz', '.pdf', '.docx', '.woff2')) {
+    if ($extension -in @('.png', '.ico', '.gz', '.pdf', '.docx', '.woff2')) {
         return 'Binary resource: retain original bytes without source-text conversion.'
     }
     $text = [IO.File]::ReadAllText((Join-Path $projectRoot $Path))
@@ -230,7 +255,7 @@ foreach ($path in $changed) {
     if ($path -match '(^|/)(\.env[^/]*|id_rsa|id_ed25519|credentials)(/|$)' -or $path -match '\.(pfx|p12|pem|key)$') {
         throw "Potential secret file requires manual review: $path"
     }
-    if ($exists -and [IO.Path]::GetExtension($path) -notin @('.png', '.gz', '.pdf', '.docx', '.woff2')) {
+    if ($exists -and [IO.Path]::GetExtension($path) -notin @('.png', '.ico', '.gz', '.pdf', '.docx', '.woff2')) {
         $sourceText = [IO.File]::ReadAllText($fullPath)
         if ($sourceText -match '-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|\bgh[pousr]_[A-Za-z0-9]{30,}\b|\bAKIA[A-Z0-9]{16}\b') {
             throw "Potential embedded credential requires manual review: $path"
