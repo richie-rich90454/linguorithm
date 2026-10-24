@@ -567,6 +567,14 @@ export function EssayLab(props: Props) {
                                                         </Show>
                                                     </div>
                                                     <p>{d.explanation}</p>
+                                                    <Show when={d.proposals.length}>
+                                                        <p class="confidence-note">
+                                                            Review before applying. This pattern’s
+                                                            accuracy has not yet been independently
+                                                            validated. Your text changes only when
+                                                            you choose an edit.
+                                                        </p>
+                                                    </Show>
                                                     <div class="evidence-label">
                                                         The relationship
                                                     </div>
