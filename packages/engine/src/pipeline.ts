@@ -7,6 +7,7 @@ import {
 } from "./domain";
 import { DiagnosticResolver, GrammarConstraintEngine } from "./grammar";
 import { attachGoalMetadata } from "./goal-metadata";
+import { documentFeedback } from "./document-feedback";
 import {
     ConservativeDependencyParser,
     LexicalTagger,
@@ -177,6 +178,7 @@ export class AnalysisPipeline {
                     });
                 }
         }
+        diagnostics.push(...documentFeedback(sentences, text, style));
         return attachGoalMetadata(
             {
                 revision,
