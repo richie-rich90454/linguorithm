@@ -434,6 +434,57 @@ h1 {
     color: var(--muted);
     margin-bottom: 21px;
 }
+.writing-intent {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 8px 12px;
+    margin: 8px 0 18px;
+    flex-shrink: 0;
+    font-size: 12px;
+}
+.writing-intent label {
+    font-weight: 550;
+}
+.writing-intent select {
+    justify-self: start;
+    max-width: 100%;
+    min-height: 36px;
+    padding: 7px 28px 7px 10px;
+    color: var(--ink, #111);
+    border: 1px solid var(--line);
+    background: #fafafa;
+}
+.writing-intent p {
+    grid-column: 1 / -1;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.65;
+}
+.intent-guidance {
+    grid-column: 1 / -1;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.65;
+    max-height: 180px;
+    overflow: auto;
+}
+.intent-guidance summary {
+    cursor: pointer;
+    color: var(--blue);
+    width: fit-content;
+    padding: 4px 0;
+}
+.intent-guidance p {
+    margin-top: 6px;
+}
+.intent-guidance ul {
+    margin: 8px 0 4px;
+    padding-left: 18px;
+}
+.intent-guidance li + li {
+    margin-top: 5px;
+}
 .essay-text {
     white-space: pre-wrap;
     font-size: 15px;
@@ -578,6 +629,30 @@ h1 {
     display: flex;
     align-items: center;
     gap: 8px;
+    min-height: 26px;
+    cursor: pointer;
+}
+.finding-navigation {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    padding: 8px 20px;
+    border-bottom: 1px solid var(--line);
+    font-size: 11px;
+    color: var(--muted);
+}
+.finding-navigation > span {
+    margin-right: auto;
+    font-variant-numeric: tabular-nums;
+}
+.finding-navigation button {
+    min-height: 32px;
+    font-size: 11px;
+}
+.analysis-placeholder .button {
+    margin-top: 18px;
 }
 .analysis-options input {
     margin: 0;
@@ -704,15 +779,17 @@ h1 {
     gap: 14px;
     align-items: center;
     margin-top: 20px;
+    flex-wrap: wrap;
 }
 .finding-buttons > .button {
     font-size: 11px;
-    min-height: 31px;
+    min-height: 36px;
     padding: 6px 10px;
     gap: 7px;
 }
 .finding-buttons > .text-button {
     font-size: 11px;
+    min-height: 36px;
 }
 .practice-link {
     display: flex;
@@ -1600,7 +1677,7 @@ blockquote {
     .essay-bottom,
     .findings-heading,
     .finding-filters,
-    .finding-options,
+    .analysis-options,
     .engine-note {
         flex-shrink: 0;
     }
