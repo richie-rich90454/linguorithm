@@ -168,7 +168,7 @@ export function validatedMutation(
         hints: [operator.explanation, diagnostic.explanation],
         difficulty: 2,
         source: {
-            name: "Syntax controlled-mutation curriculum",
+            name: "Linguorithm controlled-mutation curriculum",
             quote: source,
             location: `${operator.id}@1.0.0/${id}`,
         },
