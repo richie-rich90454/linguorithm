@@ -1,9 +1,18 @@
-import type { AnalysisReport, CorrectionProposal, Diagnostic, Sentence } from "./domain";
+import type {
+    AnalysisReport,
+    CorrectionProposal,
+    Diagnostic,
+    Edit,
+    Morphology,
+    Sentence,
+} from "./domain";
 import { createPipeline } from "./pipeline";
 import { EssayDocument } from "./domain";
 import { DiagnosticResolver, finding, GrammarConstraintEngine } from "./grammar";
-import { advancedRules, documentRelationships } from "./advanced-grammar";
+import { advancedRules, createAdvancedRules, documentRelationships } from "./advanced-grammar";
+import { PastParticipleInflections, PresentVerbInflections } from "./inflections";
 import { SpellingIndex, editDistance } from "./spelling";
+import { ConservativeDependencyParser } from "./text";
 
 export interface ContextualTables {
     unigrams: Record<string, number>;
@@ -67,14 +76,17 @@ export class CandidateRanker {
 export interface AsyncSyntax {
     sentence(sentence: Sentence): Promise<Sentence>;
     classify?(sentence: Sentence): Promise<readonly Diagnostic[]>;
-    lexicon: { frequency: Record<string, number> };
+    lexicon: {
+        frequency: Record<string, number>;
+        forms?: Readonly<Record<string, readonly Morphology[]>>;
+    };
     dictionary?: readonly string[];
     contextual?: ContextualTables;
     metadata: { version: string; limitations: string[] };
 }
 export class HybridAnalysisPipeline {
     private readonly fallback = createPipeline();
-    private readonly constraints = new GrammarConstraintEngine(advancedRules);
+    private readonly constraints: GrammarConstraintEngine;
     private readonly resolver = new DiagnosticResolver();
     private readonly cache = new Map<string, Sentence>();
     private readonly spelling?: SpellingIndex;
@@ -82,6 +94,17 @@ export class HybridAnalysisPipeline {
     constructor(private readonly syntax: AsyncSyntax) {
         if (syntax.dictionary)
             this.spelling = new SpellingIndex(syntax.dictionary, syntax.lexicon.frequency, 2);
+        this.constraints = new GrammarConstraintEngine(
+            syntax.lexicon.forms
+                ? createAdvancedRules(
+                      new PresentVerbInflections(
+                          syntax.lexicon.forms,
+                          (word) => this.spelling?.has(word) ?? false,
+                      ),
+                      new PastParticipleInflections(syntax.lexicon.forms),
+                  )
+                : advancedRules,
+        );
         if (syntax.contextual) this.ranker = new CandidateRanker(syntax.contextual);
     }
     async analyze(
@@ -93,8 +116,9 @@ export class HybridAnalysisPipeline {
         const started = performance.now(),
             report = this.fallback.analyze(text, revision, style),
             sentences: Sentence[] = [],
-            diagnostics = [...report.diagnostics];
+            diagnostics: Diagnostic[] = [];
         const personal = new Set(personalDictionary.map((w) => w.toLowerCase()));
+        let lexicalAbstentions = 0;
         for (const original of report.sentences) {
             let local = this.cache.get(original.text);
             if (!local) {
@@ -123,6 +147,19 @@ export class HybridAnalysisPipeline {
                 })),
             };
             sentences.push(sentence);
+            const words = sentence.tokens.filter((t) => /^[\p{L}\p{M}]+$/u.test(t.text));
+            const recognized = words.filter(
+                (t) => this.spelling?.has(t.text) || personal.has(t.text.toLowerCase()),
+            ).length;
+            // Low dictionary coverage is not language identification. It is a reason
+            // to abstain from English corrections on foreign or highly specialized text.
+            if (this.spelling && words.length >= 5 && recognized * 2 < words.length) {
+                lexicalAbstentions++;
+                continue;
+            }
+            const baseline = report.diagnostics.filter(
+                (d) => d.start >= sentence.start && d.end <= sentence.end,
+            );
             const extra = this.constraints.evaluate(sentence);
             for (const token of sentence.tokens) {
                 if (
@@ -131,7 +168,7 @@ export class HybridAnalysisPipeline {
                     personal.has(token.text.toLowerCase()) ||
                     token.pos === "PROPN" ||
                     !/^[a-z]{5,24}$/u.test(token.text) ||
-                    diagnostics.some((d) => d.start <= token.start && d.end >= token.end)
+                    baseline.some((d) => d.start <= token.start && d.end >= token.end)
                 )
                     continue;
                 const candidates = this.spelling.candidates(token.text);
@@ -150,8 +187,63 @@ export class HybridAnalysisPipeline {
                         ),
                     );
             }
-            if (this.syntax.classify) extra.push(...(await this.syntax.classify(sentence)));
-            for (const d of extra) {
+            const classifierBefore = (await this.syntax.classify?.(sentence)) ?? [];
+            extra.push(...classifierBefore);
+            const before = this.fallback.analyze(sentence.text).diagnostics;
+            const advancedBefore = this.constraints.evaluate(sentence);
+            const counts = (issues: readonly Diagnostic[]) => {
+                const result = new Map<string, number>();
+                for (const issue of issues)
+                    result.set(issue.ruleId, (result.get(issue.ruleId) ?? 0) + 1);
+                return result;
+            };
+            const deterministicCounts = counts(before);
+            const advancedCounts = counts(advancedBefore);
+            const classifierCounts = counts(classifierBefore);
+            const localize = (issues: readonly Diagnostic[]) =>
+                issues.map((issue) => ({
+                    ...issue,
+                    start: issue.start - sentence.start,
+                    end: issue.end - sentence.start,
+                }));
+            const introducesIssue = (
+                issues: readonly Diagnostic[],
+                previous: readonly Diagnostic[],
+                edits: readonly Edit[],
+            ) => {
+                const ordered = [...edits].sort((a, b) => a.start - b.start);
+                const remap = (position: number, end: boolean) => {
+                    let shift = 0;
+                    for (const edit of ordered) {
+                        if (position < edit.start) break;
+                        if (position >= edit.end) {
+                            shift += edit.replacement.length - (edit.end - edit.start);
+                            continue;
+                        }
+                        return edit.start + shift + (end ? edit.replacement.length : 0);
+                    }
+                    return position + shift;
+                };
+                const identity = (rule: string, start: number, end: number) =>
+                    `${rule}:${start}:${end}`;
+                const remaining = new Map<string, number>();
+                for (const old of previous) {
+                    const key = identity(old.ruleId, remap(old.start, false), remap(old.end, true));
+                    remaining.set(key, (remaining.get(key) ?? 0) + 1);
+                }
+                return issues.some((issue) => {
+                    const key = identity(issue.ruleId, issue.start, issue.end);
+                    const count = remaining.get(key) ?? 0;
+                    if (!count) return true;
+                    remaining.set(key, count - 1);
+                    return false;
+                });
+            };
+            const reparsed = new Map<
+                string,
+                Promise<{ rules: Diagnostic[]; classifier: readonly Diagnostic[] }>
+            >();
+            for (const d of [...baseline, ...extra]) {
                 const safe: CorrectionProposal[] = [];
                 for (const p of (this.ranker?.rank(sentence, d.proposals) ?? d.proposals).slice(
                     0,
@@ -167,41 +259,75 @@ export class HybridAnalysisPipeline {
                             })),
                         };
                         const corrected = EssayDocument.create(sentence.text).apply(local).text;
-                        const before = this.fallback.analyze(sentence.text),
-                            after = this.fallback.analyze(corrected);
+                        const fallbackAfter = this.fallback.analyze(corrected);
+                        const after = fallbackAfter.diagnostics;
                         if (
-                            after.diagnostics.some(
-                                (issue) =>
-                                    !before.diagnostics.some((old) => old.ruleId === issue.ruleId),
-                            )
+                            introducesIssue(after, before, local.edits) ||
+                            ((deterministicCounts.get(d.ruleId) ?? 0) > 0 &&
+                                (counts(after).get(d.ruleId) ?? 0) >=
+                                    deterministicCounts.get(d.ruleId)!)
                         )
                             continue;
-                        // Reparse only bounded rule repairs; dictionary alternatives are lexical reviews.
-                        if (d.ruleId !== "dictionary-spelling") {
-                            const candidate = await this.syntax.sentence({
-                                ...sentence,
-                                start: 0,
-                                end: corrected.length,
-                                text: corrected,
-                                tokens: [],
-                            });
-                            if (
-                                this.constraints
-                                    .evaluate(candidate)
-                                    .some((issue) => issue.ruleId === d.ruleId)
-                            )
-                                continue;
+                        // Every proposal, including fallback and spelling repairs, must pass
+                        // the same structural checks. Share reparses for equivalent edits.
+                        let pending = reparsed.get(corrected);
+                        if (!pending) {
+                            pending = (async () => {
+                                let candidate = this.cache.get(corrected);
+                                if (!candidate) {
+                                    const tokens = fallbackAfter.sentences.flatMap((s) => s.tokens);
+                                    candidate = await this.syntax.sentence({
+                                        id: "candidate",
+                                        start: 0,
+                                        end: corrected.length,
+                                        text: corrected,
+                                        tokens,
+                                        ...new ConservativeDependencyParser().parse(tokens),
+                                        syntaxSource: "lexical",
+                                    });
+                                    if (this.cache.size >= 500)
+                                        this.cache.delete(this.cache.keys().next().value!);
+                                    this.cache.set(corrected, candidate);
+                                }
+                                return {
+                                    rules: this.constraints.evaluate(candidate),
+                                    classifier: (await this.syntax.classify?.(candidate)) ?? [],
+                                };
+                            })();
+                            reparsed.set(corrected, pending);
                         }
+                        const candidate = await pending;
+                        if (
+                            introducesIssue(
+                                candidate.rules,
+                                localize(advancedBefore),
+                                local.edits,
+                            ) ||
+                            introducesIssue(
+                                candidate.classifier,
+                                localize(classifierBefore),
+                                local.edits,
+                            ) ||
+                            ((advancedCounts.get(d.ruleId) ?? 0) > 0 &&
+                                (counts(candidate.rules).get(d.ruleId) ?? 0) >=
+                                    advancedCounts.get(d.ruleId)!) ||
+                            ((classifierCounts.get(d.ruleId) ?? 0) > 0 &&
+                                (counts(candidate.classifier).get(d.ruleId) ?? 0) >=
+                                    classifierCounts.get(d.ruleId)!)
+                        )
+                            continue;
                         safe.push({
                             ...p,
                             validation: {
                                 status: "rechecked",
                                 checks: [
                                     "Exact source match and bounded edits",
-                                    "No new deterministic rule category",
+                                    "No new deterministic or parsed finding after mapping source spans through edits",
+                                    "No new contextual classifier finding after mapping source spans through edits",
+                                    "Parsed constraints checked; lexical fallback above the model token limit",
                                     d.ruleId === "dictionary-spelling"
-                                        ? "Installed dictionary candidate; human review required"
-                                        : "Target constraint absent after reparsing",
+                                        ? "Installed dictionary candidate reparsed; human review required"
+                                        : "Target supported finding decreases after reparsing",
                                 ],
                             },
                         });
@@ -231,7 +357,14 @@ export class HybridAnalysisPipeline {
                 syntax: this.syntax.metadata.version,
                 classifier: this.syntax.metadata.version,
             },
-            limitations: this.syntax.metadata.limitations,
+            limitations: [
+                ...this.syntax.metadata.limitations,
+                ...(lexicalAbstentions
+                    ? [
+                          `English corrections withheld for ${lexicalAbstentions} sentence(s) with insufficient dictionary coverage; language and specialized vocabulary require human review.`,
+                      ]
+                    : []),
+            ],
             modelStatus: {
                 state: "ready",
                 detail: "Local BiLSTM/CRF tagging and bounded-beam dependency parsing; neural error scores are review-only and synthetic-task calibrated.",
