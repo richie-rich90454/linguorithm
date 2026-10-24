@@ -2,19 +2,19 @@
     "schemaVersion": 1,
     "version": "ewt-1",
     "archive": "ewt-1.tar.gz",
-    "sha256": "ef22468cfe02166db1d3be8f9380cf6b90a168da46cc64eb2556832b070b708d",
-    "compressedBytes": 9714247,
-    "uncompressedBytes": 25033216,
+    "sha256": "e00507d09c912c62bec1a99308eb03e6180e131f3407d65790a94669cc46783c",
+    "compressedBytes": 9560276,
+    "uncompressedBytes": 24687104,
     "files": [
         {
             "path": "classifier-manifest.json",
-            "bytes": 3974,
-            "sha256": "ac86684b882d7270940e3e0e579b63711dc75656abd91b191bd9221b01720763"
+            "bytes": 16570,
+            "sha256": "fd8bf6a12cf4d84b7aa8088c9b86cbdb0a3533e9db52b24f11d384284a4ade1a"
         },
         {
             "path": "contextual.json",
-            "bytes": 2289664,
-            "sha256": "4576ca1a6a04922e66d0c4851ce3d3acd7cacc27c393c7c337e242a82db2eece"
+            "bytes": 1871222,
+            "sha256": "7b23888adcce2f8c13f18455d97f08dc301c8633e0ead3ae04623b89958e2b79"
         },
         {
             "path": "dictionary.json",
@@ -23,8 +23,8 @@
         },
         {
             "path": "lexicon.json",
-            "bytes": 1591003,
-            "sha256": "8ded97f69099d495a6871b7742ea5bbf2551bf89dfa25cf3c65b7cf8e68eb413"
+            "bytes": 1650220,
+            "sha256": "8f378aa80e3890809c046ab55d02b6f2fafa0025fc32c5e98f7baf233e7becde"
         },
         {
             "path": "licenses/dictionary-notices.txt",
@@ -64,7 +64,7 @@
         {
             "path": "registry.json",
             "bytes": 927,
-            "sha256": "1db907d9f8b1de77555ec9bb18d3fa4f2a3124362a5c4151f1c685dc7c71e242"
+            "sha256": "738ab06c4968ca8bfdb1e404d361da01e54a97b461ca73bef59cfa3e0f031b8f"
         },
         {
             "path": "runtime/ort-wasm-simd-threaded.mjs",
@@ -84,7 +84,7 @@
         {
             "path": "weights/error-classifier.onnx",
             "bytes": 908987,
-            "sha256": "eb82abb8c8155230939c225d844194a3a5c4d8bf2e2383c0a31b96fbdd5c1b84"
+            "sha256": "580a0205b0018541be7d207d2bdf7cc5458c6b6b6d7d1a9d0f43af879e73f132"
         },
         {
             "path": "weights/parser.onnx",
