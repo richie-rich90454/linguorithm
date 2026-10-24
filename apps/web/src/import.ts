@@ -82,7 +82,7 @@ export async function extractFile(file: File): Promise<string> {
         }
     } else
         throw new Error(
-            "Supported formats: TXT, Markdown, HTML, DOCX, PPTX, XLSX, and text-based PDF.",
+            "Supported formats include plain text, Markdown, HTML, Word, PowerPoint, Excel, and text-based PDF.",
         );
     if (text.length > MAX_TEXT) throw new Error("Extracted text exceeds 150,000 characters.");
     if (!text.trim()) throw new Error("No readable text was found.");
