@@ -13,7 +13,7 @@ RELEASE = "r2.16"
 repo = "UniversalDependencies/UD_English-EWT"
 request = urllib.request.Request(
     f"https://api.github.com/repos/{repo}/git/ref/tags/{RELEASE}",
-    headers={"User-Agent": "Syntax-reproducible-training"},
+    headers={"User-Agent": "Linguorithm-reproducible-training"},
 )
 ref = json.load(urllib.request.urlopen(request, timeout=60))["object"]
 if ref["type"] == "tag":
@@ -21,7 +21,7 @@ if ref["type"] == "tag":
         urllib.request.urlopen(
             urllib.request.Request(
                 f"https://api.github.com/repos/{repo}/git/tags/{ref['sha']}",
-                headers={"User-Agent": "Syntax-reproducible-training"},
+                headers={"User-Agent": "Linguorithm-reproducible-training"},
             ),
             timeout=60,
         )
@@ -52,7 +52,7 @@ for name in [
             urllib.request.urlopen(
                 urllib.request.Request(
                     f"https://api.github.com/repos/{repo}/contents/{name}?ref={commit}",
-                    headers={"User-Agent": "Syntax-reproducible-training"},
+                    headers={"User-Agent": "Linguorithm-reproducible-training"},
                 ),
                 timeout=120,
             )
@@ -64,7 +64,7 @@ for name in [
                 urllib.request.urlopen(
                     urllib.request.Request(
                         f"https://api.github.com/repos/{repo}/git/blobs/{metadata['sha']}",
-                        headers={"User-Agent": "Syntax-reproducible-training"},
+                        headers={"User-Agent": "Linguorithm-reproducible-training"},
                     ),
                     timeout=120,
                 )
