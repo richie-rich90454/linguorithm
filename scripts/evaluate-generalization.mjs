@@ -97,7 +97,7 @@ function prepareFixture() {
         sourceReadme: "generalization-syntax.ATTRIBUTION.md",
         adaptation:
             "Selected official-test sentences and projected gold token spans/UPOS/basic dependency heads/relations; no gold annotation changed. Offsets are JavaScript UTF-16 indices.",
-        scope: "Held-out from model training, but drawn from the same public corpus used for model development/test reporting. This is neither a newly independent dataset nor an error-annotated learner-essay benchmark. Author/prompt independence is unverified.",
+        scope: "Held out from model fitting but drawn from the same public corpus used for model development/test reporting. This fixed browser sample was inspected during tokenizer development, so refreshed scores are regression evidence rather than an untouched confirmatory estimate. It is not a newly independent dataset or an error-annotated learner-essay benchmark. Author/prompt independence is unverified.",
         selection: {
             method: "Seeded SHA-256 ordering of eligible official-test sentence IDs; first 300, before inspecting model predictions",
             splitCounts,
@@ -857,6 +857,7 @@ const authoredCases = items
             kind: item.kind,
             text: item.text,
             modelState: report.modelStatus?.state ?? null,
+            limitations: report.limitations,
             diagnostics,
             integrity: integrity(item, report),
             syntaxSources: report.sentences.map((s) => s.syntaxSource ?? "lexical"),
@@ -888,6 +889,10 @@ const authoredCases = items
                 predictedSyntax: report.sentences.map((sentence) => ({
                     syntaxSource: sentence.syntaxSource ?? "lexical",
                     ambiguous: sentence.ambiguous,
+                    alternatives: (sentence.alternatives ?? []).map((alternative) => ({
+                        score: alternative.score,
+                        graph: alternative.graph,
+                    })),
                     tokens: sentence.tokens.map((token) => ({
                         text: token.text,
                         pos: token.pos,
@@ -965,7 +970,7 @@ const summaryBySkill = Object.fromEntries(
 );
 const report = {
     generatedAt: new Date().toISOString(),
-    scope: "Production browser worker inference on fixed held-out natural syntax data plus newly authored development challenges and controlled gold-guided agreement mutations. Not an independent learner-essay accuracy or learning-effectiveness study. Model weights are not changed by this evaluation.",
+    scope: "Production browser worker inference on a fixed EWT syntax regression fixture consulted during tokenizer development, plus newly authored development challenges and controlled gold-guided agreement mutations. The syntax fixture remains held out from model fitting but is not an untouched confirmatory test. This is not an independent learner-essay accuracy or learning-effectiveness study. Model weights are not changed by this evaluation.",
     production: {
         baseUrl: process.env.GENERALIZATION_BASE_URL ?? "http://127.0.0.1:4317",
         analyzedCases: items.length,
