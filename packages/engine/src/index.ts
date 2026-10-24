@@ -15,3 +15,5 @@ export * from "./assessment";
 export * from "./progress-export";
 export * from "./annotations";
 export * from "./inflections";
+export * from "./goals";
+export * from "./goal-metadata";
