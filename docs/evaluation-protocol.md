@@ -4,15 +4,14 @@ This is a prospective protocol and executable reporting format. The original uni
 
 ## Run the comparison
 
-Run from the repository root in PowerShell. The environment script selects the repository's Node, pnpm, caches, and dependencies; no global installation is needed.
+Run from the repository root in PowerShell. GNU Make selects the project-local task runner and dependencies; no global installation is needed.
 
 ```powershell
-. ./scripts/project-env.ps1
-pnpm exec tsx scripts/compare-systems.mts --help
-pnpm exec tsx scripts/compare-systems.mts --corpus data/gold.json --run data/full.json --run data/rules-only.json --run data/without-parser.json --run data/blinded-comparator.json --annotations data/independent-submissions.json --supported Grammar,Punctuation --top-k 3 --bootstrap 2000 --seed 20261022 --out reports/independent-comparison.json
+make compare ARGS="--help"
+make compare ARGS="--corpus data/gold.json --run data/full.json --run data/rules-only.json --run data/without-parser.json --run data/blinded-comparator.json --annotations data/independent-submissions.json --supported Grammar,Punctuation --supported-patterns Grammar=comma-splice=review,Grammar=subject-verb-agreement=direct --top-k 3 --bootstrap 2000 --seed 20261022 --out reports/independent-comparison.json"
 ```
 
-For a release check, add `--require-gates`. Exit codes are 0 for a completed report, 1 for a failed declared release gate, and 2 for invalid input. Without `--require-gates`, failed gates are still included in the report. A system with no declared supported categories cannot pass a release check. `Style` is always scored separately and never passes a grammatical release gate.
+For a release check, add `--require-gates` inside `ARGS`. It requires at least one explicit `--supported-patterns` entry. Declare each annotation category/subtype with `direct` when a safe direct correction is part of the product contract, or `review` when the product intentionally offers no direct correction. Exit codes are 0 for a completed report, 1 for a failed declared release gate, and 2 for invalid input. Without `--require-gates`, failed gates are still included in the report. Optional `--supported` category checks are broader supplemental gates. `Style` is always scored separately and cannot be declared as a grammatical pattern.
 
 All runs must contain exactly the documents in the selected `--split` (default `test`). A source-text or corpus-version mismatch, incomplete run, unresolved gold document, duplicate identifier, or cross-split group/text leak stops evaluation. Missing predictions must be represented by an explicit empty `predictions` array, so missing runs cannot silently improve scores. Unknown confidence is `null`; unavailable timings or memory are omitted.
 
@@ -156,7 +155,7 @@ This matching example can be saved as `reports/example-run.json`. It contains ha
 ```
 
 ```powershell
-pnpm exec tsx scripts/compare-systems.mts --corpus reports/example-gold.json --run reports/example-run.json --supported Grammar --out reports/example-comparison.json
+make compare ARGS="--corpus reports/example-gold.json --run reports/example-run.json --supported Grammar --out reports/example-comparison.json"
 ```
 
 This miniature example necessarily fails release-volume gates. That is the intended behavior. No accuracy numbers from it should appear in product claims.
@@ -195,23 +194,23 @@ Valid-control false positives are document-level rates. A valid control contains
 
 Metrics and pairwise differences use a seeded percentile bootstrap with connected author/source/prompt groups as resampling units. The same draws are paired across systems and ablations. Pairwise differences are always `right minus left`. Intervals require at least two groups and 20 defined replicates; `null` is unresolved uncertainty, not zero. Ratios with zero denominators are `null`. The report gives valid replicate counts. Sparse categories may have undefined replicates, so inspect those counts and collect more groups instead of claiming significance. Wilson 95% binomial intervals are also supplied; these assume independent outcomes and are secondary to the grouped analysis when errors cluster. Neither interval method repairs unrepresentative or leaked data. No simultaneous-inference correction is currently applied: predeclare primary comparisons, and treat exploratory category/subtype intervals accordingly.
 
-The command applies the following **proposed, predeclared release policy**, which is stricter than checking a favorable point estimate. It is not evidence that a release has met the specification:
+The command applies the following **proposed, predeclared release policy** to every explicitly supported category/subtype. It is stricter than checking a favorable point estimate, and a report can certify only the declared patterns represented by the frozen corpus:
 
-| Requirement for each declared grammatical category | Minimum or bound |
+| Requirement for each declared grammatical pattern | Minimum or bound |
 | --- | --- |
-| Reference errors and high-confidence predictions | At least 200 of each |
-| High-confidence direct-correction attempts | At least 100 |
+| Reference errors and predictions | At least 200 of each |
+| Direct-correction attempts, when policy is `direct` | At least 100 |
 | Valid-control documents | At least 200 |
-| Independent groups containing reference errors, high-confidence predictions, and controls | At least 30 in each group cohort |
-| High-confidence diagnostic precision | Wilson and group-bootstrap lower bounds at least 95% |
-| Recall | Wilson and group-bootstrap lower bounds at least 75% |
-| High-confidence direct-correction precision | Wilson and group-bootstrap lower bounds at least 90% |
-| High-confidence valid-control false-positive rate | Global Wilson upper bound below 2% |
+| Independent groups containing reference errors, predictions, and controls; correction groups when applicable | At least 30 in each group cohort |
+| Diagnostic precision | Wilson and group-bootstrap lower bounds at least 95% |
+| Recall | Wilson and group-bootstrap lower bounds at least 90% |
+| Direct-correction acceptability, when policy is `direct` | Wilson and group-bootstrap lower bounds at least 90% |
+| Valid-control false-positive rate | Pattern-specific Wilson upper bound below 2% |
 | Source and edit integrity | Every diagnostic has a valid literal source span; every candidate validates and undoes exactly |
 
-High confidence defaults to a supplied probability of at least 0.95; predeclare any alternative cutoff before collecting results. The valid-control gate is global across grammatical categories so a category cannot pass while the overall system produces excessive control false positives. Insufficient samples, unknown confidence, unresolved bounds, or any failed requirement produce explicit failed reasons. A passing category gate is an engineering signal, not independent certification: consent, annotation independence, representative sampling, control clustering, semantic review, browser behavior, and operational measurement still require the study record. Library callers can set alternative minimum volumes for a preregistered study; the release CLI uses the defaults above.
+Pattern gates use all diagnostics, including findings without confidence values, and, for `direct` patterns, all attempted first-choice direct corrections; this prevents a confidence cutoff from hiding low-quality findings or edits. The stricter optional category gates retain the 0.95 confidence cutoff for diagnostics and corrections and fail if any declared-category prediction has unknown confidence. Valid-control flags are counted separately for the exact category/subtype in each metric. `review` patterns are not judged on direct-correction accuracy and must not emit direct edits. Insufficient samples, unresolved bounds, or any failed requirement produce explicit failed reasons. Passing gates are engineering signals, not independent certification: consent, annotation independence, representativeness, control clustering, semantic review, browser behavior, and operational measurement still require the study record. Library callers can set alternative minimum volumes for a preregistered study; the release CLI uses the defaults above.
 
-Disable, restrict to reviewed subtypes, or mark experimental any failing category. Publish all failing category/subtype results and abstention rates; an aggregate cannot hide them. Unchanged held-out data may be reused for regression only after it is no longer an independent test. A fix driven by test inspection needs a newly sealed test cohort for a new generalization claim.
+Disable, restrict to reviewed subtypes, or mark experimental any failing pattern. Publish all failing category/subtype results and abstention rates; an aggregate cannot hide them. Unchanged held-out data may be reused for regression only after it is no longer an independent test. A fix driven by test inspection needs a newly sealed test cohort for a new generalization claim.
 
 ## Independent blinded competitor study
 
