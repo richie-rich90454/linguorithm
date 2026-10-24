@@ -8,37 +8,41 @@ function deletions(word: string, depth = 1): Set<string> {
     let frontier = [word];
     for (let d = 0; d < depth; d++) {
         const next: string[] = [];
-        for (const value of frontier)
-            for (let i = 0; i < value.length; i++) {
-                const key = value.slice(0, i) + value.slice(i + 1);
+        for (const value of frontier) {
+            const characters = [...value];
+            for (let i = 0; i < characters.length; i++) {
+                const key = characters.slice(0, i).join("") + characters.slice(i + 1).join("");
                 if (!keys.has(key)) {
                     keys.add(key);
                     next.push(key);
                 }
             }
+        }
         frontier = next;
     }
     return keys;
 }
 export function editDistance(a: string, b: string): number {
-    const maximum = a.length + b.length;
-    const rows = Array.from({ length: a.length + 2 }, () => new Float64Array(b.length + 2));
+    const left = [...a],
+        right = [...b],
+        maximum = left.length + right.length;
+    const rows = Array.from({ length: left.length + 2 }, () => new Float64Array(right.length + 2));
     rows[0]![0] = maximum;
-    for (let i = 0; i <= a.length; i++) {
+    for (let i = 0; i <= left.length; i++) {
         rows[i + 1]![0] = maximum;
         rows[i + 1]![1] = i;
     }
-    for (let j = 0; j <= b.length; j++) {
+    for (let j = 0; j <= right.length; j++) {
         rows[0]![j + 1] = maximum;
         rows[1]![j + 1] = j;
     }
     const last = new Map<string, number>();
-    for (let i = 1; i <= a.length; i++) {
+    for (let i = 1; i <= left.length; i++) {
         let matched = 0;
-        for (let j = 1; j <= b.length; j++) {
-            const previousRow = last.get(b[j - 1]!) ?? 0,
+        for (let j = 1; j <= right.length; j++) {
+            const previousRow = last.get(right[j - 1]!) ?? 0,
                 previousColumn = matched;
-            const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+            const cost = left[i - 1] === right[j - 1] ? 0 : 1;
             if (!cost) matched = j;
             rows[i + 1]![j + 1] = Math.min(
                 rows[i]![j]! + cost,
@@ -54,24 +58,135 @@ export function editDistance(a: string, b: string): number {
                     1,
             );
         }
-        last.set(a[i - 1]!, i);
+        last.set(left[i - 1]!, i);
     }
-    return rows[a.length + 1]![b.length + 1]!;
+    return rows[left.length + 1]![right.length + 1]!;
+}
+
+interface TrieNode {
+    character: string;
+    child: number;
+    sibling: number;
+    word?: string;
+}
+
+// Linked child indices avoid one Map allocation for every dictionary prefix.
+class DictionaryTrie {
+    private readonly nodes: TrieNode[] = [{ character: "", child: -1, sibling: -1 }];
+    constructor(words: readonly string[]) {
+        for (const word of words) {
+            if ([...word].length > 32) continue;
+            let parent = 0;
+            for (const character of word) {
+                let child = this.nodes[parent]!.child;
+                while (child !== -1 && this.nodes[child]!.character !== character)
+                    child = this.nodes[child]!.sibling;
+                if (child === -1) {
+                    child = this.nodes.length;
+                    this.nodes.push({
+                        character,
+                        child: -1,
+                        sibling: this.nodes[parent]!.child,
+                    });
+                    this.nodes[parent]!.child = child;
+                }
+                parent = child;
+            }
+            this.nodes[parent]!.word = word;
+        }
+    }
+
+    candidates(word: string, distance: number): Set<string> {
+        const target = [...word],
+            maximum = 32 + target.length,
+            rows = [
+                new Float64Array(target.length + 2).fill(maximum),
+                Float64Array.from({ length: target.length + 2 }, (_, j) =>
+                    j === 0 ? maximum : j - 1,
+                ),
+            ],
+            last = new Map<string, number>(),
+            found = new Set<string>();
+        let remaining = 20_000;
+        const visit = (index: number, depth: number): void => {
+            if (remaining-- <= 0 || found.size >= 200) return;
+            const node = this.nodes[index]!,
+                row = new Float64Array(target.length + 2);
+            row[0] = maximum;
+            row[1] = depth;
+            let matched = 0,
+                minimum = depth;
+            for (let j = 1; j <= target.length; j++) {
+                const previousRow = last.get(target[j - 1]!) ?? 0,
+                    previousColumn = matched,
+                    cost = node.character === target[j - 1] ? 0 : 1;
+                if (!cost) matched = j;
+                row[j + 1] = Math.min(
+                    rows[depth]![j]! + cost,
+                    row[j]! + 1,
+                    rows[depth]![j + 1]! + 1,
+                    rows[previousRow]![previousColumn]! +
+                        depth -
+                        previousRow +
+                        j -
+                        previousColumn -
+                        1,
+                );
+                minimum = Math.min(minimum, row[j + 1]!);
+            }
+            if (node.word && row[target.length + 1]! <= distance) found.add(node.word);
+            if (minimum > distance || depth >= target.length + distance) return;
+            rows.push(row);
+            const previous = last.get(node.character);
+            last.set(node.character, depth);
+            // Explore the matching prefix first so the budget favors nearby spellings.
+            let matching = node.child;
+            while (matching !== -1 && this.nodes[matching]!.character !== target[depth])
+                matching = this.nodes[matching]!.sibling;
+            if (matching !== -1) visit(matching, depth + 1);
+            for (
+                let child = node.child;
+                child !== -1 && remaining > 0;
+                child = this.nodes[child]!.sibling
+            )
+                if (child !== matching) visit(child, depth + 1);
+            if (previous === undefined) last.delete(node.character);
+            else last.set(node.character, previous);
+            rows.pop();
+        };
+        let matching = this.nodes[0]!.child;
+        while (matching !== -1 && this.nodes[matching]!.character !== target[0])
+            matching = this.nodes[matching]!.sibling;
+        if (matching !== -1) visit(matching, 1);
+        for (
+            let child = this.nodes[0]!.child;
+            child !== -1 && remaining > 0;
+            child = this.nodes[child]!.sibling
+        )
+            if (child !== matching) visit(child, 1);
+        return found;
+    }
 }
 export class SpellingIndex {
     private readonly index = new Map<string, Set<string>>();
     private readonly known: Set<string>;
+    private readonly dictionary?: DictionaryTrie;
+    private readonly distance: number;
     constructor(
         words: readonly string[] = vocabulary,
         private readonly frequency: Readonly<Record<string, number>> = {},
-        private readonly distance = 1,
+        distance = 1,
     ) {
+        this.distance = Number.isFinite(distance)
+            ? Math.max(0, Math.min(2, Math.floor(distance)))
+            : 1;
         this.known = new Set(words);
         const hasFrequency = Object.keys(frequency).length > 0;
+        if (hasFrequency) this.dictionary = new DictionaryTrie(words);
         for (const word of words.filter(
             (w) => w.length <= 32 && (!hasFrequency || (frequency[w] ?? 0) >= 3),
         ))
-            for (const key of deletions(word, distance)) {
+            for (const key of deletions(word, this.distance)) {
                 const set = this.index.get(key) ?? new Set<string>();
                 set.add(word);
                 this.index.set(key, set);
@@ -83,11 +198,13 @@ export class SpellingIndex {
     candidates(input: string): string[] {
         const word = input.toLowerCase();
         if (word.length < 4 || word.length > 40 || this.known.has(word)) return [];
-        const candidates = new Set<string>();
+        let candidates = new Set<string>();
         for (const key of deletions(word, this.distance))
             for (const candidate of this.index.get(key) ?? [])
                 if (candidates.size < 200 && editDistance(word, candidate) <= this.distance)
                     candidates.add(candidate);
+        if (!candidates.size && this.dictionary)
+            candidates = this.dictionary.candidates(word, this.distance);
         return [...candidates]
             .sort(
                 (a, b) =>
