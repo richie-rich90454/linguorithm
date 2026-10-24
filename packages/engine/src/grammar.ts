@@ -342,7 +342,14 @@ const punctuation: GrammarRule = {
             /^(However|Therefore|Nevertheless|Furthermore|Moreover|Consequently)\s+(?=[\p{L}])/iu.exec(
                 s.text,
             );
-        if (transition) {
+        if (
+            transition &&
+            // Degree/concessive however ("however carefully...") is not a
+            // sentence transition. Require an ordinary clause opening before
+            // making this restricted deterministic comma proposal.
+            (transition[1]!.toLowerCase() !== "however" ||
+                ["DET", "PRON"].includes(s.tokens[1]?.pos ?? ""))
+        ) {
             const end = s.start + transition[1]!.length;
             result.push(
                 finding(
