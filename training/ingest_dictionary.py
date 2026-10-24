@@ -23,7 +23,7 @@ def main():
         if not target.exists():
             request = urllib.request.Request(
                 f"https://api.github.com/repos/wooorm/dictionaries/git/blobs/{record['gitBlobSha']}",
-                headers={"User-Agent": "Syntax-reproducible-training"},
+                headers={"User-Agent": "Linguorithm-reproducible-training"},
             )
             with urllib.request.urlopen(request, timeout=60) as response:
                 blob = json.load(response)
