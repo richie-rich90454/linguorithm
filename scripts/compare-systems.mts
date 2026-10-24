@@ -6,14 +6,15 @@ import {
     annotationAgreement,
     annotationCategorySchema,
     compareSystems,
+    parseSupportedPatternDeclarations,
+    requireSupportedPatternDeclarations,
     type ComparisonOptions,
 } from "../packages/engine/src/annotations";
 
 const help = `Compare frozen, supplied predictions against independently annotated source text.
 
 PowerShell (all tools remain inside this project):
-  . ./scripts/project-env.ps1
-  pnpm exec tsx scripts/compare-systems.mts --corpus path/to/gold.json --run path/to/system-a.json --run path/to/system-b.json --out reports/comparison.json
+  make compare ARGS="--corpus path/to/gold.json --run path/to/system-a.json --run path/to/system-b.json --out reports/comparison.json"
 
 Options:
   --corpus PATH          Required grammar-annotations JSON corpus.
@@ -22,11 +23,12 @@ Options:
   --annotations PATH     Optional JSON array of independent annotator submissions.
   --split NAME           train, validation, or test (default test).
   --supported LIST       Comma-separated predeclared categories; default none.
+  --supported-patterns LIST  Comma-separated Category=subtype=direct|review declarations.
   --top-k N              Acceptable-correction rank cutoff (default 3).
   --confidence N         High-confidence cutoff (default 0.95).
   --bootstrap N          Group-bootstrap replicates, 50..10000 (default 1000).
   --seed N               Unsigned 32-bit reproducibility seed (default 20261022).
-  --require-gates        Exit 1 unless every declared category passes for every run.
+  --require-gates        Exit 1 unless every declared pattern passes for every run.
   --help                Print usage.
 
 Gold schemas and JSON examples: docs/evaluation-protocol.md.
@@ -48,6 +50,7 @@ export function runComparisonCli(args: string[]): number {
         "--annotations",
         "--split",
         "--supported",
+        "--supported-patterns",
         "--top-k",
         "--confidence",
         "--bootstrap",
@@ -101,10 +104,11 @@ export function runComparisonCli(args: string[]): number {
             options.supportedCategories = one("--supported")!
                 .split(",")
                 .map((c) => annotationCategorySchema.parse(c.trim()));
-        if (requireGates && !options.supportedCategories?.some((c) => c !== "Style"))
-            throw new Error(
-                "--require-gates requires predeclared grammatical --supported categories.",
+        if (one("--supported-patterns"))
+            options.supportedPatterns = parseSupportedPatternDeclarations(
+                one("--supported-patterns")!,
             );
+        requireSupportedPatternDeclarations(requireGates, options.supportedPatterns);
         const comparison = compareSystems(corpus, runPaths.map(json), options);
         const annotationPath = one("--annotations");
         const report = {
@@ -133,7 +137,7 @@ export function runComparisonCli(args: string[]): number {
                     documents: report.corpus.documents,
                     independentGroups: report.corpus.independentGroups,
                     systems: report.systems.map((s) => s.id),
-                    failedCategories: failed,
+                    failedMetrics: failed,
                     annotationReview: annotationPath ? "included" : "not supplied",
                 },
                 null,
