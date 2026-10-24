@@ -472,6 +472,7 @@ interface Counts {
     fn: number;
     spanMatches: number;
     predictions: number;
+    unknownConfidencePredictions: number;
     validSpans: number;
     correctionAttempts: number;
     correctionConfidenceKnown: number;
@@ -490,6 +491,7 @@ const emptyCounts = (): Counts => ({
     fn: 0,
     spanMatches: 0,
     predictions: 0,
+    unknownConfidencePredictions: 0,
     validSpans: 0,
     correctionAttempts: 0,
     correctionConfidenceKnown: 0,
@@ -586,10 +588,47 @@ export interface ComparisonOptions {
     bootstrapSamples?: number;
     seed?: number;
     supportedCategories?: z.infer<typeof annotationCategorySchema>[];
+    supportedPatterns?: {
+        category: Exclude<z.infer<typeof annotationCategorySchema>, "Style">;
+        subtype: string;
+        correctionPolicy: "direct" | "review";
+    }[];
     minimumCategoryVolume?: number;
     minimumCorrectionVolume?: number;
     minimumControls?: number;
     minimumIndependentGroups?: number;
+}
+
+export function parseSupportedPatternDeclarations(
+    value: string,
+): NonNullable<ComparisonOptions["supportedPatterns"]> {
+    return value.split(",").map((entry) => {
+        const [rawCategory, rawSubtype, correctionPolicy, ...extra] = entry
+            .split("=")
+            .map((part) => part.trim());
+        if (!rawCategory || !rawSubtype || !correctionPolicy || extra.length)
+            throw new Error(
+                `Invalid supported pattern '${entry}'. Use Category=subtype=direct or Category=subtype=review.`,
+            );
+        if (correctionPolicy !== "direct" && correctionPolicy !== "review")
+            throw new Error(
+                `Invalid correction policy '${correctionPolicy}' in supported pattern '${entry}'.`,
+            );
+        const category = annotationCategorySchema.parse(rawCategory);
+        if (category === "Style")
+            throw new Error("Style cannot be declared as a grammatical supported pattern.");
+        return { category, subtype: rawSubtype, correctionPolicy };
+    });
+}
+
+export function requireSupportedPatternDeclarations(
+    requireGates: boolean,
+    patterns: ComparisonOptions["supportedPatterns"],
+): void {
+    if (requireGates && !patterns?.length)
+        throw new Error(
+            "--require-gates requires explicit --supported-patterns declarations with direct or review correction policies.",
+        );
 }
 
 /** Scores supplied, frozen predictions only. It never invokes a system or creates reference labels. */
@@ -637,6 +676,24 @@ export function compareSystems(
     const supported = z.array(annotationCategorySchema).parse(options.supportedCategories ?? []);
     if (new Set(supported).size !== supported.length)
         throw new Error("Duplicate supported categories.");
+    const supportedPatterns = (options.supportedPatterns ?? []).map((pattern) => {
+        const category = annotationCategorySchema.parse(pattern.category);
+        if (
+            category === "Style" ||
+            typeof pattern.subtype !== "string" ||
+            !pattern.subtype.trim() ||
+            !["direct", "review"].includes(pattern.correctionPolicy)
+        )
+            throw new Error(
+                "Supported patterns require a grammatical category, subtype, and correction policy.",
+            );
+        return { ...pattern, category };
+    });
+    const patternKeys = supportedPatterns.map(
+        ({ category, subtype }) => `subtype:${JSON.stringify([category, subtype])}`,
+    );
+    if (new Set(patternKeys).size !== patternKeys.length)
+        throw new Error("Duplicate supported patterns.");
     const minimum = {
         category: options.minimumCategoryVolume ?? 200,
         corrections: options.minimumCorrectionVolume ?? 100,
@@ -652,6 +709,7 @@ export function compareSystems(
         unknownConfidence: number;
         controlFlags: boolean[];
         highControlFlags: boolean[];
+        controlFlagsByMetric: Map<string, { all: boolean; high: boolean }>[];
     }[] = [];
     for (const run of runs) {
         if (run.corpusId !== corpus.id || run.corpusVersion !== corpus.version)
@@ -662,7 +720,8 @@ export function compareSystems(
         const counts: Map<string, Counts>[] = [],
             calibration: { probability: number; correct: boolean }[] = [];
         const controlFlags: boolean[] = [],
-            highControlFlags: boolean[] = [];
+            highControlFlags: boolean[] = [],
+            controlFlagsByMetric: Map<string, { all: boolean; high: boolean }>[] = [];
         let unknownConfidence = 0;
         for (const document of documents) {
             const output = predictions.get(document.id)!;
@@ -672,6 +731,7 @@ export function compareSystems(
             const matched = new Set<number>(),
                 spanMatched = new Set<number>();
             const row = new Map<string, Counts>();
+            const controlByMetric = new Map<string, { all: boolean; high: boolean }>();
             const keys = (category: string, subtype: string) => [
                 category === "Style" ? "style" : "overall",
                 `category:${category}`,
@@ -728,6 +788,8 @@ export function compareSystems(
                 for (const key of keys(prediction.category, prediction.subtype)) {
                     const c = get(key);
                     c.predictions++;
+                    if (prediction.confidence === null && prediction.category !== "Style")
+                        c.unknownConfidencePredictions++;
                     if (valid) c.validSpans++;
                     if (spanIndex >= 0) c.spanMatches++;
                     if (index >= 0) c.tp++;
@@ -749,6 +811,12 @@ export function compareSystems(
                         c.highCorrectionAttempts++;
                         if (correct[0]) c.highCorrectFirst++;
                     }
+                    if (document.validControl && prediction.category !== "Style") {
+                        const flags = controlByMetric.get(key) ?? { all: false, high: false };
+                        flags.all = true;
+                        flags.high ||= high;
+                        controlByMetric.set(key, flags);
+                    }
                 }
                 if (prediction.category !== "Style") {
                     if (prediction.confidence === null) unknownConfidence++;
@@ -763,6 +831,7 @@ export function compareSystems(
                 if (!matched.has(i)) for (const key of keys(e.category, e.subtype)) get(key).fn++;
             });
             counts.push(row);
+            controlFlagsByMetric.push(controlByMetric);
             controlFlags.push(
                 document.validControl && output.predictions.some((p) => p.category !== "Style"),
             );
@@ -783,6 +852,7 @@ export function compareSystems(
             unknownConfidence,
             controlFlags,
             highControlFlags,
+            controlFlagsByMetric,
         });
     }
     const allKeys = [
@@ -790,6 +860,7 @@ export function compareSystems(
             "overall",
             "style",
             ...supported.map((c) => `category:${c}`),
+            ...patternKeys,
             ...series.flatMap((s) => s.counts.flatMap((c) => [...c.keys()])),
         ]),
     ].sort();
@@ -846,6 +917,18 @@ export function compareSystems(
                         return c !== undefined && c.highTp + c.highFp > 0;
                     }),
                 ).length,
+                predictions: clusters.filter((indices) =>
+                    indices.some((i) => {
+                        const c = s.counts[i]!.get(key);
+                        return c !== undefined && c.predictions > 0;
+                    }),
+                ).length,
+                correctionAttempts: clusters.filter((indices) =>
+                    indices.some((i) => {
+                        const c = s.counts[i]!.get(key);
+                        return c !== undefined && c.correctionAttempts > 0;
+                    }),
+                ).length,
                 controls: clusters.filter((indices) =>
                     indices.some((i) => documents[i]!.validControl),
                 ).length,
@@ -854,54 +937,139 @@ export function compareSystems(
             const category = key.startsWith("category:")
                 ? annotationCategorySchema.parse(key.slice(9))
                 : null;
-            const declared =
+            const supportedPattern = supportedPatterns.find(
+                (pattern) =>
+                    key === `subtype:${JSON.stringify([pattern.category, pattern.subtype])}`,
+            );
+            const declaredCategory =
                 category !== null && category !== "Style" && supported.includes(category);
+            const declared = declaredCategory || supportedPattern !== undefined;
+            const metricControls = documents.flatMap((document, index) =>
+                document.validControl
+                    ? [s.controlFlagsByMetric[index]!.get(key) ?? { all: false, high: false }]
+                    : [],
+            );
+            const metricFalseControls = metricControls.filter((flags) => flags.all).length;
+            const metricHighFalseControls = metricControls.filter((flags) => flags.high).length;
+            const metricControlInterval = wilsonInterval(
+                metricFalseControls,
+                metricControls.length,
+            );
             if (declared) {
-                if (Object.values(groupVolume).some((n) => n < minimum.independentGroups))
+                const gateGroups = supportedPattern
+                    ? [
+                          groupVolume.reference,
+                          groupVolume.predictions,
+                          groupVolume.controls,
+                          ...(supportedPattern.correctionPolicy === "direct"
+                              ? [groupVolume.correctionAttempts]
+                              : []),
+                      ]
+                    : [
+                          groupVolume.reference,
+                          groupVolume.highConfidencePredictions,
+                          groupVolume.controls,
+                      ];
+                if (gateGroups.some((n) => n < minimum.independentGroups))
                     reasons.push(
-                        "Insufficient independent document groups for reference errors, high-confidence predictions, or controls.",
+                        "Insufficient independent groups for reference errors, qualifying predictions, corrections, or controls.",
                     );
                 if (counts.tp + counts.fn < minimum.category)
                     reasons.push("Insufficient reference errors.");
-                if (counts.highTp + counts.highFp < minimum.category)
-                    reasons.push("Insufficient high-confidence predictions.");
-                if (counts.highCorrectionAttempts < minimum.corrections)
-                    reasons.push("Insufficient high-confidence direct corrections.");
-                if (validControls < minimum.controls) reasons.push("Insufficient valid controls.");
+                if (declaredCategory && counts.unknownConfidencePredictions > 0)
+                    reasons.push("Unknown confidence predictions prevent the category gate.");
                 if (
-                    (wilsonInterval(counts.highTp, counts.highTp + counts.highFp)?.lower ?? 0) <
-                    0.95
-                )
-                    reasons.push("High-confidence precision lower bound below 95%.");
-                if ((wilsonInterval(counts.tp, counts.tp + counts.fn)?.lower ?? 0) < 0.75)
-                    reasons.push("Recall lower bound below 75%.");
-                if (
-                    (wilsonInterval(counts.highCorrectFirst, counts.highCorrectionAttempts)
-                        ?.lower ?? 0) < 0.9
-                )
-                    reasons.push("Direct-correction precision lower bound below 90%.");
-                if (
-                    (intervals.highConfidencePrecision?.lower ?? 0) < 0.95 ||
-                    (intervals.recall?.lower ?? 0) < 0.75 ||
-                    (intervals.highConfidenceCorrectionPrecision?.lower ?? 0) < 0.9
+                    supportedPattern
+                        ? counts.predictions < minimum.category
+                        : counts.highTp + counts.highFp < minimum.category
                 )
                     reasons.push(
-                        "Group-bootstrap confidence bounds do not meet the category targets.",
+                        supportedPattern
+                            ? "Insufficient pattern predictions."
+                            : "Insufficient high-confidence predictions.",
                     );
-                if ((wilsonInterval(highFalseControls, validControls)?.upper ?? 1) >= 0.02)
+                const correctionAttempts = supportedPattern
+                    ? counts.correctionAttempts
+                    : counts.highCorrectionAttempts;
+                if (
+                    (!supportedPattern || supportedPattern.correctionPolicy === "direct") &&
+                    correctionAttempts < minimum.corrections
+                )
                     reasons.push(
-                        "High-confidence control false-positive upper bound is not below 2%.",
+                        supportedPattern
+                            ? "Insufficient direct corrections."
+                            : "Insufficient high-confidence direct corrections.",
+                    );
+                const gateControls = supportedPattern ? metricControls.length : validControls;
+                if (gateControls < minimum.controls) reasons.push("Insufficient valid controls.");
+                const precisionSuccesses = supportedPattern ? counts.tp : counts.highTp;
+                const precisionTrials = supportedPattern
+                    ? counts.tp + counts.fp
+                    : counts.highTp + counts.highFp;
+                if ((wilsonInterval(precisionSuccesses, precisionTrials)?.lower ?? 0) < 0.95)
+                    reasons.push(
+                        supportedPattern
+                            ? "Pattern precision Wilson lower bound below 95%."
+                            : "High-confidence precision lower bound below 95%.",
+                    );
+                if ((wilsonInterval(counts.tp, counts.tp + counts.fn)?.lower ?? 0) < 0.9)
+                    reasons.push("Recall Wilson lower bound below 90%.");
+                const correctionSuccesses = supportedPattern
+                    ? counts.correctFirst
+                    : counts.highCorrectFirst;
+                const correctionTrials = supportedPattern
+                    ? counts.correctionAttempts
+                    : counts.highCorrectionAttempts;
+                if (
+                    (!supportedPattern || supportedPattern.correctionPolicy === "direct") &&
+                    (wilsonInterval(correctionSuccesses, correctionTrials)?.lower ?? 0) < 0.9
+                )
+                    reasons.push("Direct-correction precision Wilson lower bound below 90%.");
+                const precisionInterval = supportedPattern
+                    ? intervals.precision
+                    : intervals.highConfidencePrecision;
+                const correctionInterval = supportedPattern
+                    ? intervals.directCorrectionPrecision
+                    : intervals.highConfidenceCorrectionPrecision;
+                if (
+                    (precisionInterval?.lower ?? 0) < 0.95 ||
+                    (intervals.recall?.lower ?? 0) < 0.9 ||
+                    ((!supportedPattern || supportedPattern.correctionPolicy === "direct") &&
+                        (correctionInterval?.lower ?? 0) < 0.9)
+                )
+                    reasons.push(
+                        "Group-bootstrap confidence bounds do not meet the declared targets.",
+                    );
+                if ((metricControlInterval?.upper ?? 1) >= 0.02)
+                    reasons.push(
+                        supportedPattern
+                            ? "Pattern valid-control false-positive upper bound is not below 2%."
+                            : "Category valid-control false-positive upper bound is not below 2%.",
                     );
                 if (
                     counts.validSpans !== counts.predictions ||
                     counts.validCandidates !== counts.candidates
                 )
                     reasons.push("Source-span or edit integrity failure.");
+                if (
+                    supportedPattern?.correctionPolicy === "review" &&
+                    counts.correctionAttempts > 0
+                )
+                    reasons.push("Review-only pattern produced direct corrections.");
             }
             return {
                 key,
                 counts,
                 independentGroups: groupVolume,
+                validControlFalsePositives: {
+                    documents: metricControls.length,
+                    falsePositiveDocuments: metricFalseControls,
+                    rate: metricControls.length
+                        ? metricFalseControls / metricControls.length
+                        : null,
+                    interval: metricControlInterval,
+                    highConfidenceFalsePositiveDocuments: metricHighFalseControls,
+                },
                 ...values,
                 intervals,
                 wilson: {
@@ -914,6 +1082,10 @@ export function compareSystems(
                     highConfidenceCorrectionPrecision: wilsonInterval(
                         counts.highCorrectFirst,
                         counts.highCorrectionAttempts,
+                    ),
+                    directCorrectionPrecision: wilsonInterval(
+                        counts.correctFirst,
+                        counts.correctionAttempts,
                     ),
                 },
                 releaseGate: {
@@ -1049,6 +1221,7 @@ export function compareSystems(
             highConfidence: threshold,
             minimum,
             supportedCategories: supported,
+            supportedPatterns,
             bootstrapSamples: samples,
             seed: options.seed ?? 20261022,
             intervals:
