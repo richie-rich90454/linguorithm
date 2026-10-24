@@ -1,5 +1,22 @@
 {
     "dictionaryForms": 121191,
+    "classifierBrowserScoreParity": {
+        "status": "passed",
+        "scoreFixtureSha256": "3db9f450d936c6f0969a31c67defe546cdb60f291942e3abb6da442e03383e3c",
+        "weightSha256": "580a0205b0018541be7d207d2bdf7cc5458c6b6b6d7d1a9d0f43af879e73f132",
+        "tolerance": 0.0001,
+        "modelHashes": {
+            "tagger.onnx": "5ab892928bc522f0fb824839652ae6e269f5b600cd9d075b19527ae5b5d595f7",
+            "parser.onnx": "f1b239bb5a3a7f4d442c902e579f64783a786e8744002913d217f9da1adfeefa",
+            "lexicon.json": "8f378aa80e3890809c046ab55d02b6f2fafa0025fc32c5e98f7baf233e7becde",
+            "tagger-manifest.json": "5cbd3f873eb61f6c079e3b7b1be3841f352a9227c4417760ed4cb3d7d4c9a212",
+            "parser-manifest.json": "565ad67828553097047853003a9ad6fcb26b6cdd65b130d9f99507d217e0c7fa"
+        },
+        "fixtures": 20,
+        "checkedTokens": 20,
+        "method": "New classifier Python ONNX versus actual browser WASM inference on held-out feature tensors",
+        "maximumDifference": 1.9073486328125e-6
+    },
     "resources": {
         "schemaVersion": 2,
         "version": "ewt-1",
@@ -13,15 +30,15 @@
         },
         "lexicon": {
             "path": "lexicon.json",
-            "sha256": "8ded97f69099d495a6871b7742ea5bbf2551bf89dfa25cf3c65b7cf8e68eb413"
+            "sha256": "8f378aa80e3890809c046ab55d02b6f2fafa0025fc32c5e98f7baf233e7becde"
         },
         "contextual": {
             "path": "contextual.json",
-            "sha256": "4576ca1a6a04922e66d0c4851ce3d3acd7cacc27c393c7c337e242a82db2eece"
+            "sha256": "7b23888adcce2f8c13f18455d97f08dc301c8633e0ead3ae04623b89958e2b79"
         },
         "classifier": {
             "path": "classifier-manifest.json",
-            "sha256": "ac86684b882d7270940e3e0e579b63711dc75656abd91b191bd9221b01720763"
+            "sha256": "fd8bf6a12cf4d84b7aa8088c9b86cbdb0a3533e9db52b24f11d384284a4ade1a"
         },
         "dictionary": {
             "path": "dictionary.json",
@@ -42,7 +59,7 @@
         },
         "error-classifier": {
             "floatBytes": 908987,
-            "int8Bytes": 231256,
+            "int8Bytes": 231257,
             "production": "float32 until compressed-model browser/quality comparison passes"
         }
     }
