@@ -2,6 +2,7 @@ import { chromium } from "@playwright/test";
 import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { format } from "oxfmt";
 import { preview } from "vite";
 
 process.env.PLAYWRIGHT_BROWSERS_PATH ??= resolve(".cache/ms-playwright");
@@ -1057,7 +1058,17 @@ const report = {
     },
     failuresAreReportedWithoutSuppressingReport: true,
 };
-writeFileSync("reports/generalization.json", JSON.stringify(report, null, 4) + "\n");
+const reportPath = "reports/generalization.json";
+const formattedReport = await format(
+    reportPath,
+    JSON.stringify(report, null, 4) + "\n",
+    json("oxfmt.json"),
+);
+if (formattedReport.errors.length)
+    throw new Error(
+        `Could not format ${reportPath}: ${formattedReport.errors.map((error) => error.message).join("; ")}`,
+    );
+writeFileSync(reportPath, formattedReport.code);
 console.log(
     JSON.stringify(
         {
