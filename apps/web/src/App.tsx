@@ -18,7 +18,15 @@ import {
     type SkillState,
     type Assessment,
 } from "@grammar/engine";
-import { db, download, exportBackup, restoreBackup, saveDocument } from "./persistence";
+import {
+    contributesToGrammarMastery,
+    db,
+    download,
+    exportBackup,
+    reconcileGrammarMastery,
+    restoreBackup,
+    saveDocument,
+} from "./persistence";
 import { extractFile } from "./import";
 import { Icon } from "./icons";
 import { EssayLab } from "./EssayLab";
@@ -256,6 +264,7 @@ export default function App() {
         const previous = commitPending();
         if (previous) await persist(previous);
         const document = EssayDocument.create(text, title);
+        if (busy()) cancel();
         setDoc(document);
         setDraft(text);
         setReport(undefined);
@@ -396,12 +405,12 @@ export default function App() {
                 throw new Error(
                     "This workspace has reached its limit of 50,000 recorded attempts. Export your records before starting a new workspace.",
                 );
-            if (!active) await db.skills.put(state);
+            if (!active && contributesToGrammarMastery(q.id)) await db.skills.put(state);
             await db.attempts.add(attempt);
             if (updated) await db.assessments.put(updated);
         });
         if (updated) {
-            setAssessment(updated);
+            if (assessment()?.id === updated.id) setAssessment(updated);
             setAssessments(await db.assessments.toArray());
         }
         setStates(await db.skills.toArray());
@@ -460,7 +469,7 @@ export default function App() {
         const current = commitPending();
         if (current) await persist(current);
         download(
-            `syntax-backup-${new Date().toISOString().slice(0, 10)}.json`,
+            `linguorithm-backup-${new Date().toISOString().slice(0, 10)}.json`,
             JSON.stringify(await exportBackup(), null, 4),
             "application/json",
         );
@@ -520,6 +529,7 @@ export default function App() {
         safely(async () => {
             try {
                 await refreshDocuments();
+                await reconcileGrammarMastery();
                 setStates(await db.skills.toArray());
                 setAttempts(await db.attempts.orderBy("at").toArray());
                 setMaterials(await db.materials.toArray());
@@ -547,7 +557,7 @@ export default function App() {
         clearTimeout(timeout);
     });
     createEffect(() => {
-        document.title = `${page()} — Syntax`;
+        document.title = `${page()} — Linguorithm`;
     });
 
     return (
@@ -597,11 +607,9 @@ export default function App() {
                         setPage("Essay laboratory");
                     }}
                 >
-                    <span class="brand-symbol">
-                        s<span>↗</span>
-                    </span>
+                    <img class="brand-symbol" src="./icon.svg" alt="" aria-hidden="true" />
                     <span>
-                        Syntax<span class="brand-sub">Writing & grammar</span>
+                        Linguorithm<span class="brand-sub">Writing & grammar</span>
                     </span>
                 </a>
                 <div class="workspace-label">Workspace</div>
@@ -631,7 +639,7 @@ export default function App() {
                     <button class="text-button" onClick={() => setSettings(true)}>
                         Privacy & settings <span>↗</span>
                     </button>
-                    <span class="version">Syntax 0.2 · American English</span>
+                    <span class="version">Linguorithm 0.2 · American English</span>
                 </div>
             </aside>
             <div class="app-body">
@@ -749,10 +757,11 @@ export default function App() {
                             onPractice={startPractice}
                         />
                     </Show>
-                    <Show when={page() === "Practice"}>
+                    <div hidden={page() !== "Practice"}>
                         <Practice
                             onRepairs={() => {
                                 setAssessment(undefined);
+                                setQuestion(undefined);
                                 setQuizQueue(mutations.slice(1));
                                 setQuestion(mutations[0]);
                             }}
@@ -772,7 +781,7 @@ export default function App() {
                             onAnswer={answer}
                             onError={fail}
                         />
-                    </Show>
+                    </div>
                     <Show when={page() === "Materials"}>
                         <section class="materials-layout">
                             <div class="material-list">
@@ -859,8 +868,8 @@ export default function App() {
                                     <li>Validate the answer and retain the source.</li>
                                 </ol>
                                 <p>
-                                    TXT, Markdown, HTML, DOCX, PPTX, XLSX, and text-based PDF. No
-                                    invented summaries or questions about unsupported facts.
+                                    Text, Markdown, HTML, Word, PowerPoint, Excel, and text-based
+                                    PDF. No invented summaries or questions about unsupported facts.
                                 </p>
                             </aside>
                         </section>
@@ -936,7 +945,7 @@ export default function App() {
                             onAssessment={(phase) => safely(() => startAssessment(phase))}
                             onExport={() =>
                                 download(
-                                    "syntax-learning-records.csv",
+                                    "linguorithm-learning-records.csv",
                                     new ProgressExporter().csv(attempts()),
                                     "text/csv",
                                 )
@@ -949,7 +958,7 @@ export default function App() {
                         />
                     </Show>
                     <footer class="page-footer">
-                        <span>Syntax · American English</span>
+                        <span>Linguorithm · American English</span>
                         <button onClick={() => setSettings(true)}>
                             Engine notes <span>↗</span>
                         </button>
@@ -1008,7 +1017,9 @@ function Settings(props: {
             onKeyDown={(e) => {
                 if (e.key === "Escape") props.onClose();
                 if (e.key === "Tab") {
-                    const items = panel.querySelectorAll<HTMLElement>("button, a, input");
+                    const items = panel.querySelectorAll<HTMLElement>(
+                        "button, a, input, textarea, select",
+                    );
                     const first = items[0],
                         last = items[items.length - 1];
                     if (
