@@ -34,6 +34,7 @@ export interface Morphology {
     lemma: string;
     pos: Pos;
     number?: "singular" | "plural";
+    person?: 1 | 2 | 3;
     finite?: boolean;
     verbForm?: string;
     tense?: string;
