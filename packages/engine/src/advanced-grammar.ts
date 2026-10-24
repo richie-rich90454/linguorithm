@@ -945,6 +945,73 @@ const neuralPerfectForm = (inflections?: PastParticipleInflections): GrammarRule
         });
     },
 });
+const gerundComplement: GrammarRule = {
+    id: "gerund-complement",
+    version: "1.0.0",
+    skill: "verb-forms",
+    description: "Review a stable to-infinitive complement immediately after enjoy or avoid.",
+    evaluate(s) {
+        if (s.ambiguous || s.syntaxSource !== "neural" || hasQuotes(s)) return [];
+        return s.graph.flatMap((edge) => {
+            if (edge.relation !== "xcomp" || !stableEdge(s, edge)) return [];
+            const governor = s.tokens[edge.head]!;
+            const complement = s.tokens[edge.dependent]!;
+            const marker = s.tokens[edge.head + 1];
+            const governingForms = governor.analyses.filter((a) => a.pos === "VERB");
+            const complementForms = complement.analyses.filter((a) => a.pos === "VERB");
+            if (
+                governor.pos !== "VERB" ||
+                !finite(governor) ||
+                !governingForms.length ||
+                !governingForms.every((a) => /^(enjoy|avoid)$/u.test(a.lemma)) ||
+                new Set(governingForms.map((a) => a.lemma)).size !== 1 ||
+                complement.pos !== "VERB" ||
+                !complementForms.some((a) => a.verbForm === "Inf") ||
+                complementForms.some(
+                    (a) => /^(Part|Ger)$/u.test(a.verbForm ?? "") || a.tense === "Past",
+                ) ||
+                new Set(complementForms.map((a) => a.lemma)).size !== 1 ||
+                edge.dependent !== edge.head + 2 ||
+                marker?.text.toLowerCase() !== "to" ||
+                !/^\s+$/u.test(s.text.slice(governor.end - s.start, marker.start - s.start)) ||
+                !/^\s+$/u.test(s.text.slice(marker.end - s.start, complement.start - s.start)) ||
+                !s.graph.some(
+                    (candidate) =>
+                        candidate.head === edge.dependent &&
+                        candidate.dependent === edge.head + 1 &&
+                        candidate.relation === "mark" &&
+                        stableEdge(s, candidate),
+                ) ||
+                s.graph.some(
+                    (candidate) =>
+                        candidate.head === edge.dependent && subjectRelation(candidate.relation),
+                )
+            )
+                return [];
+            return [
+                finding(
+                    s,
+                    this.id,
+                    this.skill,
+                    { start: marker.start, end: complement.end },
+                    "Grammar",
+                    "Review the verb complement after enjoy or avoid",
+                    `The local parse treats “${marker.text} ${complement.text}” as the direct verb complement of “${governor.text}”. In ordinary edited English, enjoy and avoid normally take an -ing complement. Check the intended construction and voice before revising; this observation supplies no automatic rewrite.`,
+                    [],
+                    "Possible issue",
+                    [
+                        { start: governor.start, end: governor.end, label: "Governing verb" },
+                        {
+                            start: marker.start,
+                            end: complement.end,
+                            label: "Parsed infinitive complement",
+                        },
+                    ],
+                ),
+            ];
+        });
+    },
+};
 const clausePunctuation: GrammarRule = {
     id: "clause-punctuation",
     version: "1.0.0",
@@ -1220,6 +1287,7 @@ const seriesComma: GrammarRule = {
 export const advancedRules: readonly GrammarRule[] = [
     neuralAgreement(),
     neuralPerfectForm(),
+    gerundComplement,
     countNounNumber(),
     subjectCase,
     comparison,
