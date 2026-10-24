@@ -1,41 +1,6 @@
 import type { AnalysisReport, Diagnostic, GoalMetadata, WritingIntent } from "./domain";
 import { writingGoals } from "./goals";
-
-const goalByRule: Readonly<Record<string, readonly string[]>> = {
-    agreement: ["writing.agreement"],
-    "neural-agreement": ["writing.agreement"],
-    "verb-form": ["writing.irregular"],
-    "neural-perfect-form": ["writing.irregular"],
-    "article-sound": ["writing.articles"],
-    "comma-splice": ["writing.runons", "writing.boundaries"],
-    "run-on": ["writing.runons", "writing.boundaries"],
-    "parsed-boundary": ["writing.runons", "writing.boundaries"],
-    "parsed-dependent-fragment": ["writing.fragments", "writing.sentence"],
-    "dependent-fragment": ["writing.fragments", "writing.sentence"],
-    "pronoun-case": ["writing.pronouns"],
-    "pronoun-reference": ["writing.pronouns"],
-    "subject-case": ["writing.pronouns"],
-    "double-comparison": ["writing.comparison"],
-    "possessive-apostrophe": ["writing.possessive", "writing.editing"],
-    "missing-contraction-apostrophe": ["writing.apostrophe", "writing.contractions"],
-    "quotation-punctuation": ["writing.quotes"],
-    spelling: ["writing.spelling", "writing.editing"],
-    "dictionary-spelling": ["writing.spelling", "writing.editing"],
-    "contextual-usage": ["writing.homophones"],
-    "parallel-forms": ["writing.parallelism"],
-    "modifier-attachment": ["writing.modifiers"],
-    "document-repetition": ["writing.revision", "writing.concision"],
-    "repeated-word": ["writing.concision"],
-    "introductory-comma": ["writing.introductory-comma"],
-    "introductory-clause-comma": ["writing.introductory-comma"],
-    "missing-series-comma": ["writing.commas", "writing.list-punctuation"],
-    "sentence-capitalization": ["writing.capitals", "writing.editing"],
-    "missing-terminal-mark": ["writing.endmarks", "writing.editing"],
-    "repeated-spacing": ["writing.spacing"],
-    "colon-complement": ["writing.colons"],
-    "semicolon-shared-subject": ["writing.semicolons"],
-    "document-tense": ["writing.tense"],
-};
+import { goalByRule } from "./goal-rules";
 
 function annotateDiagnostic(diagnostic: Diagnostic): Diagnostic {
     const goalId = goalByRule[diagnostic.ruleId]?.[0];
