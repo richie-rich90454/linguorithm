@@ -12,6 +12,7 @@ import { attachGoalMetadata } from "./goal-metadata";
 import { EssayDocument } from "./domain";
 import { DiagnosticResolver, finding, GrammarConstraintEngine } from "./grammar";
 import { advancedRules, createAdvancedRules, documentRelationships } from "./advanced-grammar";
+import { documentFeedback } from "./document-feedback";
 import { PastParticipleInflections, PresentVerbInflections } from "./inflections";
 import { SpellingIndex, editDistance } from "./spelling";
 import { ConservativeDependencyParser } from "./text";
@@ -341,6 +342,7 @@ export class HybridAnalysisPipeline {
                 diagnostics.push({ ...d, proposals: safe });
             }
         }
+        diagnostics.push(...documentFeedback(sentences, text, style));
         diagnostics.push(...documentRelationships(sentences, style, writingIntent));
         return attachGoalMetadata(
             {
