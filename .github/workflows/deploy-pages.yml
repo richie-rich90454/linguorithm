@@ -1,0 +1,48 @@
+name: Deploy to GitHub Pages
+on:
+    workflow_run:
+        workflows: [Verify platform]
+        types: [completed]
+        branches: [main]
+    workflow_dispatch:
+permissions:
+    contents: read
+concurrency:
+    group: github-pages
+    cancel-in-progress: true
+jobs:
+    deploy:
+        if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            pages: write
+            id-token: write
+        timeout-minutes: 20
+        steps:
+            - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+            - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+              with:
+                  node-version: 24.13.0
+            - name: Install project-local tooling and dependencies
+              run: |
+                  make install-pnpm
+                  make install
+            - name: Build and verify the static application
+              run: |
+                  make check
+                  make content
+                  make build
+                  make bundle
+                  make validate-models
+            - uses: actions/configure-pages@v5
+            - uses: actions/upload-pages-artifact@v3
+              with:
+                  path: apps/web/dist
+            - id: deployment
+              uses: actions/deploy-pages@v4
