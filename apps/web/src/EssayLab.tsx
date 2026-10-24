@@ -1,6 +1,55 @@
 import { For, Show, createMemo, createSignal } from "solid-js";
-import type { AnalysisReport, Diagnostic, EssayDocument, SkillId } from "@grammar/engine";
+import type {
+    AnalysisReport,
+    Diagnostic,
+    EssayDocument,
+    SkillId,
+    WritingIntent,
+} from "@grammar/engine";
 import { Icon } from "./icons";
+
+const intentPrompts: Record<WritingIntent, readonly string[]> = {
+    general: [
+        "What should your reader take away?",
+        "Where could a concrete example make your meaning clearer?",
+    ],
+    narrative: [
+        "What changes between the beginning and the end?",
+        "Which moment would benefit from a specific detail?",
+    ],
+    descriptive: [
+        "Which details help your reader picture the scene?",
+        "Do your details create the impression you intended?",
+    ],
+    explanatory: [
+        "Have you introduced each idea before building on it?",
+        "Would an example make a difficult step easier to follow?",
+    ],
+    argumentative: [
+        "Does each reason support your central claim?",
+        "Have you addressed a thoughtful reader’s strongest objection?",
+    ],
+    reflective: [
+        "What did the experience change in your thinking?",
+        "Which detail helps explain why that change matters?",
+    ],
+    informative: [
+        "What does your reader need to know first?",
+        "Can your reader distinguish facts from your interpretation?",
+    ],
+    analytical: [
+        "What does your evidence reveal beyond a summary?",
+        "Have you explained how each example supports your interpretation?",
+    ],
+    creative: [
+        "What feeling or effect do you want to create?",
+        "Which language choices strengthen your intended voice?",
+    ],
+    "professional-communication": [
+        "Is the purpose clear in the opening?",
+        "Does your reader know the next step and who should take it?",
+    ],
+};
 
 interface Props {
     doc?: EssayDocument;
@@ -15,6 +64,8 @@ interface Props {
     reviewMode: boolean;
     documents: readonly EssayDocument[];
     status: string;
+    writingIntent?: WritingIntent;
+    onIntent?: (intent: WritingIntent) => void;
     onEdit: (value: boolean) => void;
     onText: (text: string) => void;
     onAnalyze: () => void;
@@ -62,12 +113,27 @@ export function EssayLab(props: Props) {
         });
     });
     const select = (d: Diagnostic) => {
+        if (filter() !== "All findings" && filter() !== d.category) setFilter("All findings");
         props.onSelect(d.id);
         document.getElementById(`finding-${d.id}`)?.scrollIntoView({
             block: "nearest",
             behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
         });
     };
+    const showPassage = (d: Diagnostic) => {
+        props.onSelect(d.id);
+        props.onEdit(false);
+        queueMicrotask(() => {
+            document.getElementById(`annotation-${d.id}`)?.scrollIntoView({
+                block: "center",
+                behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+                    ? "auto"
+                    : "smooth",
+            });
+            document.getElementById(`finding-${d.id}`)?.scrollIntoView({ block: "nearest" });
+        });
+    };
+    const activeIndex = createMemo(() => filtered().findIndex((d) => d.id === active()?.id));
     return (
         <>
             <div class="lab-toolbar">
@@ -115,7 +181,12 @@ export function EssayLab(props: Props) {
                         <Icon name="redo" size={17} />
                     </button>
                     <span class="toolbar-divider" />
-                    <button class="text-button export-button" onClick={props.onExport}>
+                    <button
+                        class="text-button export-button"
+                        onClick={props.onExport}
+                        aria-label="Export text"
+                        disabled={!props.draft.trim()}
+                    >
                         <Icon name="download" size={16} />
                         Export text
                     </button>
@@ -126,7 +197,7 @@ export function EssayLab(props: Props) {
                     <div class="essay-meta">
                         <span>
                             <span class="document-dot" />
-                            Personal essay
+                            Your writing
                         </span>
                         <button class="text-button" onClick={() => props.onEdit(!props.editing)}>
                             {props.editing ? "Reading view" : "Edit text"}
@@ -139,10 +210,52 @@ export function EssayLab(props: Props) {
                         value={props.doc?.record.title ?? ""}
                         onChange={(e) => props.onTitle(e.currentTarget.value)}
                     />
+                    <div class="writing-intent">
+                        <label for="writing-intent">Writing intent</label>
+                        <select
+                            id="writing-intent"
+                            disabled={!props.doc}
+                            value={props.writingIntent ?? "general"}
+                            onChange={(e) =>
+                                props.onIntent?.(e.currentTarget.value as WritingIntent)
+                            }
+                            aria-describedby="writing-intent-help"
+                        >
+                            <option value="general">Everyday writing</option>
+                            <option value="narrative">Tell a story</option>
+                            <option value="descriptive">Describe a scene</option>
+                            <option value="informative">Share information</option>
+                            <option value="explanatory">Explain an idea</option>
+                            <option value="argumentative">Make an argument</option>
+                            <option value="reflective">Reflect on an experience</option>
+                            <option value="analytical">Analyze a text or idea</option>
+                            <option value="creative">Explore creatively</option>
+                            <option value="professional-communication">
+                                Communicate professionally
+                            </option>
+                        </select>
+                        <p id="writing-intent-help">
+                            Choose the context for this draft. You decide which suggestions fit your
+                            voice.
+                        </p>
+                        <details class="intent-guidance">
+                            <summary>Optional writing guidance</summary>
+                            <p>
+                                Reflection prompts for your intent, separate from detected findings.
+                            </p>
+                            <ul>
+                                <For each={intentPrompts[props.writingIntent ?? "general"]}>
+                                    {(prompt) => <li>{prompt}</li>}
+                                </For>
+                            </ul>
+                        </details>
+                    </div>
                     <p class="essay-instruction">
                         {props.editing
                             ? "Make your changes, then analyze to see fresh findings."
-                            : "Select an underlined passage to review its finding."}
+                            : props.stale || !props.report
+                              ? "Analyze your writing to see suggestions in context."
+                              : "Select an underlined passage to review its finding."}
                     </p>
                     <Show
                         when={props.editing}
@@ -224,8 +337,11 @@ export function EssayLab(props: Props) {
                     </Show>
                     <div class="essay-bottom">
                         <span>
-                            {words()} words <span>·</span> {props.report?.sentences.length ?? 0}{" "}
-                            sentences <span>·</span> American English
+                            {words()} words
+                            <Show when={props.report && !props.stale}>
+                                <span>·</span> {props.report?.sentences.length} sentences
+                            </Show>
+                            <span>·</span> American English
                         </span>
                         <Show
                             when={props.busy}
@@ -249,20 +365,25 @@ export function EssayLab(props: Props) {
                         </Show>
                     </div>
                 </section>
-                <aside class="findings-panel" aria-label="Analysis findings">
+                <aside class="findings-panel" aria-label="Analysis findings" aria-busy={props.busy}>
                     <div class="findings-heading">
                         <h2>
-                            Findings <span>{props.diagnostics.length}</span>
+                            Findings{" "}
+                            <Show when={props.report && !props.stale && !props.busy}>
+                                <span>{props.diagnostics.length}</span>
+                            </Show>
                         </h2>
-                        <p>
+                        <p role="status">
                             {props.busy
                                 ? "Looking for grammatical relationships…"
                                 : props.stale
                                   ? "Text changed. Analyze for current findings."
-                                  : "Review suggestions in context."}
+                                  : !props.report
+                                    ? "Your feedback will appear here."
+                                    : "Review each suggestion, then choose what to keep."}
                         </p>
                     </div>
-                    <div class="finding-filters" aria-label="Filter findings">
+                    <div class="finding-filters" role="group" aria-label="Filter findings">
                         <For
                             each={[
                                 "All findings",
@@ -276,6 +397,7 @@ export function EssayLab(props: Props) {
                             {(category) => (
                                 <button
                                     classList={{ selected: filter() === category }}
+                                    aria-pressed={filter() === category}
                                     onClick={() => setFilter(category)}
                                 >
                                     {category}
@@ -313,23 +435,52 @@ export function EssayLab(props: Props) {
                         </label>
                     </div>
                     <Show
-                        when={!props.stale && !props.busy}
+                        when={props.report && !props.stale && !props.busy}
                         fallback={
                             <div class="analysis-placeholder">
                                 <Icon name={props.busy ? "structure" : "essay"} size={28} />
                                 <h3>
                                     {props.busy
                                         ? "Tracing the relationships…"
-                                        : "Ready for another look."}
+                                        : !props.draft.trim()
+                                          ? "Start with your draft."
+                                          : !props.report
+                                            ? "Ready when you are."
+                                            : "Your draft has changed."}
                                 </h3>
                                 <p>
                                     {props.busy
                                         ? "Your essay is being analyzed locally in a background worker."
-                                        : "Analyze your current text to update the annotations."}
+                                        : !props.draft.trim()
+                                          ? "Write or paste your text, then choose Analyze essay. Your writing stays on this device."
+                                          : "Choose Analyze essay to review your current text. Your writing stays on this device."}
                                 </p>
                             </div>
                         }
                     >
+                        <Show when={filtered().length > 1}>
+                            <nav class="finding-navigation" aria-label="Navigate findings">
+                                <span>
+                                    {activeIndex() + 1} of {filtered().length}
+                                </span>
+                                <button
+                                    class="text-button"
+                                    disabled={activeIndex() <= 0}
+                                    onClick={() => showPassage(filtered()[activeIndex() - 1]!)}
+                                    aria-label="Previous finding"
+                                >
+                                    ← Previous
+                                </button>
+                                <button
+                                    class="text-button"
+                                    disabled={activeIndex() >= filtered().length - 1}
+                                    onClick={() => showPassage(filtered()[activeIndex() + 1]!)}
+                                    aria-label="Next finding"
+                                >
+                                    Next →
+                                </button>
+                            </nav>
+                        </Show>
                         <div class="findings-list">
                             <Show
                                 when={filtered().length}
@@ -342,9 +493,18 @@ export function EssayLab(props: Props) {
                                                 : "No supported issues found."}
                                         </h3>
                                         <p>
-                                            An unmarked passage is not a guarantee of correctness.
-                                            Read your writing in context.
+                                            {props.diagnostics.length
+                                                ? "Try All findings to continue reviewing your writing."
+                                                : "Read through once more for meaning and flow. An unmarked passage is not a guarantee of correctness."}
                                         </p>
+                                        <Show when={props.diagnostics.length}>
+                                            <button
+                                                class="button secondary"
+                                                onClick={() => setFilter("All findings")}
+                                            >
+                                                Show all findings
+                                            </button>
+                                        </Show>
                                     </div>
                                 }
                             >
@@ -359,20 +519,9 @@ export function EssayLab(props: Props) {
                                         >
                                             <button
                                                 class="finding-select"
-                                                onClick={() => {
-                                                    props.onSelect(d.id);
-                                                    document
-                                                        .getElementById(`annotation-${d.id}`)
-                                                        ?.scrollIntoView({
-                                                            block: "center",
-                                                            behavior: matchMedia(
-                                                                "(prefers-reduced-motion: reduce)",
-                                                            ).matches
-                                                                ? "auto"
-                                                                : "smooth",
-                                                        });
-                                                }}
+                                                onClick={() => showPassage(d)}
                                                 aria-expanded={active()?.id === d.id}
+                                                aria-controls={`finding-detail-${d.id}`}
                                             >
                                                 <span
                                                     classList={{
@@ -390,12 +539,15 @@ export function EssayLab(props: Props) {
                                                     </span>
                                                     <strong>{d.title}</strong>
                                                 </span>
-                                                <span class="finding-expand">
-                                                    {active()?.id === d.id ? "−" : "+"}
+                                                <span class="finding-expand" aria-hidden="true">
+                                                    {active()?.id === d.id ? "↗" : "+"}
                                                 </span>
                                             </button>
                                             <Show when={active()?.id === d.id}>
-                                                <div class="finding-detail">
+                                                <div
+                                                    class="finding-detail"
+                                                    id={`finding-detail-${d.id}`}
+                                                >
                                                     <div class="correction-preview">
                                                         <del>
                                                             {props.draft.slice(d.start, d.end) ||
@@ -455,9 +607,11 @@ export function EssayLab(props: Props) {
                                                         </Show>
                                                         <button
                                                             class="text-button"
+                                                            title="Keep your wording and hide this finding"
+                                                            aria-label={`Dismiss ${d.title}; keep your wording`}
                                                             onClick={() => props.onIgnore(d)}
                                                         >
-                                                            Dismiss
+                                                            Keep my wording
                                                         </button>
                                                     </div>
                                                     <Show when={d.proposals.length > 1}>
