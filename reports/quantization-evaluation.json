@@ -6,7 +6,7 @@
             "posAccuracy": 0.9447282674282956,
             "uas": 0.816565429019671,
             "las": 0.7727181302546361,
-            "elapsedSeconds": 49.884493600111455
+            "elapsedSeconds": 20.55464950017631
         },
         "int8": {
             "sentences": 1962,
@@ -14,7 +14,7 @@
             "posAccuracy": 0.9446075867894927,
             "uas": 0.8166458827788728,
             "las": 0.7730399452914437,
-            "elapsedSeconds": 49.298510199878365
+            "elapsedSeconds": 21.179171199910343
         }
     },
     "production": "float32",
