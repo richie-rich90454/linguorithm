@@ -27,4 +27,4 @@ Changes are recorded here before a tagged release is published.
 
 ### Evaluation scope
 
-Syntax and synthetic-task measurements are documented in the model card. Independent natural-essay accuracy, physical-device performance, and educational effectiveness have not been established. No comparative superiority claim is implied by this release.
+Linguorithm and synthetic-task measurements are documented in the model card. Independent natural-essay accuracy, physical-device performance, and educational effectiveness have not been established. No comparative superiority claim is implied by this release.
