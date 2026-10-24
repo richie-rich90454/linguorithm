@@ -8,6 +8,7 @@ import {
     type SkillState,
 } from "@grammar/engine";
 import { Icon } from "./icons";
+import { contributesToGrammarMastery } from "./persistence";
 
 export function Progress(props: {
     states: readonly SkillState[];
@@ -24,6 +25,7 @@ export function Progress(props: {
             (a) =>
                 a.hints === 0 &&
                 (a.attemptNumber ?? 1) === 1 &&
+                contributesToGrammarMastery(a.exerciseId) &&
                 (a.phase ?? "practice") === "practice",
         ),
     );
