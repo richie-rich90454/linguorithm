@@ -5,8 +5,10 @@ import type {
     Edit,
     Morphology,
     Sentence,
+    WritingIntent,
 } from "./domain";
 import { createPipeline } from "./pipeline";
+import { attachGoalMetadata } from "./goal-metadata";
 import { EssayDocument } from "./domain";
 import { DiagnosticResolver, finding, GrammarConstraintEngine } from "./grammar";
 import { advancedRules, createAdvancedRules, documentRelationships } from "./advanced-grammar";
@@ -112,9 +114,10 @@ export class HybridAnalysisPipeline {
         revision = 0,
         style = false,
         personalDictionary: readonly string[] = [],
+        writingIntent: WritingIntent = "general",
     ): Promise<AnalysisReport> {
         const started = performance.now(),
-            report = this.fallback.analyze(text, revision, style),
+            report = this.fallback.analyze(text, revision, style, writingIntent),
             sentences: Sentence[] = [],
             diagnostics: Diagnostic[] = [];
         const personal = new Set(personalDictionary.map((w) => w.toLowerCase()));
@@ -338,38 +341,47 @@ export class HybridAnalysisPipeline {
                 diagnostics.push({ ...d, proposals: safe });
             }
         }
-        diagnostics.push(...documentRelationships(sentences, style));
-        return {
-            ...report,
-            sentences,
-            diagnostics: this.resolver.resolve(
-                diagnostics.filter(
-                    (d) =>
-                        !(
-                            d.category === "Spelling" &&
-                            personal.has(text.slice(d.start, d.end).toLowerCase())
-                        ),
+        diagnostics.push(...documentRelationships(sentences, style, writingIntent));
+        return attachGoalMetadata(
+            {
+                ...report,
+                sentences,
+                diagnostics: this.resolver.resolve(
+                    diagnostics.filter(
+                        (d) =>
+                            !(
+                                d.category === "Spelling" &&
+                                personal.has(text.slice(d.start, d.end).toLowerCase())
+                            ),
+                    ),
                 ),
-            ),
-            elapsedMs: performance.now() - started,
-            versions: {
-                ...report.versions,
-                syntax: this.syntax.metadata.version,
-                classifier: this.syntax.metadata.version,
+                elapsedMs: performance.now() - started,
+                versions: {
+                    ...report.versions,
+                    syntax: this.syntax.metadata.version,
+                    classifier: this.syntax.metadata.version,
+                },
+                limitations: [
+                    ...this.syntax.metadata.limitations,
+                    ...(lexicalAbstentions
+                        ? [
+                              `English corrections withheld for ${lexicalAbstentions} sentence(s) with insufficient dictionary coverage; language and specialized vocabulary require human review.`,
+                          ]
+                        : []),
+                ],
+                modelStatus: {
+                    state: "ready",
+                    detail: "Local BiLSTM/CRF tagging and bounded-beam dependency parsing; neural error scores are review-only and synthetic-task calibrated.",
+                    tasks: [
+                        "pos",
+                        "parser",
+                        "error-classifier",
+                        "dictionary",
+                        "contextual-ranking",
+                    ],
+                },
             },
-            limitations: [
-                ...this.syntax.metadata.limitations,
-                ...(lexicalAbstentions
-                    ? [
-                          `English corrections withheld for ${lexicalAbstentions} sentence(s) with insufficient dictionary coverage; language and specialized vocabulary require human review.`,
-                      ]
-                    : []),
-            ],
-            modelStatus: {
-                state: "ready",
-                detail: "Local BiLSTM/CRF tagging and bounded-beam dependency parsing; neural error scores are review-only and synthetic-task calibrated.",
-                tasks: ["pos", "parser", "error-classifier", "dictionary", "contextual-ranking"],
-            },
-        };
+            writingIntent,
+        );
     }
 }
