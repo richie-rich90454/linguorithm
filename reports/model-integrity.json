@@ -24,18 +24,18 @@
         },
         {
             "path": "classifier-manifest.json",
-            "sha256": "ac86684b882d7270940e3e0e579b63711dc75656abd91b191bd9221b01720763",
-            "bytes": 3974
+            "sha256": "fd8bf6a12cf4d84b7aa8088c9b86cbdb0a3533e9db52b24f11d384284a4ade1a",
+            "bytes": 16570
         },
         {
             "path": "weights/error-classifier.onnx",
-            "sha256": "eb82abb8c8155230939c225d844194a3a5c4d8bf2e2383c0a31b96fbdd5c1b84",
+            "sha256": "580a0205b0018541be7d207d2bdf7cc5458c6b6b6d7d1a9d0f43af879e73f132",
             "bytes": 908987
         },
         {
             "path": "lexicon.json",
-            "sha256": "8ded97f69099d495a6871b7742ea5bbf2551bf89dfa25cf3c65b7cf8e68eb413",
-            "bytes": 1591003
+            "sha256": "8f378aa80e3890809c046ab55d02b6f2fafa0025fc32c5e98f7baf233e7becde",
+            "bytes": 1650220
         },
         {
             "path": "dictionary.json",
@@ -44,8 +44,8 @@
         },
         {
             "path": "contextual.json",
-            "sha256": "4576ca1a6a04922e66d0c4851ce3d3acd7cacc27c393c7c337e242a82db2eece",
-            "bytes": 2289664
+            "sha256": "7b23888adcce2f8c13f18455d97f08dc301c8633e0ead3ae04623b89958e2b79",
+            "bytes": 1871222
         }
     ],
     "policy": "Syntax passed EWT accuracy and Python/ONNX parity gates. Grammar classifier calibrated on synthetic EWT mutations only; review-only until independent learner-essay validation."
