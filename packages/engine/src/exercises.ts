@@ -31,7 +31,7 @@ const authored = (
                   return feedback + " " + explanation;
               })(),
     ),
-    source: { name: "Syntax authored curriculum", quote: sentence, location: `Item ${id}` },
+    source: { name: "Linguorithm authored curriculum", quote: sentence, location: `Item ${id}` },
     validation: "authored",
 });
 
