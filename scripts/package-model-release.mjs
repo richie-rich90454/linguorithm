@@ -7,6 +7,24 @@ import "./validate-models.mjs";
 const source = resolve("apps/web/public/models");
 const destination = resolve("models/releases");
 const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
+const scoreParity = JSON.parse(
+    readFileSync(resolve("reports/classifier-score-parity.json"), "utf8"),
+);
+const classifierHash = digest(readFileSync(resolve(source, "weights/error-classifier.onnx")));
+if (
+    scoreParity.status !== "passed" ||
+    scoreParity.weightSha256 !== classifierHash ||
+    !/^[a-f0-9]{64}$/.test(scoreParity.scoreFixtureSha256 ?? "") ||
+    !Number.isInteger(scoreParity.checkedTokens) ||
+    scoreParity.checkedTokens < 1 ||
+    scoreParity.tolerance !== 0.0001 ||
+    !Number.isFinite(scoreParity.maximumDifference) ||
+    scoreParity.maximumDifference < 0 ||
+    scoreParity.maximumDifference > scoreParity.tolerance
+)
+    throw new Error(
+        'Archive promotion requires passed browser classifier score parity for the packaged weights. Run make check-classifier-features ARGS="--scores" before promotion.',
+    );
 const paths = [];
 function walk(directory) {
     for (const entry of readdirSync(directory, { withFileTypes: true })) {
