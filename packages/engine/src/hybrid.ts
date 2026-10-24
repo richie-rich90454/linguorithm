@@ -13,7 +13,11 @@ import { EssayDocument } from "./domain";
 import { DiagnosticResolver, finding, GrammarConstraintEngine } from "./grammar";
 import { advancedRules, createAdvancedRules, documentRelationships } from "./advanced-grammar";
 import { documentFeedback } from "./document-feedback";
-import { PastParticipleInflections, PresentVerbInflections } from "./inflections";
+import {
+    CountNounInflections,
+    PastParticipleInflections,
+    PresentVerbInflections,
+} from "./inflections";
 import { SpellingIndex, editDistance } from "./spelling";
 import { ConservativeDependencyParser } from "./text";
 
@@ -105,6 +109,7 @@ export class HybridAnalysisPipeline {
                           (word) => this.spelling?.has(word) ?? false,
                       ),
                       new PastParticipleInflections(syntax.lexicon.forms),
+                      new CountNounInflections(syntax.lexicon.forms),
                   )
                 : advancedRules,
         );
