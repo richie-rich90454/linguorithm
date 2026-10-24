@@ -1,5 +1,5 @@
 {
-    "generatedAt": "2026-10-24T07:39:40.659Z",
+    "generatedAt": "2026-10-24T12:15:15.421Z",
     "scope": "Production browser worker inference on fixed held-out natural syntax data plus newly authored development challenges and controlled gold-guided agreement mutations. Not an independent learner-essay accuracy or learning-effectiveness study. Model weights are not changed by this evaluation.",
     "production": {
         "baseUrl": "http://127.0.0.1:4317",
@@ -27,8 +27,8 @@
                 "classifierWeights": "580a0205b0018541be7d207d2bdf7cc5458c6b6b6d7d1a9d0f43af879e73f132",
                 "dictionary": "26f2b4b2b612a8107586cff814c4af77f32a08e1dd20f706a04d1d380b864da9"
             },
-            "worker": "analysis.worker-o4mthKNW.js",
-            "workerSha256": "8612871efa69195ab20d925afb6cf3342e5bbdf202daea4d8733ddc1e5457245"
+            "worker": "analysis.worker-Brfs9gWQ.js",
+            "workerSha256": "7997a69b308ea18415f3a003119c6e7d57b24011b9b4b093910797f8b6ce20ad"
         },
         "classifierConfidence": {
             "calibratedReviewWarnings": 0,
