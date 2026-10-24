@@ -9,6 +9,7 @@ import {
 } from "@grammar/engine";
 import { Icon } from "./icons";
 import { contributesToGrammarMastery } from "./persistence";
+import { WritingGoalMap } from "./WritingGoalMap";
 
 export function Progress(props: {
     states: readonly SkillState[];
@@ -152,6 +153,7 @@ export function Progress(props: {
                 prior is 20%; learning, slip, and guess parameters are provisional. Hinted success
                 does not count as independent accuracy.
             </p>
+            <WritingGoalMap onPractice={props.onPractice} />
             <div class="section-header">
                 <h2>Recent attempts</h2>
                 <div class="button-row">
