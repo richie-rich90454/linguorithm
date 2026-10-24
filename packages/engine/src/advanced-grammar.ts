@@ -1,6 +1,10 @@
 import type { Dependency, Diagnostic, Sentence, Token, WritingIntent } from "./domain";
 import { finding, type GrammarRule } from "./grammar";
-import type { PastParticipleInflections, PresentVerbInflections } from "./inflections";
+import type {
+    CountNounInflections,
+    PastParticipleInflections,
+    PresentVerbInflections,
+} from "./inflections";
 
 const hasQuotes = (s: Sentence) => /[“”"]/u.test(s.text);
 const subjectRelation = (relation: string) => ["nsubj", "nsubj:pass"].includes(relation);
@@ -81,6 +85,134 @@ function grammaticalNumber(token: Token): "singular" | "plural" | undefined {
     if (surface.endsWith("s")) pluralLemmas.push(surface.slice(0, -1));
     return pluralLemmas.includes(lemma) ? "plural" : undefined;
 }
+const cardinalUnits: Readonly<Record<string, number>> = {
+    zero: 0,
+    one: 1,
+    two: 2,
+    three: 3,
+    four: 4,
+    five: 5,
+    six: 6,
+    seven: 7,
+    eight: 8,
+    nine: 9,
+    ten: 10,
+    eleven: 11,
+    twelve: 12,
+    thirteen: 13,
+    fourteen: 14,
+    fifteen: 15,
+    sixteen: 16,
+    seventeen: 17,
+    eighteen: 18,
+    nineteen: 19,
+    twenty: 20,
+    thirty: 30,
+    forty: 40,
+    fifty: 50,
+    sixty: 60,
+    seventy: 70,
+    eighty: 80,
+    ninety: 90,
+};
+const pluralSelectingQuantifiers = new Set([
+    "both",
+    "few",
+    "fewer",
+    "many",
+    "multiple",
+    "numerous",
+    "several",
+    "various",
+]);
+function cardinalValue(surface: string): number | undefined {
+    const normalized = surface.toLowerCase().replaceAll(",", "");
+    if (/^\d+(?:\.\d+)?$/u.test(normalized)) {
+        const value = Number(normalized);
+        return Number.isFinite(value) ? value : undefined;
+    }
+    const words = normalized.split(/[-\s]+/u).filter((word) => word && word !== "and");
+    if (!words.length) return undefined;
+    let total = 0;
+    let group = 0;
+    for (const word of words) {
+        const value = cardinalUnits[word];
+        if (value !== undefined) group += value;
+        else if (word === "hundred" && group > 0) group *= 100;
+        else if ((word === "thousand" || word === "million") && group > 0) {
+            total += group * (word === "thousand" ? 1_000 : 1_000_000);
+            group = 0;
+        } else return undefined;
+    }
+    return total + group;
+}
+const countNounNumber = (countNouns?: CountNounInflections): GrammarRule => ({
+    id: "count-noun-number",
+    version: "1.0.0",
+    skill: "usage",
+    description:
+        "Review parsed singular count nouns with a stable plural-selecting numeral or determiner.",
+    evaluate(s) {
+        if (!countNouns || s.syntaxSource !== "neural" || s.ambiguous || hasQuotes(s)) return [];
+        const findings: Diagnostic[] = [];
+        for (const edge of s.graph) {
+            if (
+                !stableEdge(s, edge) ||
+                !["nummod", "det", "det:predet", "amod"].includes(edge.relation)
+            )
+                continue;
+            const noun = s.tokens[edge.head]!;
+            const quantifier = s.tokens[edge.dependent]!;
+            if (
+                !countNouns.supports(noun) ||
+                grammaticalNumber(noun) !== "singular" ||
+                s.graph.some(
+                    (candidate) =>
+                        candidate.dependent === edge.head &&
+                        ["compound", "nmod"].includes(candidate.relation) &&
+                        ["NOUN", "PROPN"].includes(s.tokens[candidate.head]!.pos),
+                )
+            )
+                continue;
+            const cardinal =
+                edge.relation === "nummod" ? cardinalValue(quantifier.text) : undefined;
+            const hasIndefiniteArticle =
+                edge.relation === "nummod" &&
+                s.graph.some(
+                    (candidate) =>
+                        candidate.head === edge.head &&
+                        candidate.relation === "det" &&
+                        /^(a|an)$/iu.test(s.tokens[candidate.dependent]!.text),
+                );
+            if (hasIndefiniteArticle) continue;
+            const pluralRequired =
+                (edge.relation === "nummod" &&
+                    quantifier.pos === "NUM" &&
+                    (cardinal === 0 || (cardinal !== undefined && cardinal > 1))) ||
+                (["det", "det:predet", "amod"].includes(edge.relation) &&
+                    pluralSelectingQuantifiers.has(quantifier.text.toLowerCase()));
+            if (!pluralRequired) continue;
+            findings.push(
+                finding(
+                    s,
+                    this.id,
+                    this.skill,
+                    noun,
+                    "Grammar",
+                    "Review the noun form after a plural quantity",
+                    `The local parse links “${quantifier.text}” to the singular-form noun “${noun.text}”. A count noun normally takes a plural form after zero or more than one. Check the intended meaning; this detector does not propose an unvalidated rewrite.`,
+                    [],
+                    "Possible issue",
+                    [
+                        { start: quantifier.start, end: quantifier.end, label: "Plural quantity" },
+                        { start: noun.start, end: noun.end, label: "Parsed count noun" },
+                    ],
+                ),
+            );
+        }
+        return findings;
+    },
+});
 const parsedFinitePredicate = (s: Sentence, index: number) =>
     finite(s.tokens[index]!) ||
     (s.tokens[index]!.pos === "VERB" &&
@@ -1088,6 +1220,7 @@ const seriesComma: GrammarRule = {
 export const advancedRules: readonly GrammarRule[] = [
     neuralAgreement(),
     neuralPerfectForm(),
+    countNounNumber(),
     subjectCase,
     comparison,
     boundaries,
@@ -1101,11 +1234,16 @@ export const advancedRules: readonly GrammarRule[] = [
 export function createAdvancedRules(
     inflections: PresentVerbInflections,
     pastParticiples?: PastParticipleInflections,
+    countNouns?: CountNounInflections,
 ): readonly GrammarRule[] {
     return [
         neuralAgreement(inflections),
         neuralPerfectForm(pastParticiples),
-        ...advancedRules.slice(2),
+        countNounNumber(countNouns),
+        ...advancedRules.filter(
+            (rule) =>
+                !["neural-agreement", "neural-perfect-form", "count-noun-number"].includes(rule.id),
+        ),
     ];
 }
 
