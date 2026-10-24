@@ -1,5 +1,12 @@
-import { MAX_TEXT, type AnalysisReport, type Diagnostic, type Sentence } from "./domain";
+import {
+    MAX_TEXT,
+    type AnalysisReport,
+    type Diagnostic,
+    type Sentence,
+    type WritingIntent,
+} from "./domain";
 import { DiagnosticResolver, GrammarConstraintEngine } from "./grammar";
+import { attachGoalMetadata } from "./goal-metadata";
 import {
     ConservativeDependencyParser,
     LexicalTagger,
@@ -23,7 +30,12 @@ export class AnalysisPipeline {
         private readonly constraints: GrammarConstraintEngine,
         private readonly resolver: DiagnosticResolver,
     ) {}
-    analyze(text: string, revision = 0, style = false): AnalysisReport {
+    analyze(
+        text: string,
+        revision = 0,
+        style = false,
+        writingIntent: WritingIntent = "general",
+    ): AnalysisReport {
         if (text.length > MAX_TEXT) throw new Error("Documents are limited to 150,000 characters.");
         const began = performance.now();
         const sentences: Sentence[] = [],
@@ -147,6 +159,7 @@ export class AnalysisPipeline {
                         ...openingSpan(target),
                         id: `repetition:${target.start}`,
                         ruleId: "document-repetition",
+                        goalId: "writing.revision",
                         category: "Style",
                         skill: "usage",
                         title: "A sentence opening repeats",
@@ -164,25 +177,29 @@ export class AnalysisPipeline {
                     });
                 }
         }
-        return {
-            revision,
-            text,
-            sentences,
-            diagnostics: this.resolver.resolve(diagnostics),
-            elapsedMs: performance.now() - began,
-            cachedParagraphs,
-            versions: {
-                engine: "0.2.0",
-                rules: "1.1.0",
-                syntax: "lexical-fallback-1",
-                exercises: "1.1.0",
+        return attachGoalMetadata(
+            {
+                revision,
+                text,
+                sentences,
+                diagnostics: this.resolver.resolve(diagnostics),
+                elapsedMs: performance.now() - began,
+                cachedParagraphs,
+                versions: {
+                    engine: "0.2.0",
+                    rules: "1.1.0",
+                    syntax: "lexical-fallback-1",
+                    exercises: "1.1.0",
+                },
+                limitations: [
+                    "Deterministic checks only. No trained POS tagger, parser, or error classifier is bundled.",
+                    "Syntax diagrams are provisional lexical analyses; ambiguous constructions require human review.",
+                    "Confidence policies are heuristic, not calibrated probabilities. Coverage is limited to documented constructions.",
+                ],
+                writingIntent,
             },
-            limitations: [
-                "Deterministic checks only. No trained POS tagger, parser, or error classifier is bundled.",
-                "Syntax diagrams are provisional lexical analyses; ambiguous constructions require human review.",
-                "Confidence policies are heuristic, not calibrated probabilities. Coverage is limited to documented constructions.",
-            ],
-        };
+            writingIntent,
+        );
     }
 }
 export function createPipeline(): AnalysisPipeline {
