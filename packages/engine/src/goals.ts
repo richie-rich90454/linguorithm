@@ -1,4 +1,5 @@
 import type { SkillId, WritingIntent } from "./domain";
+import { detectableGoalIds } from "./goal-rules";
 
 export type ProficiencyBand =
     | "emergent"
@@ -946,35 +947,6 @@ const intentMap: Record<GoalIntent, WritingIntent> = {
     "create-poetry": "creative",
 };
 
-const implementedGoalSlugs = new Set([
-    "agreement",
-    "apostrophe",
-    "articles",
-    "comparison",
-    "colons",
-    "capitals",
-    "boundaries",
-    "commas",
-    "contractions",
-    "concision",
-    "endmarks",
-    "fragments",
-    "homophones",
-    "introductory-comma",
-    "irregular",
-    "modifiers",
-    "parallelism",
-    "possessive",
-    "pronouns",
-    "spacing",
-    "quotes",
-    "revision",
-    "runons",
-    "semicolons",
-    "spelling",
-    "sentence",
-    "tense",
-]);
 const practiceSkillByGoal: Readonly<Record<string, SkillId>> = {
     sentence: "sentence",
     fragments: "sentence",
@@ -1019,7 +991,7 @@ const validControls: Readonly<Record<GoalControl, readonly string[]>> = {
 };
 export const writingGoals: readonly WritingGoal[] = rows.map(
     ([slug, name, description, example, control, band, sourceIntents]) => {
-        const detection = implementedGoalSlugs.has(slug)
+        const detection = detectableGoalIds.has(`writing.${slug}`)
             ? "implemented-unvalidated"
             : "not-yet-detectable";
         return {
