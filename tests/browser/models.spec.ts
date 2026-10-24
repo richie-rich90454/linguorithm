@@ -81,14 +81,25 @@ test("model failure remains explicit while deterministic analysis works", async 
     await expect(page.getByRole("button", { name: "Apply correction" })).toBeVisible();
 });
 
-test("corrupted model metadata fails integrity checking", async ({ page }) => {
-    await page.route("**/models/lexicon.json?*", (route) =>
-        route.fulfill({ contentType: "application/json", body: '{"forms":{},"frequency":{}}' }),
-    );
-    await page.goto("/");
-    await expect(page.getByTestId("model-status")).toHaveText("Deterministic fallback");
-    await page.getByRole("button", { name: "Engine notes", exact: false }).click();
-    await expect(page.getByRole("dialog")).toContainText("Integrity check failed");
+test.describe("model integrity", () => {
+    test.use({ serviceWorkers: "block" });
+
+    test("corrupted model metadata fails integrity checking", async ({ page, context }) => {
+        let corruptedRequestObserved = false;
+        await context.route(/\/models\/lexicon\.json\?/u, async (route) => {
+            corruptedRequestObserved = true;
+            await route.fulfill({
+                contentType: "application/json",
+                body: '{"forms":{},"frequency":{}}',
+            });
+        });
+        await page.goto("/");
+        await expect.poll(() => corruptedRequestObserved).toBe(true);
+        await expect(page.getByText(/Integrity check failed/u)).toBeVisible();
+        await expect(page.getByTestId("model-status")).toHaveText("Deterministic fallback");
+        await page.getByRole("button", { name: "Engine notes", exact: false }).click();
+        await expect(page.getByRole("dialog")).toContainText("Integrity check failed");
+    });
 });
 
 test("cached neural models initialize after an offline reload", async ({ page, context }) => {
