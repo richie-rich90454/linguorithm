@@ -108,36 +108,20 @@ input[type="radio"] {
 .brand {
     text-decoration: none;
     display: flex;
-    gap: 10px;
+    gap: 8px;
     align-items: center;
-    font-size: 25px;
+    font-size: 19px;
     font-weight: 650;
-    letter-spacing: -1px;
-    padding: 0 10px;
+    letter-spacing: -0.7px;
+    padding: 0 6px;
 }
 .brand-symbol {
-    display: inline-flex;
-    position: relative;
-    background: #111;
-    color: #fff;
-    width: 39px;
+    display: block;
+    width: 42px;
     height: 42px;
-    align-items: center;
-    justify-content: center;
-    font-weight: 500;
-    font-size: 39px;
-    line-height: 1;
+    flex: 0 0 auto;
+    object-fit: cover;
     border-radius: 5px;
-    letter-spacing: -4px;
-    padding-right: 6px;
-}
-.brand-symbol > span {
-    font-size: 19px;
-    position: absolute;
-    right: 3px;
-    top: 0;
-    color: #fff;
-    letter-spacing: 0;
 }
 .brand-sub {
     display: block;
@@ -524,7 +508,7 @@ h1 {
     padding: 8px 12px;
 }
 .findings-panel {
-    border-left: 1px solid var(--line);
+    background: #fafafa;
     display: flex;
     flex-direction: column;
     min-width: 0;
@@ -656,7 +640,8 @@ h1 {
 }
 .finding-active {
     background: #f8f8f8;
-    box-shadow: inset 2px 0 0 var(--blue);
+    outline: 1px solid var(--line);
+    outline-offset: -1px;
 }
 .finding-detail {
     padding: 0 20px 20px 41px;
@@ -1112,8 +1097,10 @@ h1 {
     max-width: 200px;
 }
 .practice-main {
-    border-left: 1px solid var(--line);
-    padding-left: 30px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: #fafafa;
+    padding: 24px;
 }
 .practice-meta {
     display: flex;
@@ -1151,7 +1138,8 @@ h1 {
     line-height: 1.8;
     letter-spacing: -0.4px;
     padding: 20px 23px;
-    border-left: 2px solid var(--blue);
+    border: 1px solid var(--line);
+    border-radius: 5px;
     background: rgba(23, 74, 232, 0.025);
 }
 .answer-options {
@@ -1231,7 +1219,8 @@ h1 {
 }
 .hint-box {
     padding: 15px 20px;
-    border-left: 2px solid var(--blue);
+    border: 1px solid var(--line);
+    border-radius: 5px;
     margin-bottom: 24px;
     background: rgba(23, 74, 232, 0.025);
 }
@@ -1290,8 +1279,10 @@ blockquote {
     font-size: 14px;
     line-height: 1.9;
     margin: 15px 0;
-    padding-left: 18px;
-    border-left: 2px solid var(--blue);
+    padding: 14px 18px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: #fafafa;
 }
 .materials-layout {
     display: grid;
@@ -1310,8 +1301,10 @@ blockquote {
     color: var(--muted);
 }
 .material-guide {
-    border-left: 1px solid var(--line);
-    padding: 28px 0 0 30px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: #fafafa;
+    padding: 22px;
 }
 .material-guide > .eyebrow {
     font-size: 11px;
@@ -1397,18 +1390,15 @@ blockquote {
 }
 .progress-summary {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    border-top: 1px solid #111;
-    border-bottom: 1px solid var(--line);
-    padding: 28px 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
 }
 .progress-summary > div {
-    padding: 0 35px;
-    border-left: 1px solid var(--line);
-}
-.progress-summary > div:first-child {
-    padding-left: 0;
-    border-left: 0;
+    min-width: 0;
+    padding: 18px 20px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: #fafafa;
 }
 .progress-summary > div > span {
     font-size: 12px;
@@ -1656,7 +1646,8 @@ blockquote {
 .source-block {
     padding: 16px 18px;
     margin: 12px 0;
-    border-left: 2px solid var(--line);
+    border: 1px solid var(--line);
+    border-radius: 5px;
     background: #fafafa;
     max-height: 340px;
     overflow: auto;
@@ -1772,14 +1763,14 @@ button:active:not(:disabled) {
         gap: 28px;
     }
     .practice-main {
-        padding-left: 28px;
+        padding: 20px;
     }
     .materials-layout {
         grid-template-columns: minmax(0, 1fr) 220px;
         gap: 24px;
     }
     .material-guide {
-        padding-left: 24px;
+        padding: 20px;
     }
 }
 @media (max-width: 1000px) {
@@ -1793,13 +1784,13 @@ button:active:not(:disabled) {
     }
     .brand {
         padding: 0 5px;
-        gap: 8px;
-        font-size: 24px;
+        gap: 6px;
+        font-size: 16px;
+        letter-spacing: -0.5px;
     }
     .brand-symbol {
-        width: 33px;
+        width: 36px;
         height: 36px;
-        font-size: 27px;
     }
     .brand-sub {
         font-size: 10px;
@@ -1860,7 +1851,7 @@ button:active:not(:disabled) {
         gap: 20px;
     }
     .practice-main {
-        padding-left: 20px;
+        padding: 18px;
     }
     .practice-meta {
         font-size: 10px;
@@ -1869,9 +1860,7 @@ button:active:not(:disabled) {
         grid-template-columns: 1fr;
     }
     .material-guide {
-        border-left: 0;
-        padding: 25px 0;
-        border-top: 1px solid var(--line);
+        padding: 20px;
         max-width: 100%;
     }
     .material-guide h2 br {
@@ -1900,8 +1889,7 @@ button:active:not(:disabled) {
     }
     .brand-symbol {
         height: 32px;
-        width: 30px;
-        font-size: 27px;
+        width: 32px;
     }
     .brand-sub {
         font-size: 10px;
@@ -1982,7 +1970,7 @@ button:active:not(:disabled) {
         grid-template-columns: 1.5fr 1fr 85px;
     }
     .progress-summary > div {
-        padding: 0 20px;
+        padding: 16px;
     }
     .sidebar-bottom {
         display: block;
@@ -2088,7 +2076,6 @@ button:active:not(:disabled) {
         font-size: 11px;
     }
     .findings-panel {
-        border-left: 0;
         border-top: 1px solid #111;
     }
     .findings-heading {
@@ -2179,8 +2166,7 @@ button:active:not(:disabled) {
         display: none;
     }
     .practice-main {
-        padding-left: 0;
-        border-left: 0;
+        padding: 16px;
     }
     .practice-meta {
         padding: 20px 0;
@@ -2259,10 +2245,10 @@ button:active:not(:disabled) {
         min-width: 35px;
     }
     .progress-summary {
-        padding: 25px 0;
+        gap: 8px;
     }
     .progress-summary > div {
-        padding: 0 14px;
+        padding: 12px;
     }
     .progress-summary > div > span {
         font-size: 11px;
