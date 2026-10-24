@@ -24,6 +24,8 @@ const forms: Record<string, Morphology> = {
     waiting: { lemma: "wait", pos: "VERB", finite: false, verbForm: "Part" },
     gone: { lemma: "go", pos: "VERB", finite: false, verbForm: "Part" },
     however: { lemma: "however", pos: "ADV" },
+    damaged: { lemma: "damage", pos: "VERB", finite: false, verbForm: "Part", tense: "Past" },
+    repaired: { lemma: "repair", pos: "VERB", finite: false, verbForm: "Part", tense: "Past" },
 };
 function parsed(text: string, edges: readonly Edge[], offset = 0): Sentence {
     const tokens = new Tokenizer().tokenize(text, offset).map((token) => {
@@ -55,12 +57,64 @@ const issues = (sentence: Sentence) =>
     engine
         .evaluate(sentence)
         .filter((issue) => ["comma-splice", "run-on", "dependent-fragment"].includes(issue.ruleId));
+const seriesIssues = (sentence: Sentence) =>
+    advancedRules
+        .flatMap((rule) => rule.evaluate(sentence))
+        .filter((issue) => issue.ruleId === "missing-series-comma");
 const clauses = (relation = "parataxis"): Edge[] => [
     ["arrived", "arrived", "root"],
     ["arrived", "courier", "nsubj"],
     ["arrived", "departed", relation],
     ["departed", "driver", "nsubj"],
 ];
+
+describe("parsed list punctuation", () => {
+    const list = (text: string) =>
+        parsed(text, [
+            ["packed", "packed", "root"],
+            ["packed", "We", "nsubj"],
+            ["packed", "bread", "obj"],
+            ["bread", "fruit", "conj"],
+            ["bread", "water", "conj"],
+            ["water", "and", "cc"],
+        ]);
+
+    it("suggests a missing separator between early items in a parsed three-item list", () => {
+        const text = "We packed bread fruit and water.";
+        const issue = seriesIssues(list(text))[0]!;
+
+        expect(issue.ruleId).toBe("missing-series-comma");
+        expect(EssayDocument.create(text).apply(issue.proposals[0]!).text).toBe(
+            "We packed bread, fruit and water.",
+        );
+    });
+
+    it.each(["We packed bread, fruit, and water.", "We packed bread, fruit and water."])(
+        "accepts complete or style-variable list punctuation: %s",
+        (text) => {
+            expect(seriesIssues(list(text))).toEqual([]);
+        },
+    );
+
+    it("does not treat two coordinated items as a series", () => {
+        expect(
+            seriesIssues(
+                parsed("We packed bread and water.", [
+                    ["packed", "packed", "root"],
+                    ["packed", "We", "nsubj"],
+                    ["packed", "bread", "obj"],
+                    ["bread", "water", "conj"],
+                    ["water", "and", "cc"],
+                ]),
+            ),
+        ).toEqual([]);
+    });
+
+    it("abstains when the syntax parse is ambiguous", () => {
+        const sentence = list("We packed bread fruit and water.");
+        expect(seriesIssues({ ...sentence, ambiguous: true })).toEqual([]);
+    });
+});
 
 describe("finite independent clause boundary coverage", () => {
     it("detects pronoun-subject comma splices through the ordinary analysis pipeline", () => {
@@ -70,6 +124,30 @@ describe("finite independent clause boundary coverage", () => {
         expect(createPipeline().analyze("I work hard, and she studies daily.").diagnostics).toEqual(
             [],
         );
+    });
+
+    it("uses tensed subjects when a transition parse mislabels a complete clause as subordinate", () => {
+        const sentence = parsed("The storm damaged the lighthouse, the keeper repaired the lamp.", [
+            ["repaired", "repaired", "root"],
+            ["repaired", "keeper", "nsubj"],
+            ["repaired", "damaged", "advcl"],
+            ["damaged", "storm", "nsubj"],
+        ]);
+        expect(issues(sentence).map((issue) => issue.ruleId)).toContain("comma-splice");
+    });
+
+    it("keeps a marked introductory subordinate clause as a valid control", () => {
+        const sentence = parsed(
+            "When the storm damaged the lighthouse, the keeper repaired the lamp.",
+            [
+                ["repaired", "repaired", "root"],
+                ["repaired", "keeper", "nsubj"],
+                ["repaired", "damaged", "advcl"],
+                ["damaged", "storm", "nsubj"],
+                ["damaged", "When", "mark"],
+            ],
+        );
+        expect(issues(sentence)).toEqual([]);
     });
 
     it.each(["parataxis", "conj"])(
