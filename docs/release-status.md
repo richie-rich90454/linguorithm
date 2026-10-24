@@ -1,5 +1,7 @@
 # Specification implementation and release status
 
+See the dated [writing and model gate report](release-gates-2026-10-24.md) for the latest benchmark floor and writing-pattern quality-gate results.
+
 The original specification remains in engineering-specification.md. This inventory distinguishes implemented engineering from evidence requiring external data or people.
 
 | Area | Delivered |
