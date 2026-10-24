@@ -196,6 +196,123 @@ const clauseFinite = (s: Sentence, head: number) =>
             stableEdge(s, edge) &&
             finite(s.tokens[edge.dependent]!),
     );
+const surfaceTensedPredicate = (token: Token) =>
+    finite(token) ||
+    token.analyses.some(
+        (analysis) =>
+            analysis.pos === token.pos && (analysis.tense === "Past" || analysis.tense === "Pres"),
+    );
+const subordinateMarkers = new Set([
+    "although",
+    "as",
+    "because",
+    "before",
+    "if",
+    "once",
+    "since",
+    "though",
+    "unless",
+    "until",
+    "when",
+    "whenever",
+    "where",
+    "whereas",
+    "wherever",
+    "while",
+]);
+function parsedSubjectsAroundComma(s: Sentence): Diagnostic[] {
+    const subjects = s.graph.filter(
+        (edge) => subjectRelation(edge.relation) && stableEdge(s, edge),
+    );
+    const findings: Diagnostic[] = [];
+    for (const comma of s.tokens.filter((token) => token.text === ",")) {
+        const left = subjects.filter((edge) => {
+            const subject = s.tokens[edge.dependent]!;
+            const predicate = s.tokens[edge.head]!;
+            return (
+                subject.start < predicate.start &&
+                predicate.end <= comma.start &&
+                ["VERB", "AUX"].includes(predicate.pos) &&
+                surfaceTensedPredicate(predicate)
+            );
+        });
+        const right = subjects.filter((edge) => {
+            const subject = s.tokens[edge.dependent]!;
+            const predicate = s.tokens[edge.head]!;
+            return (
+                subject.start >= comma.end &&
+                subject.start < predicate.start &&
+                ["VERB", "AUX"].includes(predicate.pos) &&
+                surfaceTensedPredicate(predicate)
+            );
+        });
+        for (const first of left) {
+            const firstPredicate = s.tokens[first.head]!;
+            const firstSubject = s.tokens[first.dependent]!;
+            const prefix = s.tokens.filter((token) => token.start < firstPredicate.start);
+            if (prefix.some((token) => subordinateMarkers.has(token.text.toLowerCase()))) continue;
+            for (const second of right) {
+                const secondPredicate = s.tokens[second.head]!;
+                const secondSubject = s.tokens[second.dependent]!;
+                const clauseLink = s.graph.find(
+                    (edge) =>
+                        ["advcl", "conj", "parataxis"].includes(edge.relation) &&
+                        ((edge.head === first.head && edge.dependent === second.head) ||
+                            (edge.head === second.head && edge.dependent === first.head)) &&
+                        (s.alternatives ?? []).every((alternative) =>
+                            alternative.graph.some(
+                                (candidate) =>
+                                    candidate.head === edge.head &&
+                                    candidate.dependent === edge.dependent,
+                            ),
+                        ),
+                );
+                const between = s.tokens.filter(
+                    (token) => token.start >= comma.end && token.start < secondPredicate.start,
+                );
+                if (
+                    first.head === second.head ||
+                    !clauseLink ||
+                    between.some(
+                        (token) =>
+                            subordinateMarkers.has(token.text.toLowerCase()) ||
+                            /^(and|but|for|nor|or|so|yet)$/iu.test(token.text),
+                    )
+                )
+                    continue;
+                findings.push(
+                    finding(
+                        s,
+                        "comma-splice",
+                        "punctuation",
+                        comma,
+                        "Punctuation",
+                        "Check the boundary between independent clauses",
+                        "The local parse finds a tensed subject–predicate relationship on each side of this comma, with no subordinating marker or coordinator. Review whether these clauses need a stronger boundary; an introductory subordinate clause or a deliberate rhetorical choice can change the reading.",
+                        [";"],
+                        "Possible issue",
+                        [
+                            {
+                                start: firstSubject.start,
+                                end: firstPredicate.end,
+                                label: "First tensed subject–predicate relationship",
+                            },
+                            {
+                                start: secondSubject.start,
+                                end: secondPredicate.end,
+                                label: "Second tensed subject–predicate relationship",
+                            },
+                        ],
+                    ),
+                );
+                break;
+            }
+            if (findings.length) break;
+        }
+        if (findings.length) break;
+    }
+    return findings;
+}
 function independentClause(s: Sentence, head: number, seen = new Set<number>()): boolean {
     if (seen.has(head)) return false;
     seen.add(head);
@@ -235,7 +352,7 @@ const boundaries: GrammarRule = {
     description: "Finite independent clauses in parataxis or unmarked coordination",
     evaluate(s) {
         if (s.ambiguous || /[“”"]/u.test(s.text)) return [];
-        return s.graph
+        const parsed = s.graph
             .filter((e) => ["parataxis", "conj"].includes(e.relation))
             .flatMap((edge) => {
                 const a = s.graph.find(
@@ -318,6 +435,7 @@ const boundaries: GrammarRule = {
                     ),
                 ];
             });
+        return parsed.length ? parsed : parsedSubjectsAroundComma(s);
     },
 };
 const subordinateFragments: GrammarRule = {
@@ -874,6 +992,99 @@ const clausePunctuation: GrammarRule = {
     },
 };
 
+const seriesComma: GrammarRule = {
+    id: "missing-series-comma",
+    version: "1.0.0",
+    skill: "punctuation",
+    description: "Missing commas between stable, parsed noun conjuncts in a series.",
+    evaluate(s) {
+        if (s.ambiguous || hasQuotes(s)) return [];
+        const edges = s.graph.filter(
+            (edge) =>
+                edge.relation === "conj" &&
+                stableEdge(s, edge) &&
+                ["NOUN", "PROPN"].includes(s.tokens[edge.head]!.pos) &&
+                ["NOUN", "PROPN"].includes(s.tokens[edge.dependent]!.pos),
+        );
+        const neighbors = new Map<number, Set<number>>();
+        for (const edge of edges) {
+            const left = neighbors.get(edge.head) ?? new Set<number>();
+            const right = neighbors.get(edge.dependent) ?? new Set<number>();
+            left.add(edge.dependent);
+            right.add(edge.head);
+            neighbors.set(edge.head, left);
+            neighbors.set(edge.dependent, right);
+        }
+        const visited = new Set<number>();
+        const results: Diagnostic[] = [];
+        for (const start of neighbors.keys()) {
+            if (visited.has(start)) continue;
+            const component: number[] = [];
+            const pending = [start];
+            visited.add(start);
+            while (pending.length) {
+                const current = pending.pop()!;
+                component.push(current);
+                for (const neighbor of neighbors.get(current) ?? [])
+                    if (!visited.has(neighbor)) {
+                        visited.add(neighbor);
+                        pending.push(neighbor);
+                    }
+            }
+            const items = component.sort(
+                (left, right) => s.tokens[left]!.start - s.tokens[right]!.start,
+            );
+            if (items.length < 3) continue;
+            const hasCoordinator = s.graph.some(
+                (edge) =>
+                    edge.relation === "cc" &&
+                    edges.some(
+                        (coordination) =>
+                            [coordination.head, coordination.dependent].includes(edge.head) ||
+                            [coordination.head, coordination.dependent].includes(edge.dependent),
+                    ) &&
+                    /^(and|or|nor)$/iu.test(s.tokens[edge.dependent]!.text),
+            );
+            if (!hasCoordinator) continue;
+
+            for (let i = 0; i < items.length - 1; i++) {
+                const left = s.tokens[items[i]!]!;
+                const right = s.tokens[items[i + 1]!]!;
+                const between = s.tokens.filter(
+                    (token) => token.start >= left.end && token.end <= right.start,
+                );
+                if (between.some((token) => token.text === "," || /^[;:.]$/u.test(token.text)))
+                    continue;
+                // The comma before a final coordinator is optional in common English styles.
+                if (
+                    i === items.length - 2 &&
+                    between.some((token) => /^(and|or|nor)$/iu.test(token.text))
+                )
+                    continue;
+                const at = left.end;
+                results.push(
+                    finding(
+                        s,
+                        this.id,
+                        this.skill,
+                        { start: at, end: at },
+                        "Punctuation",
+                        "Separate the items in this series",
+                        "The parse groups at least three noun items in one coordinated series. A comma normally separates these early items; the comma before the final conjunction can vary by style.",
+                        [","],
+                        "Possible issue",
+                        [
+                            { start: left.start, end: left.end, label: "List item" },
+                            { start: right.start, end: right.end, label: "Next list item" },
+                        ],
+                    ),
+                );
+            }
+        }
+        return results;
+    },
+};
+
 export const advancedRules: readonly GrammarRule[] = [
     neuralAgreement(),
     neuralPerfectForm(),
@@ -884,6 +1095,7 @@ export const advancedRules: readonly GrammarRule[] = [
     parallel,
     modifier,
     clausePunctuation,
+    seriesComma,
 ];
 
 export function createAdvancedRules(
