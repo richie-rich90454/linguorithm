@@ -225,6 +225,7 @@ export class LocalSyntaxRuntime {
                             lemma: z.string(),
                             pos,
                             number: z.enum(["singular", "plural"]).optional(),
+                            person: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional(),
                             finite: z.boolean().optional(),
                             verbForm: z.string().optional(),
                             tense: z.string().optional(),
@@ -522,6 +523,31 @@ export class LocalSyntaxRuntime {
             ? original
             : { ...original, tokens, ...(await this.parse(tokens)), syntaxSource: "neural" };
     }
+    private calibrationCohort(sentence: Sentence): boolean {
+        if (
+            sentence.tokens.length > 128 ||
+            !sentence.tokens.length ||
+            [...sentence.text].some((character) => (character.codePointAt(0) ?? 0) > 0x7f)
+        )
+            return false;
+        const retokenized = this.tokenizer.tokenize(sentence.text);
+        if (
+            retokenized.length !== sentence.tokens.length ||
+            retokenized.some((token, index) => token.text !== sentence.tokens[index]!.text)
+        )
+            return false;
+        // Calibration features require a train-derived morphology entry for every
+        // parsed subject. Outside that cohort, emit review warnings without a
+        // synthetic-task probability that the training data did not validate.
+        return sentence.graph
+            .filter((edge) => edge.relation === "nsubj")
+            .every((edge) =>
+                Object.hasOwn(
+                    this.lexicon.forms,
+                    sentence.tokens[edge.dependent]!.text.toLowerCase(),
+                ),
+            );
+    }
     async classify(sentence: Sentence): Promise<readonly Diagnostic[]> {
         if (
             !this.classifier ||
@@ -581,6 +607,7 @@ export class LocalSyntaxRuntime {
         const scores = output.scores?.data as Float32Array | undefined;
         if (!scores || scores.length !== tokens.length * this.classifierMetadata.labels.length)
             throw new Error("Classifier output violates its schema.");
+        const calibrated = this.calibrationCohort(sentence);
         const diagnostics: Diagnostic[] = [];
         tokens.forEach((token, row) => {
             for (let i = 1; i < this.classifierMetadata!.labels.length; i++) {
@@ -597,6 +624,11 @@ export class LocalSyntaxRuntime {
                 const raw = scores[row * this.classifierMetadata!.labels.length + i]!,
                     probability = 1 / (1 + Math.exp(-(calibration.a * raw + calibration.b)));
                 if (probability < calibration.threshold) continue;
+                // Training mutations label predicate agreement and lexical verb form,
+                // not arbitrary nouns, relative markers, or punctuation. Require the
+                // learned POS prediction to support the category before emitting it.
+                if (label === "agreement" && token.pos !== "AUX" && token.pos !== "VERB") continue;
+                if (label === "verb-form" && token.pos !== "VERB") continue;
                 const d = finding(
                     sentence,
                     `model-${label}`,
@@ -611,10 +643,12 @@ export class LocalSyntaxRuntime {
                 diagnostics.push({
                     ...d,
                     confidence: {
-                        calibrated: true,
-                        probability,
+                        calibrated,
+                        ...(calibrated ? { probability } : {}),
                         scope: calibration.scope,
-                        policy: "Calibrated on synthetic mutations only; review-only on essays.",
+                        policy: calibrated
+                            ? "Calibrated on synthetic mutations only; review-only on essays."
+                            : "Uncalibrated review warning outside the tokenization-stable training cohort.",
                     },
                 });
             }
