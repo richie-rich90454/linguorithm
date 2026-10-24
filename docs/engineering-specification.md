@@ -1,4 +1,4 @@
-# Grammar Intelligence Platform
+# Linguorithm: Grammar Intelligence Platform
 
 ## Complete Engineering and Product Specification
 
