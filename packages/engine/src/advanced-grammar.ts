@@ -1,4 +1,4 @@
-import type { Dependency, Diagnostic, Sentence, Token } from "./domain";
+import type { Dependency, Diagnostic, Sentence, Token, WritingIntent } from "./domain";
 import { finding, type GrammarRule } from "./grammar";
 import type { PastParticipleInflections, PresentVerbInflections } from "./inflections";
 
@@ -185,15 +185,58 @@ const comparison: GrammarRule = {
             });
     },
 };
+// UD copular and auxiliary constructions put the clause head on a nonfinite
+// lexical predicate. Only stable finite evidence licenses a boundary finding.
+const clauseFinite = (s: Sentence, head: number) =>
+    finite(s.tokens[head]!) ||
+    s.graph.some(
+        (edge) =>
+            edge.head === head &&
+            ["cop", "aux", "aux:pass"].includes(edge.relation) &&
+            stableEdge(s, edge) &&
+            finite(s.tokens[edge.dependent]!),
+    );
+function independentClause(s: Sentence, head: number, seen = new Set<number>()): boolean {
+    if (seen.has(head)) return false;
+    seen.add(head);
+    if (s.graph.some((edge) => edge.head === head && edge.relation === "mark")) return false;
+    const parents = s.graph.filter((edge) => edge.dependent === head && edge.head !== head);
+    return parents.every(
+        (edge) =>
+            ["parataxis", "conj"].includes(edge.relation) &&
+            stableEdge(s, edge) &&
+            independentClause(s, edge.head, new Set(seen)),
+    );
+}
+function subjectStart(s: Sentence, subject: number): number {
+    const members = new Set([subject]);
+    // Include the determiner and premodifiers, but not an attached relative
+    // clause or apposition whose punctuation needs a separate analysis.
+    for (let changed = true; changed;) {
+        changed = false;
+        for (const edge of s.graph) {
+            if (
+                members.has(edge.head) &&
+                !members.has(edge.dependent) &&
+                /^(det|amod|compound|nummod|flat|fixed)(:|$)/u.test(edge.relation) &&
+                stableEdge(s, edge)
+            ) {
+                members.add(edge.dependent);
+                changed = true;
+            }
+        }
+    }
+    return Math.min(...[...members].map((index) => s.tokens[index]!.start));
+}
 const boundaries: GrammarRule = {
     id: "parsed-boundary",
     version: "1.0.0",
     skill: "boundaries",
-    description: "Independent-clause boundaries from parataxis and subject edges",
+    description: "Finite independent clauses in parataxis or unmarked coordination",
     evaluate(s) {
         if (s.ambiguous || /[“”"]/u.test(s.text)) return [];
         return s.graph
-            .filter((e) => e.relation === "parataxis")
+            .filter((e) => ["parataxis", "conj"].includes(e.relation))
             .flatMap((edge) => {
                 const a = s.graph.find(
                         (e) => e.relation.startsWith("nsubj") && e.head === edge.head,
@@ -207,22 +250,46 @@ const boundaries: GrammarRule = {
                     !stableEdge(s, edge) ||
                     !stableEdge(s, a) ||
                     !stableEdge(s, b) ||
-                    b.dependent <= edge.head
-                )
-                    return [];
-                const first = s.tokens[edge.head]!,
-                    second = s.tokens[b.dependent]!;
-                const between = s.tokens.filter(
-                    (t) => t.start >= first.end && t.end <= second.start,
-                );
-                if (
-                    between.some(
-                        (t) => t.pos === "CCONJ" || t.pos === "SCONJ" || /[;:.!?]/u.test(t.text),
+                    b.dependent <= edge.head ||
+                    b.dependent >= edge.dependent ||
+                    !clauseFinite(s, edge.head) ||
+                    !clauseFinite(s, edge.dependent) ||
+                    !independentClause(s, edge.head) ||
+                    !independentClause(s, edge.dependent) ||
+                    s.graph.some(
+                        (e) => [edge.head, edge.dependent].includes(e.head) && e.relation === "cc",
                     )
                 )
                     return [];
-                const comma = between.find((t) => t.text === ",");
-                const span = comma ?? { start: second.start, end: second.start };
+                const first = s.tokens[edge.head]!;
+                let start = subjectStart(s, b.dependent);
+                // A conjunctive adverb is part of the second clause, not a
+                // coordinator: “..., however, the train was late.”
+                for (const child of s.graph)
+                    if (
+                        child.head === edge.dependent &&
+                        child.relation === "advmod" &&
+                        stableEdge(s, child) &&
+                        s.tokens[child.dependent]!.start > first.end &&
+                        s.tokens[child.dependent]!.end <= start
+                    )
+                        start = s.tokens[child.dependent]!.start;
+                if (start <= first.end) return [];
+                const between = s.tokens.filter((t) => t.start >= first.end && t.end <= start);
+                if (
+                    between.some(
+                        (t) =>
+                            t.pos === "CCONJ" ||
+                            t.pos === "SCONJ" ||
+                            /[;:.!?—–()[\]]/u.test(t.text),
+                    )
+                )
+                    return [];
+                const comma = [...between].reverse().find((t) => t.text === ",");
+                // Consume existing whitespace for an exact, well-spaced repair.
+                const span = comma ?? { start: start - 1, end: start };
+                if (!comma && s.text.slice(span.start - s.start, span.end - s.start) !== " ")
+                    return [];
                 return [
                     finding(
                         s,
@@ -243,7 +310,7 @@ const boundaries: GrammarRule = {
                                 label: "First subject–predicate relationship",
                             },
                             {
-                                start: second.start,
+                                start,
                                 end: s.tokens[edge.dependent]!.end,
                                 label: "Second subject–predicate relationship",
                             },
@@ -251,6 +318,77 @@ const boundaries: GrammarRule = {
                     ),
                 ];
             });
+    },
+};
+const subordinateFragments: GrammarRule = {
+    id: "dependent-fragment",
+    version: "1.0.0",
+    skill: "sentence",
+    description: "Finite subordinate roots without a parsed independent main clause",
+    evaluate(s) {
+        if (s.ambiguous || s.syntaxSource !== "neural" || hasQuotes(s)) return [];
+        const roots = s.graph.filter((edge) => edge.relation === "root");
+        if (roots.length !== 1) return [];
+        const root = roots[0]!;
+        const marker = s.graph.find(
+            (edge) =>
+                edge.head === root.dependent &&
+                edge.relation === "mark" &&
+                /^(although|because|unless|whereas|though|while|when|after|before|since)$/iu.test(
+                    s.tokens[edge.dependent]!.text,
+                ),
+        );
+        const subject = s.graph.find(
+            (edge) => edge.head === root.dependent && subjectRelation(edge.relation),
+        );
+        if (
+            !marker ||
+            !subject ||
+            !stableEdge(s, root) ||
+            !stableEdge(s, marker) ||
+            !stableEdge(s, subject) ||
+            !clauseFinite(s, root.dependent) ||
+            s.tokens[marker.dependent]!.start > s.tokens[subject.dependent]!.start ||
+            // A separate finite clause can supply the main clause, even when
+            // the parser chose the subordinate predicate as the root.
+            s.graph.some(
+                (edge) =>
+                    (subjectRelation(edge.relation) &&
+                        edge.head !== root.dependent &&
+                        clauseFinite(s, edge.head)) ||
+                    // Imperative main clauses can have no explicit subject.
+                    (["advcl", "conj", "parataxis", "ccomp"].includes(edge.relation) &&
+                        edge.dependent !== root.dependent &&
+                        clauseFinite(s, edge.dependent)),
+            ) ||
+            /[?!:;—–]/u.test(s.text)
+        )
+            return [];
+        return [
+            finding(
+                s,
+                this.id,
+                this.skill,
+                s,
+                "Grammar",
+                "Review this dependent clause as a sentence",
+                "The parse identifies a finite clause introduced by a subordinating marker, without an independent main clause. Join it to its main clause if a complete prose sentence is intended. Answers, headings, and deliberate fragments may stand alone.",
+                [],
+                "Possible issue",
+                [
+                    {
+                        start: s.tokens[marker.dependent]!.start,
+                        end: s.tokens[marker.dependent]!.end,
+                        label: "Subordinating marker",
+                    },
+                    {
+                        start: s.tokens[root.dependent]!.start,
+                        end: s.tokens[root.dependent]!.end,
+                        label: "Dependent predicate",
+                    },
+                ],
+            ),
+        ];
     },
 };
 const parallel: GrammarRule = {
@@ -742,6 +880,7 @@ export const advancedRules: readonly GrammarRule[] = [
     subjectCase,
     comparison,
     boundaries,
+    subordinateFragments,
     parallel,
     modifier,
     clausePunctuation,
@@ -761,6 +900,7 @@ export function createAdvancedRules(
 export function documentRelationships(
     sentences: readonly Sentence[],
     style: boolean,
+    writingIntent: WritingIntent = "general",
 ): Diagnostic[] {
     const findings: Diagnostic[] = [];
     for (let i = 1; i < sentences.length; i++) {
@@ -834,7 +974,15 @@ export function documentRelationships(
                 past &&
                 currentFinite.some((t) => t.analyses.some((a) => a.tense === "Pres")) &&
                 !/\b(now|today|always|generally|currently)\b/iu.test(current.text)
-            )
+            ) {
+                const observation =
+                    writingIntent === "narrative" || writingIntent === "reflective"
+                        ? "Narrative and reflective writing often shifts between remembered events and present-day reflection. Check whether the change marks that shift clearly."
+                        : writingIntent === "professional-communication" ||
+                            writingIntent === "informative" ||
+                            writingIntent === "explanatory"
+                          ? "A past-tense sentence is followed by present tense. This can be correct for a current fact or general process; check that the time relationship is clear for the reader."
+                          : "A preceding sentence uses past tense and this one includes present tense. This may be intentional: check the time relationship in the passage before changing it.";
                 findings.push(
                     finding(
                         current,
@@ -843,7 +991,7 @@ export function documentRelationships(
                         currentFinite[0]!,
                         "Style",
                         "A passage changes tense",
-                        "A preceding sentence uses past tense and this one includes present tense. This may be intentional: check the time relationship in the passage before changing it.",
+                        observation,
                         [],
                         "Style suggestion",
                         [...previousFinite.slice(0, 2), ...currentFinite.slice(0, 2)].map((t) => ({
@@ -853,6 +1001,7 @@ export function documentRelationships(
                         })),
                     ),
                 );
+            }
         }
     }
     return findings;
