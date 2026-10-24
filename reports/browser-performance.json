@@ -3,67 +3,67 @@
     "sentences": 167,
     "samples": [
         {
-            "roundtripMs": 3653.7000000476837,
-            "engineMs": 2440.4000000953674,
+            "roundtripMs": 1101.9000000953674,
+            "engineMs": 599,
             "diagnostics": 0
         },
         {
-            "roundtripMs": 60.89999985694885,
-            "engineMs": 47,
+            "roundtripMs": 18.799999952316284,
+            "engineMs": 14.200000047683716,
             "diagnostics": 0
         },
         {
-            "roundtripMs": 71.40000009536743,
-            "engineMs": 57.5,
+            "roundtripMs": 18.09999990463257,
+            "engineMs": 13.799999952316284,
             "diagnostics": 0
         },
         {
-            "roundtripMs": 66.79999995231628,
-            "engineMs": 50.200000047683716,
+            "roundtripMs": 19,
+            "engineMs": 15.399999856948853,
             "diagnostics": 0
         },
         {
-            "roundtripMs": 59.200000047683716,
-            "engineMs": 43.89999985694885,
+            "roundtripMs": 19.5,
+            "engineMs": 13.299999952316284,
             "diagnostics": 0
         },
         {
-            "roundtripMs": 62.200000047683716,
-            "engineMs": 49,
+            "roundtripMs": 20.300000190734863,
+            "engineMs": 16.799999952316284,
             "diagnostics": 0
         },
         {
-            "roundtripMs": 62.299999952316284,
-            "engineMs": 46,
+            "roundtripMs": 17.299999952316284,
+            "engineMs": 13.399999856948853,
             "diagnostics": 0
         },
         {
-            "roundtripMs": 63.200000047683716,
-            "engineMs": 46.700000047683716,
+            "roundtripMs": 13.700000047683716,
+            "engineMs": 9.799999952316284,
             "diagnostics": 0
         },
         {
-            "roundtripMs": 59.40000009536743,
-            "engineMs": 43,
+            "roundtripMs": 14.200000047683716,
+            "engineMs": 10,
             "diagnostics": 0
         },
         {
-            "roundtripMs": 58.700000047683716,
-            "engineMs": 42.200000047683716,
+            "roundtripMs": 16,
+            "engineMs": 11.899999856948853,
             "diagnostics": 0
         },
         {
-            "roundtripMs": 85.29999995231628,
-            "engineMs": 66.70000004768372,
+            "roundtripMs": 16.700000047683716,
+            "engineMs": 12.900000095367432,
             "diagnostics": 0
         }
     ],
-    "coldWorkerMs": 3653.7000000476837,
+    "coldWorkerMs": 1101.9000000953674,
     "warmMs": {
-        "p50": 62.299999952316284,
-        "p95": 85.29999995231628
+        "p50": 18.09999990463257,
+        "p95": 20.300000190734863
     },
-    "domInteractiveMs": 36.09999990463257,
+    "domInteractiveMs": 29.200000047683716,
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
     "sampledPageHeapBytes": 15200000,
     "cpu": "Intel(R) Core(TM) Ultra 7 255H",
