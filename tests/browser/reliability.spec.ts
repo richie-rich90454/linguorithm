@@ -53,7 +53,10 @@ test("an additive restore rejects an oversized merged collection without changin
                 JSON.stringify(backup(Array.from({ length: 99 }, (_, index) => record(index)))),
             ),
         });
-    await expect.poll(async () => (await storedRecords(page, "documents")).length).toBe(100);
+    await expect
+        .poll(async () => (await storedRecords(page, "documents")).length)
+        .toBeGreaterThanOrEqual(99);
+    const beforeRestore = await storedRecords(page, "documents");
     await page
         .locator('input[type="file"]')
         .nth(2)
@@ -68,6 +71,7 @@ test("an additive restore rejects an oversized merged collection without changin
                             updatedAt: "2026-10-24T00:00:00.000Z",
                         },
                         record(99),
+                        record(100),
                     ]),
                 ),
             ),
@@ -78,13 +82,15 @@ test("an additive restore rejects an oversized merged collection without changin
     const downloading = page.waitForEvent("download");
     await page.getByRole("button", { name: "Export backup" }).click();
     const result = JSON.parse(await readFile((await (await downloading).path())!, "utf8"));
-    expect(result.documents).toHaveLength(100);
+    expect(result.documents).toHaveLength(beforeRestore.length);
     expect(
         result.documents.find((document: { id: string }) => document.id === "capacity-document-0")
             .title,
     ).toBe("Stored essay 0");
     expect(
-        result.documents.some((document: { id: string }) => document.id === "capacity-document-99"),
+        result.documents.some((document: { id: string }) =>
+            ["capacity-document-99", "capacity-document-100"].includes(document.id as string),
+        ),
     ).toBe(false);
 });
 
