@@ -7,6 +7,8 @@ import {
     checkCorrectionIntegrity,
     compareSystems,
     inspectSplitLeakage,
+    parseSupportedPatternDeclarations,
+    requireSupportedPatternDeclarations,
     systemRunSchema,
     validUtf16Span,
     wilsonInterval,
@@ -15,7 +17,6 @@ import {
     type AnnotatedError,
     type SystemRun,
 } from "../src/annotations";
-
 // Original hand-authored fixtures test accounting only; they are not benchmark evidence.
 function exampleDocument(id = "essay-1", text = "🦉 She write today."): AnnotatedDocument {
     const document: AnnotatedDocument = {
@@ -223,6 +224,32 @@ describe("annotated source schemas", () => {
     });
 });
 
+describe("comparison CLI pattern declarations", () => {
+    it("parses direct and review policies and requires explicit patterns for release gates", () => {
+        const patterns = parseSupportedPatternDeclarations(
+            "Grammar=comma-splice=review, Grammar=subject-verb-agreement=direct",
+        );
+        expect(patterns).toEqual([
+            { category: "Grammar", subtype: "comma-splice", correctionPolicy: "review" },
+            {
+                category: "Grammar",
+                subtype: "subject-verb-agreement",
+                correctionPolicy: "direct",
+            },
+        ]);
+        expect(() => parseSupportedPatternDeclarations("Style=word-choice=review")).toThrow(
+            "Style cannot be declared",
+        );
+        expect(() => parseSupportedPatternDeclarations("Grammar=comma-splice=automatic")).toThrow(
+            "Invalid correction policy",
+        );
+        expect(() => requireSupportedPatternDeclarations(true, [])).toThrow(
+            "requires explicit --supported-patterns",
+        );
+        expect(() => requireSupportedPatternDeclarations(false, undefined)).not.toThrow();
+    });
+});
+
 describe("independent annotation review", () => {
     it("uses one-to-one span/category/subtype agreement and does not invent negative labels", () => {
         const corpus = exampleCorpus(),
@@ -412,6 +439,14 @@ describe("frozen system comparison", () => {
         });
         expect(report.systems[0]!.validControls.falsePositiveDocuments).toBe(0);
         expect(report.systems[0]!.metrics.find((m) => m.key === "style")!.counts.fp).toBe(1);
+        const categoryReport = compareSystems(corpus, [run], {
+            ...fastOptions,
+            supportedCategories: ["Grammar"],
+        });
+        expect(
+            categoryReport.systems[0]!.metrics.find((m) => m.key === "category:Grammar")!
+                .releaseGate.reasons,
+        ).toContain("Unknown confidence predictions prevent the category gate.");
     });
     it("provides reproducible paired group-bootstrap deltas and explicit failed small-volume gates", () => {
         const corpus = exampleCorpus(),
@@ -432,6 +467,97 @@ describe("frozen system comparison", () => {
         expect(grammar.releaseGate.reasons).toContain("Insufficient reference errors.");
         expect(report.systems[0]!.metrics.find((m) => m.key === "style")!.releaseGate.status).toBe(
             "not-declared",
+        );
+    });
+    it("gates declared patterns separately and exempts review-only patterns from edit accuracy", () => {
+        const documents = [
+            ...Array.from({ length: 200 }, (_, index) => exampleDocument(`pattern-error-${index}`)),
+            ...Array.from({ length: 200 }, (_, index) =>
+                exampleDocument(`pattern-control-${index}`, "The notebook is blue."),
+            ),
+        ];
+        const corpus = annotatedCorpusSchema.parse({
+            format: "grammar-annotations",
+            id: "pattern-gate-fixture",
+            version: "1",
+            description: "Original fixture for pattern gate accounting only",
+            documents,
+        });
+        const completeRun = exampleRun(corpus);
+        const reviewRun = structuredClone(completeRun);
+        for (const document of reviewRun.documents)
+            for (const prediction of document.predictions) prediction.candidates = [];
+        const pattern = {
+            category: "Grammar" as const,
+            subtype: "subject-verb-agreement",
+            correctionPolicy: "review" as const,
+        };
+        const reviewReport = compareSystems(corpus, [reviewRun], {
+            ...fastOptions,
+            supportedPatterns: [pattern],
+        });
+        const patternMetric = reviewReport.systems[0]!.metrics.find(
+            (metric) => metric.key === 'subtype:["Grammar","subject-verb-agreement"]',
+        )!;
+        expect(patternMetric.releaseGate.status).toBe("passed");
+        expect(patternMetric.validControlFalsePositives).toMatchObject({
+            documents: 200,
+            falsePositiveDocuments: 0,
+        });
+        const directReport = compareSystems(corpus, [completeRun], {
+            ...fastOptions,
+            supportedPatterns: [{ ...pattern, correctionPolicy: "direct" as const }],
+        });
+        const directMetric = directReport.systems[0]!.metrics.find(
+            (metric) => metric.key === 'subtype:["Grammar","subject-verb-agreement"]',
+        )!;
+        expect(directMetric.releaseGate.status).toBe("passed");
+        const noEditsReport = compareSystems(corpus, [reviewRun], {
+            ...fastOptions,
+            supportedPatterns: [{ ...pattern, correctionPolicy: "direct" as const }],
+        });
+        const noEditsMetric = noEditsReport.systems[0]!.metrics.find(
+            (metric) => metric.key === 'subtype:["Grammar","subject-verb-agreement"]',
+        )!;
+        expect(noEditsMetric.releaseGate.status).toBe("failed");
+        expect(noEditsMetric.releaseGate.reasons).toContain("Insufficient direct corrections.");
+        const missedRun = structuredClone(completeRun);
+        for (const document of missedRun.documents.slice(0, 25)) document.predictions = [];
+        const recallReport = compareSystems(corpus, [missedRun], {
+            ...fastOptions,
+            supportedPatterns: [pattern],
+        });
+        const recallMetric = recallReport.systems[0]!.metrics.find(
+            (metric) => metric.key === 'subtype:["Grammar","subject-verb-agreement"]',
+        )!;
+        expect(recallMetric.releaseGate.reasons).toContain("Recall Wilson lower bound below 90%.");
+        const controlFalsePositiveRun = structuredClone(completeRun);
+        controlFalsePositiveRun.documents
+            .find(
+                (document) =>
+                    corpus.documents.find((source) => source.id === document.documentId)!
+                        .validControl,
+            )!
+            .predictions.push({
+                id: "control-grammar-prediction",
+                start: 0,
+                end: 3,
+                original: "The",
+                category: "Grammar",
+                subtype: "subject-verb-agreement",
+                confidence: 0.99,
+                candidates: [],
+            });
+        const controlReport = compareSystems(corpus, [controlFalsePositiveRun], {
+            ...fastOptions,
+            supportedPatterns: [pattern],
+        });
+        const controlMetric = controlReport.systems[0]!.metrics.find(
+            (metric) => metric.key === 'subtype:["Grammar","subject-verb-agreement"]',
+        )!;
+        expect(controlMetric.validControlFalsePositives.falsePositiveDocuments).toBe(1);
+        expect(controlMetric.releaseGate.reasons).toContain(
+            "Pattern valid-control false-positive upper bound is not below 2%.",
         );
     });
     it("refuses leaking, incomplete, stale, or mismatched run input", () => {
