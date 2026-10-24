@@ -1,8 +1,9 @@
-"""Sparse logistic baseline on the same controlled task, with validation-only tuning."""
+"""Oracle-feature classical reference; not a head-to-head neural comparison."""
 
 import json
 
 import numpy as np
+from ewt_splits import verified_splits
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import precision_recall_fscore_support
@@ -14,12 +15,11 @@ def main():
     out = ROOT / "models/generated/ewt-1"
     metadata = json.loads((out / "tagger-manifest.json").read_text(encoding="utf-8"))
     lexicon = json.loads((out / "lexicon.json").read_text(encoding="utf-8"))
-    seen, data = set(), {}
-    for split in ["train", "dev", "test"]:
-        rows = read_corpus(ROOT / f"training/datasets/raw/ewt/en_ewt-ud-{split}.conllu")
-        rows = [r for r in rows if tuple(r["tokens"]) not in seen]
-        seen.update(tuple(r["tokens"]) for r in rows)
-        data[split] = examples(rows, metadata["vocabulary"], lexicon["frequency"])
+    splits, provenance = verified_splits(ROOT, read_corpus)
+    data = {
+        split: examples(rows, metadata["vocabulary"], lexicon["frequency"])
+        for split, rows in splits.items()
+    }
 
     def features(row):
         words, tags, numeric, _ = row
@@ -70,15 +70,25 @@ def main():
     }
     result = {
         "task": "Controlled synthetic EWT errors; not learner-essay evaluation",
-        "model": "Sparse logistic SGD baseline",
+        "model": "Oracle-feature sparse logistic SGD reference",
+        "featureSource": "Gold UD POS, dependency heads and subject morphology; unavailable to the production neural classifier",
+        "cohort": "Gold-selected mutation targets and paired clean controls; no predicted-syntax eligibility exclusions or additional cross-POS clean controls",
+        "comparableHeadToHead": False,
+        **provenance,
+        "splitPolicy": "Official splits; exact token sequences and document groups excluded against earlier splits; train-only fit, dev-only alpha selection, untouched test evaluation",
         "seed": SEED,
         "alphaSelectedOnValidation": best[2],
         "validationAccuracy": best[0],
         "test": metrics,
-        "neuralComparator": json.loads(
-            (out / "classifier-manifest.json").read_text(encoding="utf-8")
-        )["evaluation"],
-        "policy": "Baseline argmax and neural calibrated precision thresholds have different operating points; compare per category and do not infer natural-essay superiority",
+        "neuralContextOnly": {
+            "evaluation": json.loads(
+                (out / "classifier-manifest.json").read_text(encoding="utf-8")
+            )["evaluation"],
+            "featureSource": "Frozen predicted syntax and learned lexical morphology",
+            "cohort": "Tokenization-stable predicted-syntax cohort with additional cross-POS clean controls",
+            "operatingPoint": "Validation-calibrated per-category precision thresholds and runtime POS guards",
+        },
+        "policy": "This oracle-feature reference and deployed neural classifier have different features, cohorts and operating points (argmax versus calibrated thresholds). Their metrics are not a comparable head-to-head result and establish neither neural superiority nor natural-essay accuracy.",
     }
     write_json(ROOT / "reports/classifier-baseline.json", result)
     print(json.dumps(metrics), flush=True)
