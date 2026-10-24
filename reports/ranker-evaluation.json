@@ -1,5 +1,12 @@
 {
     "seed": 1729,
+    "corpusHashes": {
+        "en_ewt-ud-train.conllu": "3fb78e2b55482c8ee00caa653af436c88c9e5bc9a73ce26e4ae3ddc79d2b7e7b",
+        "en_ewt-ud-dev.conllu": "531a54ff90d6ab12201c5a50c3e78e6ddac4de69abc4bce5d275d3cd29efe2b6",
+        "en_ewt-ud-test.conllu": "e266e515a0a7547657ed3d90d9ba46487d6bd251f27ad4269d4e8a427c8555cd"
+    },
+    "splitExclusions": { "train": 0, "dev": 68, "test": 115 },
+    "splitPolicy": "Official splits; exact token sequences and document groups excluded against earlier splits; train-only fit, no test tuning",
     "metrics": {
         "train": { "groups": 7055, "top1Accuracy": 0.984975194897236 },
         "dev": { "groups": 785, "top1Accuracy": 0.8114649681528663 },
