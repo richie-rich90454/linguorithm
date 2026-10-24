@@ -1,6 +1,13 @@
 import { defineConfig, devices } from "@playwright/test";
 import { resolve } from "node:path";
 process.env.PLAYWRIGHT_BROWSERS_PATH ??= resolve(".cache/ms-playwright");
+
+// The task runner supplies a fresh loopback port so this suite cannot reuse a
+// stale preview process from an unrelated app session.
+const previewPort = Number(process.env.PLAYWRIGHT_PORT ?? 4317);
+if (!Number.isInteger(previewPort) || previewPort < 1)
+    throw new Error("Unable to allocate a browser test port.");
+
 export default defineConfig({
     testDir: "./tests/browser",
     fullyParallel: true,
@@ -9,11 +16,12 @@ export default defineConfig({
     reporter: "list",
     timeout: 30_000,
     expect: { timeout: 15_000 },
-    use: { baseURL: "http://127.0.0.1:4317", trace: "retain-on-failure" },
+    use: { baseURL: `http://127.0.0.1:${previewPort}`, trace: "retain-on-failure" },
     webServer: {
-        command: "node node_modules/vite/bin/vite.js preview apps/web --host 127.0.0.1 --port 4317",
-        url: "http://127.0.0.1:4317",
-        reuseExistingServer: !process.env.CI,
+        command: `node node_modules/vite/bin/vite.js preview apps/web --host 127.0.0.1 --port ${previewPort} --strictPort`,
+        url: `http://127.0.0.1:${previewPort}`,
+        reuseExistingServer: false,
+        timeout: 120_000,
     },
     projects: [
         { name: "chromium", use: { ...devices["Desktop Chrome"] } },
