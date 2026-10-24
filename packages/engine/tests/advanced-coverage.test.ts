@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { advancedRules } from "../src/advanced-grammar";
+import { advancedRules, createAdvancedRules } from "../src/advanced-grammar";
 import { EssayDocument, type Morphology, type Sentence } from "../src/domain";
 import { DiagnosticResolver, GrammarConstraintEngine, rules as baseRules } from "../src/grammar";
+import { CountNounInflections, PresentVerbInflections } from "../src/inflections";
 import { createPipeline } from "../src/pipeline";
 import { Tokenizer } from "../src/text";
 
@@ -26,6 +27,20 @@ const forms: Record<string, Morphology> = {
     however: { lemma: "however", pos: "ADV" },
     damaged: { lemma: "damage", pos: "VERB", finite: false, verbForm: "Part", tense: "Past" },
     repaired: { lemma: "repair", pos: "VERB", finite: false, verbForm: "Part", tense: "Past" },
+    one: { lemma: "one", pos: "NUM", number: "singular" },
+    zero: { lemma: "zero", pos: "NUM" },
+    two: { lemma: "two", pos: "NUM" },
+    three: { lemma: "three", pos: "NUM" },
+    "430": { lemma: "430", pos: "NUM" },
+    many: { lemma: "many", pos: "DET" },
+    a: { lemma: "a", pos: "DET" },
+    dog: { lemma: "dog", pos: "NOUN", number: "singular" },
+    dogs: { lemma: "dog", pos: "NOUN", number: "plural" },
+    call: { lemma: "call", pos: "NOUN", number: "singular" },
+    calls: { lemma: "call", pos: "NOUN", number: "plural" },
+    sheep: { lemma: "sheep", pos: "NOUN", number: "singular" },
+    toys: { lemma: "toy", pos: "NOUN", number: "plural" },
+    water: { lemma: "water", pos: "NOUN", number: "singular" },
 };
 function parsed(text: string, edges: readonly Edge[], offset = 0): Sentence {
     const tokens = new Tokenizer().tokenize(text, offset).map((token) => {
@@ -61,12 +76,114 @@ const seriesIssues = (sentence: Sentence) =>
     advancedRules
         .flatMap((rule) => rule.evaluate(sentence))
         .filter((issue) => issue.ruleId === "missing-series-comma");
+const nounNumberIssues = (sentence: Sentence) => countNounRule.evaluate(sentence);
+const countNounForms = {
+    dog: [forms.dog!],
+    dogs: [forms.dogs!],
+    call: [forms.call!],
+    calls: [forms.calls!],
+    water: [forms.water!],
+};
+const countNounRule = createAdvancedRules(
+    new PresentVerbInflections({}),
+    undefined,
+    new CountNounInflections(countNounForms),
+).find((rule) => rule.id === "count-noun-number")!;
 const clauses = (relation = "parataxis"): Edge[] => [
     ["arrived", "arrived", "root"],
     ["arrived", "courier", "nsubj"],
     ["arrived", "departed", relation],
     ["departed", "driver", "nsubj"],
 ];
+
+describe("parsed count-noun number reviews", () => {
+    const quantity = (text: string, number: string, noun: string, relation = "nummod") =>
+        parsed(text, [
+            [noun, noun, "root"],
+            [noun, number, relation],
+        ]);
+
+    it.each([
+        ["We saw three dog.", "three", "dog"],
+        ["We saw 3 dog.", "3", "dog"],
+        ["We saw zero dog.", "zero", "dog"],
+        ["We saw many dog.", "many", "dog", "det"],
+    ])("reviews a parsed singular count noun after a plural quantity: %s", (...values) => {
+        const [text, number, noun, relation] = values as [string, string, string, string?];
+        const sentence = quantity(text, number, noun, relation);
+        const issue = nounNumberIssues(sentence)[0]!;
+        expect(issue.title).toBe("Review the noun form after a plural quantity");
+        expect(issue.proposals).toEqual([]);
+        expect(issue.evidence.map(({ label }) => label)).toEqual([
+            "Plural quantity",
+            "Parsed count noun",
+        ]);
+        expect(issue.confidence.calibrated).toBe(false);
+    });
+
+    it.each([
+        ["We saw one dog.", "one", "dog"],
+        ["We saw two dogs.", "two", "dogs"],
+    ])("accepts an aligned quantity and count noun: %s", (text, number, noun) => {
+        expect(nounNumberIssues(quantity(text!, number!, noun!))).toEqual([]);
+    });
+
+    it("does not treat a singular noun used as a compound modifier as the counted head", () => {
+        const sentence = parsed("We bought three dog toys.", [
+            ["toys", "toys", "root"],
+            ["toys", "dog", "compound"],
+            ["dog", "three", "nummod"],
+        ]);
+        expect(nounNumberIssues(sentence)).toEqual([]);
+    });
+
+    it("does not read an identifier or scheduled time as a plural count", () => {
+        const sentence = parsed("They scheduled a 430 call.", [
+            ["call", "call", "root"],
+            ["call", "430", "nummod"],
+            ["call", "a", "det"],
+        ]);
+        expect(nounNumberIssues(sentence)).toEqual([]);
+    });
+
+    it("uses noun paradigms learned from the training lexicon to exclude mass nouns", () => {
+        expect(nounNumberIssues(quantity("We need many water.", "many", "water", "det"))).toEqual(
+            [],
+        );
+    });
+
+    it("abstains when number morphology or the parsed quantifier attachment is ambiguous", () => {
+        const sheep = quantity("We saw two sheep.", "two", "sheep");
+        const ambiguousSheep: Sentence = {
+            ...sheep,
+            tokens: sheep.tokens.map((token) =>
+                token.text === "sheep"
+                    ? {
+                          ...token,
+                          analyses: [
+                              { lemma: "sheep", pos: "NOUN", number: "singular" },
+                              { lemma: "sheep", pos: "NOUN", number: "plural" },
+                          ],
+                      }
+                    : token,
+            ),
+        };
+        const ordinary = quantity("We saw three dog.", "three", "dog");
+        expect(nounNumberIssues(ambiguousSheep)).toEqual([]);
+        expect(nounNumberIssues({ ...ordinary, ambiguous: true })).toEqual([]);
+        expect(
+            nounNumberIssues({
+                ...ordinary,
+                alternatives: [
+                    {
+                        graph: ordinary.graph.filter((edge) => edge.relation !== "nummod"),
+                        score: 0,
+                    },
+                ],
+            }),
+        ).toEqual([]);
+    });
+});
 
 describe("parsed list punctuation", () => {
     const list = (text: string) =>
