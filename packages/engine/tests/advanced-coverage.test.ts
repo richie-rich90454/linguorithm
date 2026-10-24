@@ -14,6 +14,11 @@ const verb = (lemma: string): Morphology => ({
     verbForm: "Fin",
 });
 const forms: Record<string, Morphology> = {
+    enjoy: verb("enjoy"),
+    avoid: verb("avoid"),
+    want: verb("want"),
+    write: { lemma: "write", pos: "VERB", finite: false, verbForm: "Inf" },
+    writing: { lemma: "write", pos: "VERB", finite: false, verbForm: "Part" },
     arrived: verb("arrive"),
     departed: verb("depart"),
     stopped: verb("stop"),
@@ -95,6 +100,112 @@ const clauses = (relation = "parataxis"): Edge[] => [
     ["arrived", "departed", relation],
     ["departed", "driver", "nsubj"],
 ];
+
+describe("parsed gerund complement reviews", () => {
+    const rule = advancedRules.find((candidate) => candidate.id === "gerund-complement")!;
+    const complement = (text = "We enjoy to write.", governor = "enjoy", offset = 0) =>
+        parsed(
+            text,
+            [
+                [governor, governor, "root"],
+                [governor, "We", "nsubj"],
+                [governor, "write", "xcomp"],
+                ["write", "to", "mark"],
+            ],
+            offset,
+        );
+
+    it.each(["enjoy", "avoid"])("reviews a direct to-infinitive after %s", (governor) => {
+        const sentence = complement(`We ${governor} to write.`, governor, 30);
+        const [issue] = rule.evaluate(sentence);
+        expect(issue).toMatchObject({
+            ruleId: "gerund-complement",
+            certainty: "Possible issue",
+            proposals: [],
+            confidence: { calibrated: false },
+        });
+        expect(
+            sentence.text.slice(issue!.start - sentence.start, issue!.end - sentence.start),
+        ).toBe("to write");
+        expect(issue!.evidence.map((e) => e.label)).toEqual([
+            "Governing verb",
+            "Parsed infinitive complement",
+        ]);
+        expect(
+            createAdvancedRules(new PresentVerbInflections({})).some(
+                (candidate) => candidate.id === rule.id,
+            ),
+        ).toBe(true);
+    });
+
+    it("accepts a gerund complement and verbs that license an infinitive", () => {
+        expect(rule.evaluate(parsed("We enjoy writing.", [["enjoy", "writing", "xcomp"]]))).toEqual(
+            [],
+        );
+        expect(rule.evaluate(complement("We want to write.", "want"))).toEqual([]);
+    });
+
+    it("abstains on quoted text, recovery syntax, and ambiguous parses", () => {
+        const sentence = complement();
+        expect(rule.evaluate(complement('"We enjoy to write."'))).toEqual([]);
+        expect(rule.evaluate({ ...sentence, syntaxSource: "lexical" })).toEqual([]);
+        expect(rule.evaluate({ ...sentence, ambiguous: true })).toEqual([]);
+    });
+
+    it.each(["xcomp", "mark"])("requires beam agreement on the %s edge", (relation) => {
+        const sentence = complement();
+        expect(
+            rule.evaluate({
+                ...sentence,
+                alternatives: [
+                    {
+                        graph: sentence.graph.filter((edge) => edge.relation !== relation),
+                        score: 0,
+                    },
+                ],
+            }),
+        ).toEqual([]);
+    });
+
+    it("does not confuse purpose adjuncts or intervening objects with direct complements", () => {
+        const sentence = complement();
+        expect(
+            rule.evaluate({
+                ...sentence,
+                graph: sentence.graph.map((edge) =>
+                    edge.relation === "xcomp" ? { ...edge, relation: "advcl" } : edge,
+                ),
+            }),
+        ).toEqual([]);
+        expect(rule.evaluate(complement("We enjoy music to write."))).toEqual([]);
+        expect(rule.evaluate(complement("We enjoy, to write."))).toEqual([]);
+    });
+
+    it("abstains on an independent complement subject or competing verb morphology", () => {
+        const sentence = complement();
+        expect(
+            rule.evaluate({
+                ...sentence,
+                graph: [...sentence.graph, { head: 3, dependent: 0, relation: "nsubj" }],
+            }),
+        ).toEqual([]);
+        for (const form of [
+            { lemma: "write", pos: "VERB", verbForm: "Part" },
+            { lemma: "writ", pos: "VERB", verbForm: "Inf" },
+        ] as Morphology[]) {
+            expect(
+                rule.evaluate({
+                    ...sentence,
+                    tokens: sentence.tokens.map((token) =>
+                        token.text === "write"
+                            ? { ...token, analyses: [...token.analyses, form] }
+                            : token,
+                    ),
+                }),
+            ).toEqual([]);
+        }
+    });
+});
 
 describe("parsed count-noun number reviews", () => {
     const quantity = (text: string, number: string, noun: string, relation = "nummod") =>
