@@ -11,15 +11,15 @@
     },
     "lexicon": {
         "path": "lexicon.json",
-        "sha256": "8ded97f69099d495a6871b7742ea5bbf2551bf89dfa25cf3c65b7cf8e68eb413"
+        "sha256": "8f378aa80e3890809c046ab55d02b6f2fafa0025fc32c5e98f7baf233e7becde"
     },
     "contextual": {
         "path": "contextual.json",
-        "sha256": "4576ca1a6a04922e66d0c4851ce3d3acd7cacc27c393c7c337e242a82db2eece"
+        "sha256": "7b23888adcce2f8c13f18455d97f08dc301c8633e0ead3ae04623b89958e2b79"
     },
     "classifier": {
         "path": "classifier-manifest.json",
-        "sha256": "ac86684b882d7270940e3e0e579b63711dc75656abd91b191bd9221b01720763"
+        "sha256": "fd8bf6a12cf4d84b7aa8088c9b86cbdb0a3533e9db52b24f11d384284a4ade1a"
     },
     "dictionary": {
         "path": "dictionary.json",
