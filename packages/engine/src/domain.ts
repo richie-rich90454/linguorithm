@@ -4,6 +4,20 @@ export const MAX_TEXT = 150_000;
 export type Span = Readonly<{ start: number; end: number }>;
 export type Category = "Grammar" | "Punctuation" | "Spelling" | "Usage" | "Style";
 export type Certainty = "Confirmed error" | "Likely error" | "Possible issue" | "Style suggestion";
+export const writingIntentValues = [
+    "general",
+    "narrative",
+    "descriptive",
+    "explanatory",
+    "argumentative",
+    "reflective",
+    "informative",
+    "analytical",
+    "creative",
+    "professional-communication",
+] as const;
+export const writingIntentSchema = z.enum(writingIntentValues);
+export type WritingIntent = z.infer<typeof writingIntentSchema>;
 export type SkillId =
     | "sentence"
     | "agreement"
@@ -73,6 +87,7 @@ export interface CorrectionProposal {
 export interface Diagnostic extends Span {
     id: string;
     ruleId: string;
+    goalId?: string;
     category: Category;
     skill: SkillId;
     title: string;
@@ -91,11 +106,21 @@ export interface AnalysisReport {
     cachedParagraphs: number;
     versions: Record<string, string>;
     limitations: readonly string[];
+    writingIntent?: WritingIntent;
+    goalMetadata?: readonly GoalMetadata[];
     modelStatus?: {
         state: "ready" | "unavailable" | "disabled";
         detail: string;
         tasks: readonly string[];
     };
+}
+
+export interface GoalMetadata {
+    id: string;
+    detection: "implemented-unvalidated" | "not-yet-detectable";
+    proficiencyBand: "emergent" | "developing" | "foundational" | "intermediate" | "advanced";
+    relevantToIntent: boolean;
+    diagnosticIds: readonly string[];
 }
 
 const revisionSchema = z.object({
@@ -107,6 +132,7 @@ export const documentSchema = z
     .object({
         id: z.string().min(1).max(100),
         title: z.string().min(1).max(200),
+        writingIntent: writingIntentSchema.optional(),
         revisions: z.array(revisionSchema).min(1).max(500),
         cursor: z.number().int().nonnegative(),
         updatedAt: z.string().datetime(),
@@ -116,12 +142,17 @@ export type DocumentRecord = z.infer<typeof documentSchema>;
 
 export class EssayDocument {
     constructor(readonly record: DocumentRecord) {}
-    static create(text = "", title = "Untitled essay"): EssayDocument {
+    static create(
+        text = "",
+        title = "Untitled essay",
+        writingIntent: WritingIntent = "general",
+    ): EssayDocument {
         const at = new Date().toISOString();
         return new EssayDocument(
             documentSchema.parse({
                 id: crypto.randomUUID(),
                 title,
+                writingIntent,
                 revisions: [{ text, reason: "Original", at }],
                 cursor: 0,
                 updatedAt: at,
@@ -149,6 +180,14 @@ export class EssayDocument {
             revisions,
             cursor: revisions.length - 1,
             updatedAt: at,
+        });
+    }
+    withWritingIntent(writingIntent: WritingIntent): EssayDocument {
+        if (writingIntent === (this.record.writingIntent ?? "general")) return this;
+        return new EssayDocument({
+            ...this.record,
+            writingIntent,
+            updatedAt: this.nextTimestamp(),
         });
     }
     undo(): EssayDocument {
