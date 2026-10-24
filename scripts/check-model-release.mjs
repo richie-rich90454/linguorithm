@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, relative, resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
@@ -50,7 +50,6 @@ const report = {
     freshRestore: true,
     corruptedAssetRepaired: true,
     corruptedArchiveRejected: true,
-    location: relative(root, clone).replaceAll("\\", "/"),
     version: manifest.version,
 };
 mkdirSync(resolve(root, "reports"), { recursive: true });
