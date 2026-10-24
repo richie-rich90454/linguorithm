@@ -1,4 +1,4 @@
-import { MAX_TEXT } from "@grammar/engine";
+import { MAX_TEXT } from "../../../packages/engine/src/domain";
 import { readBoundedZip } from "./archive-safety";
 
 const all = (node: Document | Element, name: string): Element[] =>
