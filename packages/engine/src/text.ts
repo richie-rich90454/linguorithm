@@ -106,27 +106,57 @@ export class MorphologyAnalyzer {
 }
 
 export class Tokenizer {
-    constructor(private readonly morphology = new MorphologyAnalyzer()) {}
+    constructor(
+        private readonly morphology = new MorphologyAnalyzer(),
+        private readonly trainedVocabulary?: ReadonlySet<string>,
+    ) {}
     tokenize(text: string, offset = 0): Token[] {
-        return [
-            ...text.matchAll(/[\p{L}\p{M}]+(?:['’][\p{L}\p{M}]+)*|\d+(?:[.,]\d+)*|[^\s]/gu),
-        ].flatMap((m) => {
-            const contraction = /^(.*?)(n['’]t|['’](?:m|re|ve|ll|d|s))$/iu.exec(m[0]);
-            const parts = contraction?.[1] ? [contraction[1], contraction[2]!] : [m[0]];
-            let position = offset + m.index;
-            return parts.map((text) => {
-                const analyses = this.morphology.analyze(text);
-                const token = {
-                    start: position,
-                    end: position + text.length,
-                    text,
-                    analyses,
-                    pos: analyses[0]!.pos,
-                };
-                position += text.length;
-                return token;
-            });
-        });
+        const pattern =
+            /https?:\/\/[^\s<>"']+|www\.[^\s<>"']+|[\p{L}\p{N}.!#$%&'*+/=?^_`{|}~-]+@[\p{L}\p{N}](?:[\p{L}\p{N}-]*[\p{L}\p{N}])?(?:\.[\p{L}\p{N}](?:[\p{L}\p{N}-]*[\p{L}\p{N}])?)+|(?:\p{L}\.)+|\d{1,4}[/-]\d{1,4}(?:[/-]\d{1,4})?|\d{1,2}:\d{2}(?::\d{2})?|[\p{L}\p{M}\p{N}]*\p{N}[\p{L}\p{M}\p{N}]*\.\p{N}[\p{L}\p{M}\p{N}]*|\d{1,3}(?:,\d{3})+(?:\.\d+)?(?![\d,])|\d+\.\d+|[\p{L}\p{M}\p{N}]+(?:['’][\p{L}\p{M}\p{N}]+|[-‐‑–][\p{L}\p{M}\p{N}]+)*|[.!?…]{2,}|[-*~_]{2,}|[:;][)D(/\\]+|[^\s]/giu;
+        const tokens: Token[] = [];
+        for (const match of text.matchAll(pattern)) {
+            const raw = match[0];
+            const isUrl = /^(?:https?:\/\/|www\.)/iu.test(raw);
+            let url = raw;
+            if (isUrl) {
+                while (/[.,!?;:]$/u.test(url)) url = url.slice(0, -1);
+                while (/[)\]}]$/u.test(url)) {
+                    const closing = url.at(-1)!;
+                    const opening = closing === ")" ? "(" : closing === "]" ? "[" : "{";
+                    if (
+                        [...url].filter((character) => character === closing).length <=
+                        [...url].filter((character) => character === opening).length
+                    )
+                        break;
+                    url = url.slice(0, -1);
+                }
+            }
+            let pieces = isUrl && url !== raw ? [url, raw.slice(url.length)] : [raw];
+            if (
+                this.trainedVocabulary &&
+                /[-‐‑–]/u.test(raw) &&
+                !/^\d{1,4}-[a-z]{3}-\d{2,4}$/iu.test(raw) &&
+                !this.trainedVocabulary.has(raw.toLowerCase())
+            )
+                pieces = raw.split(/([-‐‑–])/u).filter(Boolean);
+            let position = offset + match.index!;
+            for (const piece of pieces) {
+                const contraction = /^(.*?)(n['’]t|['’](?:m|re|ve|ll|d|s))$/iu.exec(piece);
+                const parts = contraction?.[1] ? [contraction[1], contraction[2]!] : [piece];
+                for (const surface of parts) {
+                    const analyses = this.morphology.analyze(surface);
+                    tokens.push({
+                        start: position,
+                        end: position + surface.length,
+                        text: surface,
+                        analyses,
+                        pos: analyses[0]!.pos,
+                    });
+                    position += surface.length;
+                }
+            }
+        }
+        return tokens;
     }
 }
 
@@ -143,12 +173,23 @@ export class SentenceSegmenter {
         // Intl.Segmenter implements Unicode boundaries, then we merge abbreviation/initial splits.
         const parts = [...new Intl.Segmenter("en-US", { granularity: "sentence" }).segment(text)];
         const result: (Span & { text: string })[] = [];
-        let start = 0;
-        for (let i = 0; i < parts.length; i++) {
-            const part = parts[i]!;
-            const end = part.index + part.segment.length;
+        const boundaries = new Set(parts.map((part) => part.index + part.segment.length));
+        // Intl.Segmenter may keep lower-case sentence starts in the preceding
+        // sentence. Preserve those boundaries too, except after common
+        // abbreviations where a split would change sentence structure.
+        for (const match of text.matchAll(/[.!?…][”"')\]}]*(?=\s+[\p{Ll}])/gu)) {
+            const end = match.index! + match[0].length;
             if (
-                i + 1 < parts.length &&
+                !/(?:\b(?:e\.g|i\.e|etc|Mr|Mrs|Ms|Dr|Prof|Sr|Jr|St|vs)\.)$/iu.test(
+                    text.slice(0, end).trimEnd(),
+                )
+            )
+                boundaries.add(end);
+        }
+        let start = 0;
+        for (const end of [...boundaries].sort((a, b) => a - b)) {
+            if (
+                end < text.length &&
                 /(?:\b(?:Mr|Mrs|Ms|Dr|Prof|Sr|Jr|St|vs|etc)|\b[A-Z])\.\s*$/u.test(
                     text.slice(start, end),
                 )
