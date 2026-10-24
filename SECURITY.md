@@ -10,6 +10,6 @@ Include the revision, browser/OS, a synthetic reproduction, expected boundary, a
 
 ## Privacy boundaries
 
-Syntax stores writing and records in the browser. Local-first operation cannot protect against a compromised device, malicious extension, or exposed exported backup. Redact private data before sharing traces, screenshots, or reports. Model findings are not correctness or security certificates.
+Linguorithm stores writing and records in the browser. Local-first operation cannot protect against a compromised device, malicious extension, or exposed exported backup. Redact private data before sharing traces, screenshots, or reports. Model findings are not correctness or security certificates.
 
 Please coordinate disclosure so a fix and affected-user guidance can be prepared. Maintainers should acknowledge reports, establish a private reproduction, and communicate remediation status without exposing sensitive details prematurely.
