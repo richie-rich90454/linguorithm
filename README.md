@@ -1,18 +1,25 @@
-# Syntax
+# Linguorithm
 
-**A local-first grammar laboratory for writing, syntax, and deliberate practice.**
+**An English grammar checker, sentence analyzer, and practice workspace that runs locally in your browser.**
 
-Syntax combines an essay editor, sentence workbench, adaptive practice, and learning records in a SolidJS/TypeScript application. Compact trained models run in a browser worker. Writing stays in the browser: no accounts, essay uploads, analytics, remote fonts, or generative services.
+Linguorithm combines an essay editor, sentence workbench, adaptive practice, and learning records in a SolidJS/TypeScript application. Compact trained models run in a browser worker. Writing stays in the browser: no accounts, essay uploads, analytics, remote fonts, or generative services.
 
-[Quick start](#start-locally) · [Features](#what-you-can-do) · [Model card](docs/model-card.md) · [Contributing](CONTRIBUTING.md)
+[Quick start](#start-locally) · [Features](#what-you-can-do) · [Model card](docs/model-card.md) · [Contributing](CONTRIBUTING.md) · [Support](SUPPORT.md)
 
-![Syntax essay workspace with source-linked findings and a subject–verb agreement explanation](docs/images/workspace.png)
+![Linguorithm essay workspace with source-linked findings and a subject–verb agreement explanation](docs/images/workspace.png)
 
-## Why Syntax
+## Why Linguorithm
 
-A correction is more useful when you can inspect its reasoning. Syntax connects a finding to the original words, the grammatical relationship behind it, and a focused practice exercise. You control each edit, can undo it exactly, and keep your writing on your device.
+A correction is more useful when you can inspect its reasoning. Linguorithm connects a finding to the original words, the grammatical relationship behind it, and a focused practice exercise. You control each edit, can undo it exactly, and keep your writing on your device.
 
 For writers, tutors, and developers who want an inspectable local grammar tool, it combines compact discriminative models with explicit constraints. It proposes bounded edits rather than generating replacement paragraphs.
+
+| Your goal                                        | Start here                                |
+| ------------------------------------------------ | ----------------------------------------- |
+| Try the editor and practice exercises            | [Run Linguorithm locally](#start-locally) |
+| Understand accuracy, privacy, or model limits    | [Model card](docs/model-card.md)          |
+| Reproduce a bug or question a grammar finding    | [Support and reporting](SUPPORT.md)       |
+| Improve grammar examples, documentation, or code | [Contribution guide](CONTRIBUTING.md)     |
 
 ## Start locally
 
@@ -48,7 +55,9 @@ Assessment records support reflection; they do not establish a measured learning
 
 The `ewt-1` release includes a character-CNN/BiLSTM/CRF tagger, beam dependency parser, synthetic-error classifier, and trained contextual correction ranker. The SCOWL-derived dictionary recognizes 121,191 forms. Resource hashes are checked before inference, and failures visibly activate deterministic fallback analysis.
 
-Held-out UD English EWT evaluation measures **94.47% POS accuracy**, **81.66% UAS**, and **77.27% LAS** on 1,962 test sentences. These describe syntax prediction, not natural-essay diagnostic precision. Classifier calibration uses synthetic tasks, and neural findings remain review-only. A clean report cannot certify correctness.
+Full held-out UD English EWT component evaluation measures **94.47% POS accuracy**, **81.66% UAS**, and **77.27% LAS** on 1,962 test sentences. A separate production-browser benchmark on 300 held-out EWT sentences across answers, email, newsgroup, reviews, and weblog measures **92.18% POS**, **80.16% UAS**, and **76.09% LAS**, counting tokenization mismatches as incorrect. This is within-corpus evidence, not independent learner-essay validation.
+
+No error-classifier category currently passes the release emission gate. On 63 controlled agreement mutations, the complete hybrid detects 47 and misses 16, with zero target-token false positives on 63 source controls; the classifier alone emits none. On 26 authored clean probes, there are zero conservative false positives and one review warning. These small synthetic/development checks do not establish natural-error precision or recall. Neural findings remain review-only, and a clean report cannot certify correctness. See the [measured browser evidence](reports/generalization.json) and [evaluation details](docs/model-card.md#production-browser-generalization-check).
 
 Read the [model card](docs/model-card.md) for provenance, evaluation methods, domain limits, quantization results, and licensing. Initial successful model loading enables offline reuse through the service worker; browser storage eviction can require loading assets again.
 
@@ -68,6 +77,7 @@ Read the [model card](docs/model-card.md) for provenance, evaluation methods, do
 | `make bundle` | Check built bundle budgets |
 | `make benchmark` | Run the engine benchmark |
 | `make inspect` | Inspect the running production preview |
+| `make social-preview` | Render the editable social preview to its GitHub-ready PNG |
 | `make train` | Retrain, evaluate, and package local models using `.venv` |
 
 Use `make help` for setup and additional evaluation targets. Pass options with `ARGS`, for example `make browser ARGS="--project=chromium"`. Browser tests require `make build` first. Inspection and browser benchmarks require `make preview` in a separate terminal. Normal tasks never install missing prerequisites automatically.
@@ -85,13 +95,15 @@ Use `make help` for setup and additional evaluation targets. Pass options with `
 | `reports`         | Recorded evaluation and verification evidence                     |
 | `docs`            | Model card, specification, release status, research               |
 
-Production output is `apps/web/dist`. Serve it over HTTPS on a static host; the relative base supports subpaths. Preserve all packaged resource notices. The build does not publish a deployment.
+Production output is `apps/web/dist`. It uses relative asset paths for project subpaths and includes a GitHub Pages deployment workflow. Connect the repository to GitHub, set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**, and push to `main`; the site deploys only after the `Verify platform` workflow succeeds. A maintainer can also start the deployment workflow manually. Keep the workflow's Pages permissions enabled and preserve all packaged resource notices. No public URL is claimed until the deployment completes successfully.
 
 ## Contributing and support
 
-Start with [contributing](CONTRIBUTING.md), the [support guide](SUPPORT.md), and our [code of conduct](CODE_OF_CONDUCT.md). Report vulnerabilities using the [security policy](SECURITY.md). Bug and feature templates are available through this repository's Issues page.
+Start with [contributing](CONTRIBUTING.md), the [support guide](SUPPORT.md), and our [code of conduct](CODE_OF_CONDUCT.md). Report vulnerabilities using the [security policy](SECURITY.md). Bug, grammar feedback, and feature templates are available through this repository's Issues page.
 
-If Syntax is useful to you, star the repository so others can find it. Good bug reports, carefully reviewed grammar examples, and small, tested contributions help the project improve.
+If Linguorithm is useful to you, star the repository so others can find it. Share a reproducible workflow or a short synthetic grammar example to help other writers and educators assess whether it fits their needs. Good bug reports, carefully reviewed grammar examples, and small, tested contributions help the project improve.
+
+Maintainers can use the [GitHub presentation guide](docs/github-discovery.md) for the prepared social preview, suggested topics, and repository settings.
 
 See the [engineering specification](docs/engineering-specification.md), [training guide](training/README.md), [release status](docs/release-status.md), and [recorded verification](reports/verification.md) for technical context. Independent natural-learner validation, educator review, comparative trials, physical-device performance, and a consented learning study remain external release requirements.
 
