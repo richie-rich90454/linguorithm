@@ -10,6 +10,10 @@ test.beforeEach(async ({ page }) => {
 });
 test("source-linked correction, undo, persistence, and structure", async ({ page }) => {
     await expect(page.getByLabel("Annotated essay")).toContainText("details are often");
+    await expect(page.locator(".finding-detail")).toContainText("Review before applying.");
+    await expect(page.locator(".finding-detail")).toContainText(
+        "Your text changes only when you choose an edit.",
+    );
     await page.getByRole("button", { name: "Apply correction" }).click();
     await expect(page.getByLabel("Annotated essay")).toContainText("details is often");
     await page.getByRole("button", { name: "Undo change" }).click();
@@ -23,6 +27,22 @@ test("source-linked correction, undo, persistence, and structure", async ({ page
         page.getByRole("heading", { name: "Sentence workbench", exact: true }),
     ).toBeVisible();
     await expect(page.locator(".dependency-diagram")).toBeVisible();
+});
+
+test("analysis and dismissal preserve the draft until an edit is accepted", async ({ page }) => {
+    const original = "She has wrote a detailed report.";
+    await page.getByRole("button", { name: "Edit text" }).click();
+    await page.getByLabel("Essay text").fill(original);
+    await page.getByRole("button", { name: "Analyze essay" }).click();
+    const finding = page.locator(".finding-item").filter({ hasText: "Check the verb form" });
+    await expect(finding).toBeVisible();
+    await expect(page.getByLabel("Annotated essay")).toHaveText(original);
+    await finding
+        .getByRole("button", { name: "Dismiss Check the verb form; keep your wording" })
+        .click();
+    await expect(page.getByLabel("Annotated essay")).toHaveText(original);
+    await page.reload();
+    await expect(page.getByLabel("Annotated essay")).toHaveText(original);
 });
 test("practice records one first attempt and reveals explanation", async ({ page }) => {
     await page.getByRole("button", { name: "Practice", exact: false }).first().click();
