@@ -4,6 +4,8 @@ Start with the [quickstart](docs/quickstart.md), [engineering specification](doc
 
 ## A focused change
 
+Useful first contributions include clarifying a setup step, reporting an ambiguous practice answer, improving an accessible label, or supplying a minimal sentence that exposes a diagnostic error. You do not need to retrain a model to contribute. Check existing issues and pull requests before starting so related work can stay together.
+
 Open an issue describing the problem, a minimal example, and desired behavior. A small correction can go directly into a focused pull request. Discuss substantial architecture, model, curriculum, or persistence changes before implementation. Separate unrelated changes.
 
 Use synthetic examples instead of student writing or private documents. Keep essays and imported material local. Do not introduce analytics, remote fonts, network inference, or hidden external requests. Imported content must remain inert, and resource integrity failures must remain visible.
@@ -25,6 +27,8 @@ Generated reports must describe actual runs, including conditions and failures. 
 ## Models and content
 
 Preserve splits, provenance hashes, licenses, and complete notices. See [training](training/README.md) for reproduction. Do not contribute corpora you lack permission to share or ingest student writing without permission. Explain curriculum assumptions and answer ambiguity. Model promotion needs reviewed evidence; smaller weights alone are insufficient.
+
+For a grammar or practice correction, include the invented sentence or question, intended meaning, current result, proposed result, and grammatical explanation. Include a reliable reference when available. Preserve plausible alternative readings instead of forcing a single answer. Use the grammar and practice issue template when the problem concerns language analysis rather than application behavior.
 
 ## Pull requests
 
