@@ -14,3 +14,4 @@ export * from "./mutations";
 export * from "./assessment";
 export * from "./progress-export";
 export * from "./annotations";
+export * from "./inflections";
