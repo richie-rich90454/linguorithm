@@ -1,5 +1,6 @@
 import type { Dependency, Diagnostic, Sentence, Token } from "./domain";
 import { finding, type GrammarRule } from "./grammar";
+import type { PastParticipleInflections, PresentVerbInflections } from "./inflections";
 
 const hasQuotes = (s: Sentence) => /[“”"]/u.test(s.text);
 const subjectRelation = (relation: string) => ["nsubj", "nsubj:pass"].includes(relation);
@@ -15,12 +16,77 @@ const stableEdge = (s: Sentence, edge: Dependency) =>
     );
 const finite = (token: Token) =>
     ["VERB", "AUX"].includes(token.pos) &&
-    token.analyses.some((a) => a.pos === token.pos && a.finite === true) &&
-    !token.analyses.some(
-        (a) =>
-            a.pos === token.pos &&
-            (a.finite === false || /^(Inf|Part|Ger)$/u.test(a.verbForm ?? "")),
-    );
+    token.analyses.some((analysis) => analysis.pos === token.pos && analysis.finite === true);
+type QuoteRange = readonly [number, number];
+function quoteRanges(text: string): QuoteRange[] {
+    const ranges: QuoteRange[] = [];
+    const open: { mark: '"' | "“"; start: number }[] = [];
+    for (let index = 0; index < text.length; index++) {
+        const mark = text[index];
+        const current = open.at(-1);
+        if (mark === '"') {
+            if (current?.mark === '"') {
+                open.pop();
+                ranges.push([current.start, index]);
+            } else if (!current || current.mark === "“") open.push({ mark: '"', start: index });
+        } else if (mark === "“") open.push({ mark, start: index });
+        else if (mark === "”" && current?.mark === "“") {
+            open.pop();
+            ranges.push([current.start, index]);
+        }
+    }
+    for (const quote of open) ranges.push([quote.start, text.length]);
+    return ranges;
+}
+const tokenIsQuoted = (s: Sentence, token: Token, ranges: readonly QuoteRange[]) => {
+    const start = token.start - s.start;
+    return ranges.some(([open, close]) => start > open && start < close);
+};
+function isSubjunctiveWere(s: Sentence, clauseHead: number, verb: Token): boolean {
+    if (verb.text.toLowerCase() !== "were") return false;
+    if (
+        s.graph.some(
+            (edge) =>
+                edge.head === clauseHead &&
+                edge.relation === "mark" &&
+                /^(if|unless)$/iu.test(s.tokens[edge.dependent]!.text),
+        )
+    )
+        return true;
+    return s.graph.some((edge) => {
+        if (edge.dependent !== clauseHead || !["ccomp", "xcomp"].includes(edge.relation))
+            return false;
+        return s.tokens[edge.head]!.analyses.some(
+            (analysis) => analysis.pos === "VERB" && analysis.lemma.toLowerCase() === "wish",
+        );
+    });
+}
+function grammaticalNumber(token: Token): "singular" | "plural" | undefined {
+    const numbers = [...new Set(token.analyses.map((analysis) => analysis.number).filter(Boolean))];
+    if (numbers.length === 1) return numbers[0];
+    if (numbers.length > 1 || !["NOUN", "PROPN"].includes(token.pos)) return undefined;
+    const analyses = token.analyses.filter((analysis) => analysis.pos === token.pos);
+    const lemmas = [...new Set(analyses.map((analysis) => analysis.lemma.toLowerCase()))];
+    if (lemmas.length !== 1) return undefined;
+    const surface = token.text.toLowerCase();
+    const lemma = lemmas[0]!;
+    if (surface === lemma) return /(?:s|x|z|sh|ch)$/u.test(surface) ? undefined : "singular";
+    const pluralLemmas = [];
+    if (surface.endsWith("ies")) pluralLemmas.push(`${surface.slice(0, -3)}y`);
+    if (surface.endsWith("es")) {
+        const base = surface.slice(0, -2);
+        pluralLemmas.push(base);
+        if (base.endsWith("zz")) pluralLemmas.push(base.slice(0, -1));
+    }
+    if (surface.endsWith("s")) pluralLemmas.push(surface.slice(0, -1));
+    return pluralLemmas.includes(lemma) ? "plural" : undefined;
+}
+const parsedFinitePredicate = (s: Sentence, index: number) =>
+    finite(s.tokens[index]!) ||
+    (s.tokens[index]!.pos === "VERB" &&
+        s.graph.some(
+            (edge) => edge.head === index && edge.dependent === index && edge.relation === "root",
+        ));
 
 const subjectCase: GrammarRule = {
     id: "subject-case",
@@ -330,20 +396,15 @@ const modifier: GrammarRule = {
         ];
     },
 };
-const neuralAgreement: GrammarRule = {
+const neuralAgreement = (inflections?: PresentVerbInflections): GrammarRule => ({
     id: "neural-agreement",
     version: "1.0.0",
     skill: "agreement",
     description:
         "Finite lexical and auxiliary agreement over UD subjects and copula/auxiliary edges",
     evaluate(s) {
-        if (
-            s.ambiguous ||
-            s.syntaxSource !== "neural" ||
-            hasQuotes(s) ||
-            /\b(if|wish|would|could|should|might|may)\b/iu.test(s.text)
-        )
-            return [];
+        if (s.ambiguous || s.syntaxSource !== "neural") return [];
+        const quotes = quoteRanges(s.text);
         return s.graph
             .filter((e) => ["nsubj", "nsubj:pass"].includes(e.relation))
             .flatMap((edge) => {
@@ -355,7 +416,7 @@ const neuralAgreement: GrammarRule = {
                             (e.head === edge.dependent || e.dependent === edge.dependent) &&
                             e.relation === "conj",
                     ) ||
-                    /^(there|who|what|which|none|all|some|most|data|news|series|species|means|police|staff|team|family|committee|number|lot|percent|pair|part|half|majority)$/iu.test(
+                    /^(there|who|what|which|none|all|some|most|data|news|series|species|means|police|staff|team|family|committee|number|lot|percent|pair|part|half|majority|people|cattle|fish|sheep|deer|offspring)$/iu.test(
                         subject.text,
                     )
                 )
@@ -382,8 +443,8 @@ const neuralAgreement: GrammarRule = {
                     )
                 )
                     return [];
-                const numbers = [...new Set(subject.analyses.map((a) => a.number).filter(Boolean))];
-                if (numbers.length !== 1) return [];
+                const number = grammaticalNumber(subject);
+                if (!number) return [];
                 const auxiliaries = s.graph
                     .filter(
                         (e) =>
@@ -391,7 +452,9 @@ const neuralAgreement: GrammarRule = {
                     )
                     .map((e) => e.dependent);
                 // A finite auxiliary carries the agreement; its lexical complement stays nonfinite.
-                const finiteAuxiliaries = auxiliaries.filter((index) => finite(s.tokens[index]!));
+                const finiteAuxiliaries = auxiliaries.filter((index) =>
+                    parsedFinitePredicate(s, index),
+                );
                 const verbIndices = finiteAuxiliaries.length
                     ? finiteAuxiliaries
                           .slice()
@@ -401,42 +464,25 @@ const neuralAgreement: GrammarRule = {
                 return verbIndices.flatMap((index) => {
                     const verb = s.tokens[index]!,
                         word = verb.text.toLowerCase();
+                    if (tokenIsQuoted(s, verb, quotes) || isSubjunctiveWere(s, edge.head, verb))
+                        return [];
                     const replacements: Record<string, string> =
                         subject.text.toLowerCase() === "i"
                             ? { is: "am", are: "am", were: "was", has: "have", does: "do" }
-                            : numbers[0] === "plural" || subject.text.toLowerCase() === "you"
+                            : number === "plural" || subject.text.toLowerCase() === "you"
                               ? { is: "are", was: "were", has: "have", does: "do" }
                               : { are: "is", were: "was", have: "has", do: "does" };
                     let replacement = replacements[word];
-                    const lexicalPairs: readonly [string, string][] = [
-                        ["walk", "walks"],
-                        ["run", "runs"],
-                        ["eat", "eats"],
-                        ["write", "writes"],
-                        ["work", "works"],
-                        ["study", "studies"],
-                        ["think", "thinks"],
-                        ["know", "knows"],
-                        ["make", "makes"],
-                        ["go", "goes"],
-                        ["say", "says"],
-                        ["play", "plays"],
-                        ["seem", "seems"],
-                        ["need", "needs"],
-                        ["like", "likes"],
-                        ["live", "lives"],
-                        ["help", "helps"],
-                        ["arrive", "arrives"],
-                    ];
                     const singularThird =
-                        numbers[0] === "singular" && !/^(i|you)$/iu.test(subject.text);
+                        number === "singular" && !/^(i|you)$/iu.test(subject.text);
                     if (!replacement && verb.pos === "VERB") {
-                        const pair = lexicalPairs.find(
-                            ([base, third]) => word === (singularThird ? base : third),
+                        replacement = inflections?.candidate(
+                            verb,
+                            singularThird ? "singular" : "plural",
+                            parsedFinitePredicate(s, index),
                         );
-                        if (pair) replacement = pair[singularThird ? 1 : 0];
                     }
-                    if (!replacement || !finite(verb)) return [];
+                    if (!replacement || !parsedFinitePredicate(s, index)) return [];
                     return [
                         finding(
                             s,
@@ -469,7 +515,48 @@ const neuralAgreement: GrammarRule = {
                 });
             });
     },
-};
+});
+const neuralPerfectForm = (inflections?: PastParticipleInflections): GrammarRule => ({
+    id: "neural-perfect-form",
+    version: "1.0.0",
+    skill: "verb-forms",
+    description: "Observed past-participle paradigms after a parsed perfect auxiliary",
+    evaluate(s) {
+        if (!inflections || s.ambiguous || s.syntaxSource !== "neural" || hasQuotes(s)) return [];
+        return s.graph.flatMap((edge) => {
+            if (!["aux", "aux:pass"].includes(edge.relation) || !stableEdge(s, edge)) return [];
+            const auxiliary = s.tokens[edge.dependent]!;
+            const predicate = s.tokens[edge.head]!;
+            if (
+                auxiliary.pos !== "AUX" ||
+                !auxiliary.analyses.some(
+                    (analysis) => analysis.pos === "AUX" && analysis.lemma === "have",
+                ) ||
+                predicate.pos !== "VERB"
+            )
+                return [];
+            const replacement = inflections.candidate(predicate);
+            if (!replacement) return [];
+            return [
+                finding(
+                    s,
+                    this.id,
+                    this.skill,
+                    predicate,
+                    "Grammar",
+                    "Check the verb form after the perfect auxiliary",
+                    `The parsed auxiliary “${auxiliary.text}” takes a past participle. The local training lexicon attests “${replacement}” as the unambiguous participle for this verb; review the sentence before applying it.`,
+                    [replacement],
+                    "Possible issue",
+                    [
+                        { start: auxiliary.start, end: auxiliary.end, label: "Perfect auxiliary" },
+                        { start: predicate.start, end: predicate.end, label: "Verb form" },
+                    ],
+                ),
+            ];
+        });
+    },
+});
 const clausePunctuation: GrammarRule = {
     id: "clause-punctuation",
     version: "1.0.0",
@@ -650,7 +737,8 @@ const clausePunctuation: GrammarRule = {
 };
 
 export const advancedRules: readonly GrammarRule[] = [
-    neuralAgreement,
+    neuralAgreement(),
+    neuralPerfectForm(),
     subjectCase,
     comparison,
     boundaries,
@@ -658,6 +746,17 @@ export const advancedRules: readonly GrammarRule[] = [
     modifier,
     clausePunctuation,
 ];
+
+export function createAdvancedRules(
+    inflections: PresentVerbInflections,
+    pastParticiples?: PastParticipleInflections,
+): readonly GrammarRule[] {
+    return [
+        neuralAgreement(inflections),
+        neuralPerfectForm(pastParticiples),
+        ...advancedRules.slice(2),
+    ];
+}
 
 export function documentRelationships(
     sentences: readonly Sentence[],
