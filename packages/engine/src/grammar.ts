@@ -230,6 +230,54 @@ const spelling: GrammarRule = {
     },
 };
 
+const missingContractionApostrophe: GrammarRule = {
+    id: "missing-contraction-apostrophe",
+    version: "1.0.0",
+    skill: "punctuation",
+    description: "Common unambiguous contractions typed without an apostrophe.",
+    evaluate(s) {
+        if (/[“”"']/u.test(s.text)) return [];
+        const contractions: Readonly<Record<string, string>> = {
+            dont: "don't",
+            doesnt: "doesn't",
+            didnt: "didn't",
+            isnt: "isn't",
+            arent: "aren't",
+            wasnt: "wasn't",
+            werent: "weren't",
+            hasnt: "hasn't",
+            havent: "haven't",
+            hadnt: "hadn't",
+            couldnt: "couldn't",
+            wouldnt: "wouldn't",
+            shouldnt: "shouldn't",
+            mustnt: "mustn't",
+            youre: "you're",
+            theyre: "they're",
+            weve: "we've",
+            youve: "you've",
+            theyve: "they've",
+        };
+        return s.tokens.flatMap((token) => {
+            const replacement = contractions[token.text.toLowerCase()];
+            return replacement
+                ? [
+                      finding(
+                          s,
+                          this.id,
+                          this.skill,
+                          token,
+                          "Punctuation",
+                          "Add the apostrophe in this contraction",
+                          `The common contraction is written “${replacement}”, with an apostrophe marking omitted letters. Use the expanded form if it better fits your register.`,
+                          [preserveCase(token.text, replacement)],
+                      ),
+                  ]
+                : [];
+        });
+    },
+};
+
 const forms: GrammarRule = {
     id: "verb-form",
     version: "1.0.0",
@@ -655,6 +703,7 @@ export const rules: readonly GrammarRule[] = [
     agreement,
     repeats,
     spelling,
+    missingContractionApostrophe,
     forms,
     articles,
     punctuation,
