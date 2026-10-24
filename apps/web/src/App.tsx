@@ -1,23 +1,26 @@
-import { For, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import {
-    EssayDocument,
-    AssessmentService,
-    buildMutationBank,
-    MaterialExtractor,
-    ProgressExporter,
-    ExerciseSelector,
-    MasteryModel,
-    QuizAssembler,
-    exerciseBank,
-    type AnalysisReport,
-    type Attempt,
-    type Diagnostic,
-    type Exercise,
-    type Material,
-    type SkillId,
-    type SkillState,
-    type Assessment,
-} from "@grammar/engine";
+    For,
+    Show,
+    Suspense,
+    createEffect,
+    createMemo,
+    createSignal,
+    lazy,
+    onCleanup,
+    onMount,
+} from "solid-js";
+import { EssayDocument } from "../../../packages/engine/src/domain";
+import type {
+    AnalysisReport,
+    Attempt,
+    Diagnostic,
+    Exercise,
+    Material,
+    SkillId,
+    SkillState,
+    Assessment,
+    WritingIntent,
+} from "../../../packages/engine/src/domain";
 import {
     contributesToGrammarMastery,
     db,
@@ -30,9 +33,12 @@ import {
 import { extractFile } from "./import";
 import { Icon } from "./icons";
 import { EssayLab } from "./EssayLab";
-import { Workbench } from "./Workbench";
-import { Practice } from "./Practice";
-import { Progress } from "./Progress";
+
+const Workbench = lazy(() =>
+    import("./Workbench").then((module) => ({ default: module.Workbench })),
+);
+const Practice = lazy(() => import("./Practice").then((module) => ({ default: module.Practice })));
+const Progress = lazy(() => import("./Progress").then((module) => ({ default: module.Progress })));
 
 const sample = `Good writing begins with careful observation. A collection of small details are often more revealing than a single grand idea. When we slow down, we begin to notice the relationships between things.
 
@@ -56,6 +62,7 @@ const nav: {
 
 export default function App() {
     const [page, setPage] = createSignal<Page>("Essay laboratory");
+    const [practiceVisited, setPracticeVisited] = createSignal(false);
     const [doc, setDoc] = createSignal<EssayDocument>();
     const [draft, setDraft] = createSignal("");
     const [documents, setDocuments] = createSignal<EssayDocument[]>([]);
@@ -81,17 +88,30 @@ export default function App() {
     const [dictionary, setDictionary] = createSignal<string[]>([]);
     const [assessments, setAssessments] = createSignal<Assessment[]>([]);
     const [assessment, setAssessment] = createSignal<Assessment>();
-    const assessmentService = new AssessmentService();
-    const mutations = buildMutationBank();
+    type FeatureEngine = typeof import("@grammar/engine");
+    const [featureEngine, setFeatureEngine] = createSignal<FeatureEngine>();
+    const [mutations, setMutations] = createSignal<Exercise[]>([]);
     const [offline, setOffline] = createSignal(!navigator.onLine);
     const [loadingFile, setLoadingFile] = createSignal(false);
+    const materialStructures = createMemo(() => {
+        const Extractor = featureEngine()?.MaterialExtractor;
+        if (!Extractor) return [];
+        const extractor = new Extractor();
+        return materials().map((material) => ({
+            material,
+            extraction: extractor.analyze(material),
+        }));
+    });
     let worker: Worker | undefined;
     let request = 0;
     let saveTimer: ReturnType<typeof setTimeout> | undefined;
     let timeout: ReturnType<typeof setTimeout> | undefined;
-    const mastery = new MasteryModel();
-    const selector = new ExerciseSelector();
-    const bank = createMemo(() => [...exerciseBank, ...mutations, ...materialQuestions()]);
+    let featureEnginePromise: Promise<FeatureEngine> | undefined;
+    const bank = createMemo(() => [
+        ...(featureEngine()?.exerciseBank ?? []),
+        ...mutations(),
+        ...materialQuestions(),
+    ]);
     const visible = createMemo(
         () =>
             report()?.diagnostics.filter(
@@ -110,6 +130,20 @@ export default function App() {
         setError(
             cause instanceof Error ? cause.message : "Something went wrong. Please try again.",
         );
+    }
+    function loadFeatureEngine(): Promise<FeatureEngine> {
+        if (!featureEnginePromise)
+            featureEnginePromise = import("@grammar/engine")
+                .then((services) => {
+                    setFeatureEngine(services);
+                    setMutations(services.buildMutationBank());
+                    return services;
+                })
+                .catch((cause: unknown) => {
+                    featureEnginePromise = undefined;
+                    throw cause;
+                });
+        return featureEnginePromise;
     }
     async function refreshDocuments() {
         setDocuments(
@@ -210,6 +244,7 @@ export default function App() {
             text: current.text,
             revision: current.record.cursor,
             style: style(),
+            writingIntent: current.record.writingIntent ?? "general",
             models: modelsEnabled(),
             personalDictionary: dictionary(),
             assetBase: new URL(import.meta.env.BASE_URL, globalThis.document.baseURI).href,
@@ -219,6 +254,15 @@ export default function App() {
             cancel();
             setError("Analysis exceeded 20 seconds and was cancelled. Try a shorter document.");
         }, 20_000);
+    }
+    function changeWritingIntent(intent: WritingIntent) {
+        const current = doc();
+        if (!current) return;
+        const updated = current.withWritingIntent(intent);
+        if (updated === current) return;
+        setDoc(updated);
+        void persist(updated).catch(fail);
+        analyze(updated);
     }
     function changeText(text: string) {
         setDraft(text);
@@ -319,6 +363,7 @@ export default function App() {
                     await db.materials.put(material);
                 });
                 setMaterials(await db.materials.toArray());
+                const { QuizAssembler } = await loadFeatureEngine();
                 const quiz = new QuizAssembler().fromMaterial(material);
                 setMaterialQuestions(quiz.exercises);
                 setQuestion(undefined);
@@ -334,7 +379,8 @@ export default function App() {
             setLoadingFile(false);
         }
     }
-    function nextQuestion(skill = practiceSkill()) {
+    async function nextQuestion(skill = practiceSkill()) {
+        const services = await loadFeatureEngine();
         const active = assessment();
         if (active) {
             setQuestion(
@@ -358,16 +404,20 @@ export default function App() {
             .map((a) => a.exerciseId)
             .slice(0, 10);
         if (question()) recent.unshift(question()!.id);
-        const next = selector.select(bank(), states(), recent, skill);
+        const next = new services.ExerciseSelector().select(bank(), states(), recent, skill);
         setQuestion(next);
     }
     function startPractice(skill?: SkillId) {
-        setAssessment(undefined);
-        setQuizQueue(undefined);
-        setPracticeSkill(skill);
-        setPage("Practice");
-        setQuestion(undefined);
-        nextQuestion(skill);
+        safely(async () => {
+            await loadFeatureEngine();
+            setAssessment(undefined);
+            setQuizQueue(undefined);
+            setPracticeSkill(skill);
+            setPracticeVisited(true);
+            setPage("Practice");
+            setQuestion(undefined);
+            await nextQuestion(skill);
+        });
     }
     async function answer(
         q: Exercise,
@@ -376,12 +426,15 @@ export default function App() {
         durationMs = 0,
         responseText?: string,
     ) {
+        const services = await loadFeatureEngine();
         if ((await db.attempts.count()) >= 50_000)
             throw new Error(
                 "This workspace has reached 50,000 recorded attempts. Export your learning records before starting a new workspace.",
             );
         const active = assessment();
-        const updated = active ? assessmentService.answer(active, q, selectedAnswer) : undefined;
+        const updated = active
+            ? new services.AssessmentService().answer(active, q, selectedAnswer)
+            : undefined;
         const attempt: Attempt = {
             id: crypto.randomUUID(),
             exerciseId: q.id,
@@ -396,6 +449,7 @@ export default function App() {
             durationMs: Math.min(durationMs, 3_600_000),
             responseText,
         };
+        const mastery = new services.MasteryModel();
         const state = mastery.update(
             states().find((s) => s.skill === q.skill) ?? mastery.initial(q.skill),
             attempt,
@@ -417,6 +471,7 @@ export default function App() {
         setAttempts(await db.attempts.orderBy("at").toArray());
     }
     async function startAssessment(phase: Assessment["phase"]) {
+        const services = await loadFeatureEngine();
         const pending = assessments().find((s) => s.phase === phase && !s.completedAt);
         if (!pending && (await db.assessments.count()) >= 1000)
             throw new Error(
@@ -424,9 +479,9 @@ export default function App() {
             );
         const active =
             pending ??
-            assessmentService.start(
+            new services.AssessmentService().start(
                 phase,
-                [...exerciseBank, ...mutations],
+                [...services.exerciseBank, ...mutations()],
                 attempts(),
                 assessments(),
             );
@@ -438,6 +493,7 @@ export default function App() {
         setAssessments(await db.assessments.toArray());
         setAssessment(active);
         setQuizQueue(undefined);
+        setPracticeVisited(true);
         setPage("Practice");
         setQuestion(
             bank().find(
@@ -501,7 +557,7 @@ export default function App() {
         const active = assessment();
         if (active) {
             setAssessment(assessments().find((item) => item.id === active.id));
-            nextQuestion();
+            await nextQuestion();
         }
         setStatus("Backup restored. Newer local records were preserved.");
     }
@@ -620,7 +676,14 @@ export default function App() {
                                 classList={{ "nav-item": true, active: page() === item.page }}
                                 onClick={() => {
                                     setPage(item.page);
-                                    if (item.page === "Practice" && !question()) nextQuestion();
+                                    if (item.page === "Practice") {
+                                        setPracticeVisited(true);
+                                        safely(async () => {
+                                            await loadFeatureEngine();
+                                            if (!question()) await nextQuestion();
+                                        });
+                                    } else if (item.page === "Materials")
+                                        safely(() => loadFeatureEngine());
                                 }}
                                 aria-current={page() === item.page ? "page" : undefined}
                             >
@@ -708,6 +771,7 @@ export default function App() {
                             busy={busy()}
                             editing={editing()}
                             style={style()}
+                            writingIntent={doc()?.record.writingIntent ?? "general"}
                             reviewMode={reviewMode()}
                             documents={documents()}
                             status={status()}
@@ -723,6 +787,7 @@ export default function App() {
                                 setStyle(v);
                                 analyze();
                             }}
+                            onIntent={changeWritingIntent}
                             onReviewMode={setReviewMode}
                             onOpen={(d) => safely(() => openDocument(d))}
                             onNew={() => safely(() => newDocument())}
@@ -750,37 +815,55 @@ export default function App() {
                         />
                     </Show>
                     <Show when={page() === "Sentence workbench"}>
-                        <Workbench
-                            report={report()}
-                            stale={stale()}
-                            onAnalyze={() => analyze()}
-                            onPractice={startPractice}
-                        />
+                        <Suspense
+                            fallback={
+                                <div class="analysis-placeholder" role="status">
+                                    <p>Opening the sentence workbench…</p>
+                                </div>
+                            }
+                        >
+                            <Workbench
+                                report={report()}
+                                stale={stale()}
+                                onAnalyze={() => analyze()}
+                                onPractice={startPractice}
+                            />
+                        </Suspense>
                     </Show>
                     <div hidden={page() !== "Practice"}>
-                        <Practice
-                            onRepairs={() => {
-                                setAssessment(undefined);
-                                setQuestion(undefined);
-                                setQuizQueue(mutations.slice(1));
-                                setQuestion(mutations[0]);
-                            }}
-                            assessment={assessment()}
-                            question={question()}
-                            sourceQuiz={quizQueue() !== undefined}
-                            states={states()}
-                            filter={practiceSkill()}
-                            onFilter={(s) => {
-                                setAssessment(undefined);
-                                setQuizQueue(undefined);
-                                setPracticeSkill(s);
-                                setQuestion(undefined);
-                                nextQuestion(s);
-                            }}
-                            onNext={() => nextQuestion()}
-                            onAnswer={answer}
-                            onError={fail}
-                        />
+                        <Show when={practiceVisited()}>
+                            <Suspense
+                                fallback={
+                                    <div class="analysis-placeholder" role="status">
+                                        <p>Opening practice…</p>
+                                    </div>
+                                }
+                            >
+                                <Practice
+                                    onRepairs={() => {
+                                        setAssessment(undefined);
+                                        setQuestion(undefined);
+                                        setQuizQueue(mutations().slice(1));
+                                        setQuestion(mutations()[0]);
+                                    }}
+                                    assessment={assessment()}
+                                    question={question()}
+                                    sourceQuiz={quizQueue() !== undefined}
+                                    states={states()}
+                                    filter={practiceSkill()}
+                                    onFilter={(s) => {
+                                        setAssessment(undefined);
+                                        setQuizQueue(undefined);
+                                        setPracticeSkill(s);
+                                        setQuestion(undefined);
+                                        safely(() => nextQuestion(s));
+                                    }}
+                                    onNext={() => safely(() => nextQuestion())}
+                                    onAnswer={answer}
+                                    onError={fail}
+                                />
+                            </Suspense>
+                        </Show>
                     </div>
                     <Show when={page() === "Materials"}>
                         <section class="materials-layout">
@@ -822,13 +905,17 @@ export default function App() {
                                                 </div>
                                                 <button
                                                     class="button secondary"
-                                                    onClick={() => {
-                                                        const quiz =
-                                                            new QuizAssembler().fromMaterial(m);
-                                                        setMaterialQuestions(quiz.exercises);
-                                                        setQuestion(undefined);
-                                                        setStatus(quiz.limitations[0]!);
-                                                    }}
+                                                    onClick={() =>
+                                                        safely(async () => {
+                                                            const { QuizAssembler } =
+                                                                await loadFeatureEngine();
+                                                            const quiz =
+                                                                new QuizAssembler().fromMaterial(m);
+                                                            setMaterialQuestions(quiz.exercises);
+                                                            setQuestion(undefined);
+                                                            setStatus(quiz.limitations[0]!);
+                                                        })
+                                                    }
                                                 >
                                                     Build quiz <Icon name="arrow" size={15} />
                                                 </button>
@@ -875,45 +962,46 @@ export default function App() {
                         </section>
                         <div class="material-result" role="status">
                             <p>{status()}</p>
-                            <For each={materials()}>
-                                {(m) => {
-                                    const extraction = new MaterialExtractor().analyze(m);
-                                    return (
-                                        <details>
-                                            <summary>Explore source structure · {m.name}</summary>
-                                            <p>
-                                                {extraction.blocks.length} blocks ·{" "}
-                                                {extraction.definitions.length} explicit definitions
-                                            </p>
-                                            <p>
-                                                Key phrases:{" "}
-                                                {extraction.keyPhrases
-                                                    .slice(0, 12)
-                                                    .map((p) => p.phrase)
-                                                    .join(" · ") || "No supported phrases"}
-                                            </p>
-                                            <For each={extraction.blocks.slice(0, 100)}>
-                                                {(b) => (
-                                                    <p class="source-block">
-                                                        <strong>
-                                                            {b.kind}
-                                                            {b.page ? ` · page ${b.page}` : ""}
-                                                        </strong>{" "}
-                                                        · characters {b.start}–{b.end}
-                                                        <br />
-                                                        {b.text}
-                                                    </p>
-                                                )}
-                                            </For>
-                                        </details>
-                                    );
-                                }}
+                            <For each={materialStructures()}>
+                                {(entry) => (
+                                    <details>
+                                        <summary>
+                                            Explore source structure · {entry.material.name}
+                                        </summary>
+                                        <p>
+                                            {entry.extraction.blocks.length} blocks ·{" "}
+                                            {entry.extraction.definitions.length} explicit
+                                            definitions
+                                        </p>
+                                        <p>
+                                            Key phrases:{" "}
+                                            {entry.extraction.keyPhrases
+                                                .slice(0, 12)
+                                                .map((p) => p.phrase)
+                                                .join(" · ") || "No supported phrases"}
+                                        </p>
+                                        <For each={entry.extraction.blocks.slice(0, 100)}>
+                                            {(b) => (
+                                                <p class="source-block">
+                                                    <strong>
+                                                        {b.kind}
+                                                        {b.page ? ` · page ${b.page}` : ""}
+                                                    </strong>{" "}
+                                                    · characters {b.start}–{b.end}
+                                                    <br />
+                                                    {b.text}
+                                                </p>
+                                            )}
+                                        </For>
+                                    </details>
+                                )}
                             </For>
                             <Show when={materialQuestions().length}>
                                 <button
                                     class="button primary"
                                     onClick={() => {
                                         setAssessment(undefined);
+                                        setPracticeVisited(true);
                                         setPage("Practice");
                                         setPracticeSkill(undefined);
                                         setQuizQueue(materialQuestions().slice(1));
@@ -940,22 +1028,33 @@ export default function App() {
                         </div>
                     </Show>
                     <Show when={page() === "Your progress"}>
-                        <Progress
-                            assessments={assessments()}
-                            onAssessment={(phase) => safely(() => startAssessment(phase))}
-                            onExport={() =>
-                                download(
-                                    "linguorithm-learning-records.csv",
-                                    new ProgressExporter().csv(attempts()),
-                                    "text/csv",
-                                )
+                        <Suspense
+                            fallback={
+                                <div class="analysis-placeholder" role="status">
+                                    <p>Opening your progress…</p>
+                                </div>
                             }
-                            states={states()}
-                            attempts={attempts()}
-                            onPractice={startPractice}
-                            onBackup={() => safely(backup)}
-                            onRestore={() => restoreInput.click()}
-                        />
+                        >
+                            <Progress
+                                assessments={assessments()}
+                                onAssessment={(phase) => safely(() => startAssessment(phase))}
+                                onExport={() =>
+                                    safely(async () => {
+                                        const { ProgressExporter } = await loadFeatureEngine();
+                                        download(
+                                            "linguorithm-learning-records.csv",
+                                            new ProgressExporter().csv(attempts()),
+                                            "text/csv",
+                                        );
+                                    })
+                                }
+                                states={states()}
+                                attempts={attempts()}
+                                onPractice={startPractice}
+                                onBackup={() => safely(backup)}
+                                onRestore={() => restoreInput.click()}
+                            />
+                        </Suspense>
                     </Show>
                     <footer class="page-footer">
                         <span>Linguorithm · American English</span>
