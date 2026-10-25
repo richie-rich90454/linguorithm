@@ -40,7 +40,7 @@
             "license": "CC-BY-SA-4.0",
             "domain": "spoken flight-information queries",
             "sha256": "a98df5e2f11e81deb4698a05ffcb361cff5d74cbba61b234b59685ec304d66a7",
-            "seconds": 6.034
+            "seconds": 6.813
         },
         "ud-en-childes-r2.18": {
             "status": "scored",
@@ -56,7 +56,7 @@
             "license": "CC-BY-SA-4.0",
             "domain": "child-adult conversation transcripts; syntax training only, not a speech-analysis feature",
             "sha256": "a985573aeb9fabc10ab54bd3f99fb739628e4bb16da95fd814f84aee19d95f90",
-            "seconds": 44.591
+            "seconds": 72.245
         },
         "ud-en-ctetex-r2.18": {
             "status": "scored",
@@ -72,7 +72,7 @@
             "license": "CC-BY-SA-4.0",
             "domain": "textbook prose",
             "sha256": "626b1da3281f9f203d9b0c68c8132a2d4211a742a348498a1d8388de89a3aa64",
-            "seconds": 13.47
+            "seconds": 17.041
         },
         "ud-en-eslspok-r2.18": {
             "status": "scored",
@@ -88,7 +88,7 @@
             "license": "CC-BY-SA-4.0",
             "domain": "spoken second-language English; syntax training only, not written-error labels",
             "sha256": "7d3b37af353205dc3b2964937e7c511e7763cdca25ec9c830638a2540ffe04be",
-            "seconds": 1.949
+            "seconds": 1.894
         },
         "ud-en-littleprince-r2.18": {
             "status": "scored",
@@ -104,7 +104,7 @@
             "license": "CC-BY-SA-4.0",
             "domain": "literary prose",
             "sha256": "b1832f66187dea5b8ff27cf7bd607d4fa33962850b84435066c06c4cc1c35232",
-            "seconds": 6.761
+            "seconds": 6.391
         },
         "ud-en-pud-r2.18": {
             "status": "scored",
@@ -120,7 +120,7 @@
             "license": "CC-BY-SA-3.0",
             "domain": "news and Wikipedia translations; the publisher labels this set test-only",
             "sha256": "c80584f2bc2b31d5bada78a1136f9feec7ac49e5e18898db02dea434b5b8f0aa",
-            "seconds": 23.521
+            "seconds": 22.119
         },
         "ud-en-pronouns-r2.18": {
             "status": "scored",
@@ -136,7 +136,7 @@
             "license": "CC-BY-SA-4.0",
             "domain": "targeted pronoun syntax examples, not representative prose",
             "sha256": "b4e42921354d71e44e4758892f1a78f53773705e21425a64f454022570caf5b0",
-            "seconds": 1.254
+            "seconds": 1.269
         }
     }
 }
