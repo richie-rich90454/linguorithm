@@ -3,11 +3,17 @@
 import hashlib
 import importlib.metadata
 import json
+import argparse
 
 from train_release import ROOT, SEED, write_json
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--syntax-only", action="store_true")
+    group.add_argument("--classifier-only", action="store_true")
+    args = parser.parse_args()
     out = ROOT / "models/generated/ewt-1"
     provenance = json.loads(
         (ROOT / "training/datasets/ewt-manifest.json").read_text(encoding="utf-8")
@@ -53,7 +59,15 @@ def main():
             "numericFeatures": 6,
         },
     }
-    for name, defaults in configurations.items():
+    selected = (
+        ["tagger", "parser"]
+        if args.syntax_only
+        else ["classifier"]
+        if args.classifier_only
+        else list(configurations)
+    )
+    for name in selected:
+        defaults = configurations[name]
         path = out / f"{name}-manifest.json"
         manifest = json.loads(path.read_text(encoding="utf-8"))
         artifact = out / manifest["artifact"]
@@ -86,11 +100,7 @@ def main():
             }
             manifest["outputSchema"] = {"scores": "float32[N,5]"}
         write_json(path, manifest)
-    print(
-        json.dumps(
-            {"sealed": list(configurations), "provenanceSha256": provenance["sha256"]}
-        )
-    )
+    print(json.dumps({"sealed": selected, "provenanceSha256": provenance["sha256"]}))
 
 
 if __name__ == "__main__":
