@@ -22,18 +22,27 @@ def record_checkpoint(name, generated_path, metadata):
         ) from error
     CHECKPOINTS.mkdir(parents=True, exist_ok=True)
     target = CHECKPOINTS / name
-    shutil.copy2(generated_path, target)
-    artifact = {
-        "path": name,
-        "bytes": target.stat().st_size,
-        "sha256": hashlib.sha256(target.read_bytes()).hexdigest(),
-        **metadata,
-    }
+    generated_hash = hashlib.sha256(generated_path.read_bytes()).hexdigest()
     manifest = (
         json.loads(MANIFEST.read_text(encoding="utf-8"))
         if MANIFEST.exists()
         else {"schemaVersion": 1, "version": "ewt-1", "checkpoints": {}}
     )
+    previous = manifest["checkpoints"].get(name, {})
+    same_checkpoint = (
+        target.is_file()
+        and previous.get("sha256") == generated_hash
+        and hashlib.sha256(target.read_bytes()).hexdigest() == generated_hash
+    )
+    shutil.copy2(generated_path, target)
+    artifact = {
+        "path": name,
+        "bytes": target.stat().st_size,
+        "sha256": generated_hash,
+        **metadata,
+    }
+    if same_checkpoint and not artifact.get("evaluation") and previous.get("evaluation"):
+        artifact["evaluation"] = previous["evaluation"]
     manifest["checkpoints"][name] = artifact
     MANIFEST.write_text(
         json.dumps(manifest, ensure_ascii=False, indent=4) + "\n", encoding="utf-8"
