@@ -12,8 +12,10 @@ from pathlib import Path
 import numpy as np
 import onnxruntime as ort
 import torch
-from torch import nn
+from checkpoint_registry import record_checkpoint
 from ewt_splits import verified_corpus_manifest
+from torch import nn
+from ud_english_sources import load_training_rows
 
 ROOT = Path(__file__).resolve().parents[1]
 TAGS = [
@@ -356,6 +358,15 @@ def main():
         seen.update(tuple(r["tokens"]) for r in filtered)
         groups.update(r["group"] for r in filtered)
         splits[split] = filtered
+    supplemental_rows, supplemental_provenance = load_training_rows(ROOT, read_corpus)
+    retained_supplemental = []
+    for row in supplemental_rows:
+        sentence = tuple(row["tokens"])
+        if sentence in seen:
+            continue
+        seen.add(sentence)
+        retained_supplemental.append(row)
+    splits["train"].extend(retained_supplemental)
     frequency = Counter(t.lower() for r in splits["train"] for t in r["tokens"])
     vocabulary = {"<pad>": 0, "<unk>": 1, "<root>": 2}
     vocabulary.update(
@@ -396,6 +407,7 @@ def main():
         "version": "ewt-1",
         "source": provenance["source"],
         "license": provenance["license"],
+        "additionalSources": supplemental_provenance["sources"],
         "forms": {w: list(forms.values()) for w, forms in lexical.items()},
         "frequency": dict(frequency),
     }
@@ -509,12 +521,20 @@ def main():
         "transitions": crf.transitions.detach().tolist(),
         "startScores": crf.start.detach().tolist(),
         "endScores": crf.end.detach().tolist(),
-        "provenance": [provenance],
+        "provenance": [
+            provenance,
+            {
+                "manifest": "training/datasets/ud-english-manifest.json",
+                "sources": supplemental_provenance["sources"],
+                "corpusHashes": supplemental_provenance["corpusHashes"],
+            },
+        ],
         "training": {
             "seed": SEED,
             "epochs": args.epochs,
             "splitPolicy": provenance["splitPolicy"],
             "excluded": excluded,
+            "supplementalTraining": supplemental_provenance,
             "dependencies": {
                 name: importlib.metadata.version(name)
                 for name in ["torch", "numpy", "onnx", "onnxruntime"]
@@ -527,7 +547,8 @@ def main():
             "pythonOnnxMaximumDifference": max(differences),
         },
         "limitations": [
-            "Trained on edited/web English EWT, not a representative learner-essay corpus",
+            "The parser and tagger are trained on English EWT plus licensed English treebanks; these corpora do not represent a validated learner-essay population",
+            "OANC written text contributes contextual candidate-ranking counts only; its automatic annotations are not treated as gold syntax or learner-error labels",
             "Document-disjoint and exact-deduplicated official splits; author/prompt independence unverified",
             "POS and parser scores are not calibrated grammatical-error confidence",
         ],
@@ -549,9 +570,24 @@ def main():
             "calibration": {"status": "not a grammar-confidence model"},
         },
     )
+    tagger_checkpoint = out / "tagger.pt"
     torch.save(
         {"model": model.state_dict(), "crf": crf.state_dict(), "metadata": metadata},
-        out / "tagger.pt",
+        tagger_checkpoint,
+    )
+    record_checkpoint(
+        "tagger.pt",
+        tagger_checkpoint,
+        {
+            "task": "POS tagger",
+            "corpusManifests": [
+                "training/datasets/ewt-manifest.json",
+                "training/datasets/ud-english-manifest.json",
+            ],
+            "evaluation": tag_test,
+            "validationAccuracy": best,
+            "epochs": args.epochs,
+        },
     )
     print(json.dumps({"event": "tagger-exported", **tag_test}), flush=True)
     examples = [item for row in splits["train"] for item in oracle(row, vocabulary)]
@@ -670,6 +706,36 @@ def main():
         },
     )
     write_json(out / "metrics.json", {"tagger": tag_test, "parser": parser_metrics})
+    parser_checkpoint = out / "parser.pt"
+    torch.save(
+        {
+            "model": scorer.state_dict(),
+            "actions": actions,
+            "metadata": metadata,
+            "training": {
+                "epochs": args.parser_epochs,
+                "seed": SEED,
+                "transitionSystem": "arc-standard",
+                "beamWidth": 4,
+                "trainingOracleExamples": len(examples),
+            },
+            "evaluation": parser_metrics,
+        },
+        parser_checkpoint,
+    )
+    record_checkpoint(
+        "parser.pt",
+        parser_checkpoint,
+        {
+            "task": "transition-based dependency parser",
+            "corpusManifests": [
+                "training/datasets/ewt-manifest.json",
+                "training/datasets/ud-english-manifest.json",
+            ],
+            "evaluation": parser_metrics,
+            "epochs": args.parser_epochs,
+        },
+    )
     print(
         json.dumps({"event": "complete", "tagger": tag_test, "parser": parser_metrics}),
         flush=True,
