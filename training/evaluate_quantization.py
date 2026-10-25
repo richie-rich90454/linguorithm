@@ -90,7 +90,7 @@ def main():
             results[variant] = {"error": str(error)}
         print(json.dumps({variant: results[variant]}), flush=True)
     write_json(
-        ROOT / "reports/quantization-evaluation.json",
+        ROOT / "reports/candidate-quantization-evaluation.json",
         {
             "results": results,
             "production": "float32",
