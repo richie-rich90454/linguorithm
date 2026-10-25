@@ -1,0 +1,32 @@
+{
+    "schemaVersion": 2,
+    "version": "ewt-1",
+    "tagger": {
+        "path": "tagger-manifest.json",
+        "sha256": "042cd7999f380fe57cf3025f97a2aaa784efd77b4cc9e8c26e2d8e25d39bf13b"
+    },
+    "parser": {
+        "path": "parser-manifest.json",
+        "sha256": "8da3536150f7cd95caee324b26fb92d8ca68e994e36fe43f901e60c371e95c44"
+    },
+    "lexicon": {
+        "path": "lexicon.json",
+        "sha256": "77e6889e35e123a09fbf90eb38370003c41ae94bd408693abf399af5f01083ad"
+    },
+    "contextual": {
+        "path": "contextual.json",
+        "sha256": "563f0e45b406e7b0c777e44791d1db209c359ddafcf3c3862fc0270600c97c19"
+    },
+    "classifier": {
+        "path": "classifier-manifest.json",
+        "sha256": "018ddc58dc0d5c81011780377b84e28088e7be37d611b75fd74cc5b0ebb9abc2"
+    },
+    "dictionary": {
+        "path": "dictionary.json",
+        "sha256": "26f2b4b2b612a8107586cff814c4af77f32a08e1dd20f706a04d1d380b864da9"
+    },
+    "policy": "Linguorithm's syntax model passed EWT accuracy and Python/ONNX parity gates. The grammar classifier is calibrated on synthetic EWT mutations only and remains review-only until independent learner-essay validation.",
+    "candidateStatus": "not promoted",
+    "artifactDirectory": "models/generated/ewt-1",
+    "promotionPolicy": "This candidate package does not replace the frozen release. Run all release and generalization gates before explicit promotion; unsupported neural learner-error findings remain review-only."
+}
