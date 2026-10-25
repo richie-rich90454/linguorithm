@@ -1,0 +1,14 @@
+{
+    "status": "passed",
+    "featureFixtureSha256": "fcb8dcdddaa59f9fe142891f9645b169e4e726928560a71e1ffca8700ae6af67",
+    "modelHashes": {
+        "tagger.onnx": "9ac4f91427fb642b50e5814d55836c5cd851984cc59a0ccd0de989f36cc890f9",
+        "parser.onnx": "3f0826971d64cb78c4e584987aab40dfa059aedc22f43d05c4732b3fb977c5cc",
+        "lexicon.json": "77e6889e35e123a09fbf90eb38370003c41ae94bd408693abf399af5f01083ad",
+        "tagger-manifest.json": "042cd7999f380fe57cf3025f97a2aaa784efd77b4cc9e8c26e2d8e25d39bf13b",
+        "parser-manifest.json": "8da3536150f7cd95caee324b26fb92d8ca68e994e36fe43f901e60c371e95c44"
+    },
+    "fixtures": 30,
+    "checkedTokens": 604,
+    "method": "Actual browser LocalSyntaxRuntime tokenizer, tagger, parser and classify input tensors; frozen Python feature comparison"
+}
