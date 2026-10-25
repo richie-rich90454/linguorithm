@@ -1,0 +1,22 @@
+{
+    "results": {
+        "float": {
+            "sentences": 1962,
+            "tokens": 24859,
+            "posAccuracy": 0.9465787038899393,
+            "uas": 0.8198640331469488,
+            "las": 0.7762580956595196,
+            "elapsedSeconds": 22.185703600291163
+        },
+        "int8": {
+            "sentences": 1962,
+            "tokens": 24859,
+            "posAccuracy": 0.9466591576491411,
+            "uas": 0.8184963192405165,
+            "las": 0.7749306086326884,
+            "elapsedSeconds": 20.9094402003102
+        }
+    },
+    "production": "float32",
+    "policy": "Int8 requires full quality and browser compatibility review before promotion"
+}
