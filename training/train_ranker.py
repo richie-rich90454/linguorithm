@@ -1,5 +1,6 @@
 """Fit correction ranking to train-only controlled corruptions; evaluate untouched test data."""
 
+import hashlib
 import json
 import math
 import random
@@ -7,8 +8,13 @@ from collections import Counter, defaultdict
 
 import numpy as np
 from ewt_splits import verified_splits
+from ingest_oanc import ingest as ingest_oanc
+from ingest_oanc import read_manifest as read_oanc_manifest
+from oanc_context import iter_written_sentences
 from sklearn.linear_model import LogisticRegression
 from train_release import ROOT, SEED, read_corpus, write_json
+from training_stats import wilson_interval
+from ud_english_sources import load_evaluation_rows, load_training_rows
 
 
 def main():
@@ -16,11 +22,55 @@ def main():
     out = ROOT / "models/generated/ewt-1"
     contextual = json.loads((out / "contextual.json").read_text(encoding="utf-8"))
     splits, provenance = verified_splits(ROOT, read_corpus)
-    bigrams = Counter(
-        (a.lower(), b.lower())
-        for row in splits["train"]
-        for a, b in zip(["<s>"] + row["tokens"], row["tokens"] + ["</s>"], strict=True)
+    supplemental_rows, supplemental_provenance = load_training_rows(ROOT, read_corpus)
+
+    def normalized_sentence(tokens):
+        joined = "".join(
+            character.lower()
+            for token in tokens
+            for character in token
+            if character.isalnum()
+        )
+        return hashlib.sha256(joined.encode("utf-8")).digest() if joined else b""
+
+    heldout_hashes = {
+        normalized_sentence(row["tokens"])
+        for name in ("dev", "test")
+        for row in splits[name]
+    }
+    heldout_rows = load_evaluation_rows(ROOT, read_corpus)
+    heldout_hashes.update(
+        normalized_sentence(row["tokens"])
+        for source in heldout_rows.values()
+        for row in source["rows"]
     )
+    heldout_hashes.discard(b"")
+    bigrams = Counter()
+    for row in [*splits["train"], *supplemental_rows]:
+        bigrams.update(
+            (a.lower(), b.lower())
+            for a, b in zip(
+                ["<s>"] + row["tokens"], row["tokens"] + ["</s>"], strict=True
+            )
+        )
+    oanc_provenance = ingest_oanc(ROOT)
+    oanc_manifest = read_oanc_manifest(ROOT / "training/datasets/oanc-manifest.json")
+    oanc_documents, oanc_sentences, oanc_tokens, oanc_heldout_duplicates = (
+        set(),
+        0,
+        0,
+        0,
+    )
+    oanc_path = ROOT / oanc_manifest["archivePath"]
+    for document, tokens in iter_written_sentences(oanc_path):
+        if normalized_sentence(tokens) in heldout_hashes:
+            oanc_heldout_duplicates += 1
+            continue
+        oanc_documents.add(document)
+        oanc_sentences += 1
+        oanc_tokens += len(tokens)
+        lower = [token.lower() for token in tokens]
+        bigrams.update(zip(["<s>"] + lower, lower + ["</s>"], strict=True))
     followers, continuation, totals = Counter(), Counter(), Counter()
     for (a, b), count in bigrams.items():
         followers[a] += 1
@@ -31,11 +81,31 @@ def main():
     discount = counts[1] / max(1, counts[1] + 2 * counts[2])
     discount = max(0.1, min(0.9, discount))
     contextual.update(
+        bigrams={
+            a + "\u0000" + b: count for (a, b), count in bigrams.most_common(80000)
+        },
         unigrams=dict(totals),
         continuation=dict(continuation),
         followers=dict(followers),
         totalTypes=len(bigrams),
         discount=discount,
+        trainingSources=supplemental_provenance["sources"],
+        scope="Local context ranking from EWT and licensed UD training text plus written OANC; corpus likelihood is not a grammar judgment",
+        contextSources={
+            "oanc": {
+                "id": "open-american-national-corpus-graf-2026-09-25",
+                "archiveSha256": oanc_provenance["sha256"],
+                "selectedDocuments": oanc_manifest["selectedDocuments"],
+                "documents": len(oanc_documents),
+                "sentences": oanc_sentences,
+                "tokens": oanc_tokens,
+                "exactHeldOutSentenceDuplicatesExcluded": oanc_heldout_duplicates,
+                "collections": ["written_1", "written_2"],
+                "role": "word and bigram context counts for candidate ranking only; no syntax or learner-error labels",
+            },
+            "ud": supplemental_provenance,
+            "ewt": {"id": "ud-english-ewt-2.16", "role": "train split only"},
+        },
     )
     vocabulary = [
         w
@@ -110,7 +180,9 @@ def main():
         )
         metrics[name] = {
             "groups": len(items),
+            "correct": correct,
             "top1Accuracy": correct / len(items) if items else None,
+            "top1Accuracy95PercentCI": wilson_interval(correct, len(items)),
         }
     contextual["ranking"] = {
         "coefficients": model.coef_[0].tolist(),
@@ -119,11 +191,19 @@ def main():
     }
     write_json(out / "contextual.json", contextual)
     write_json(
-        ROOT / "reports/ranker-evaluation.json",
+        ROOT / "reports/candidate-ranker-evaluation.json",
         {
             "seed": SEED,
             **provenance,
+            "supplementalTraining": supplemental_provenance,
+            "contextSources": contextual["contextSources"],
+            "contextCounts": {
+                "bigramTypes": len(bigrams),
+                "retainedBigramTypes": len(contextual["bigrams"]),
+                "unigramTypes": len(totals),
+            },
             "splitPolicy": "Official splits; exact token sequences and document groups excluded against earlier splits; train-only fit, no test tuning",
+            "oancHeldOutOverlapPolicy": "Normalized exact sentence matches against EWT validation/test and every supplemental UD test split are excluded from OANC contextual counts; OANC has no labels and does not enter error-classifier evaluation.",
             "metrics": metrics,
             "smoothing": "Interpolated absolute-discount Kneser-Ney bigram",
             "discount": discount,
