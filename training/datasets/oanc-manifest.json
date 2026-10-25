@@ -1,0 +1,21 @@
+{
+    "schemaVersion": 1,
+    "id": "open-american-national-corpus-graf-2026-09-25",
+    "release": "datasets-2026-09-25",
+    "landingPage": "https://anc.org/data/oanc/",
+    "terms": "The OANC publisher describes this data as unrestricted for use and redistribution, including commercial development. Preserve this provenance notice with derived resources.",
+    "termsUrl": "https://anc.org/data/oanc/download/",
+    "license": "Unrestricted use and redistribution, including commercial development, per the publisher's current terms",
+    "archiveUrl": "https://github.com/nancyide/anc-website/releases/download/datasets-2026-09-25/OANC_GrAF.zip",
+    "archivePath": ".cache/datasets/oanc/OANC_GrAF.zip",
+    "archiveBytes": 655230430,
+    "archiveSha256": "5a26559a1becba41a527cb674fff4fb9c4fb70b276f60422c4f07a0ef23fd867",
+    "inputFormat": "Official OANC GrAF ZIP; read primary UTF-8 text directly from ZIP without extracting its 7.4 GB expanded contents.",
+    "selectedCollections": ["written_1", "written_2"],
+    "selectedDocuments": 6424,
+    "purpose": "Written-American-English context counts for local correction ranking only. No grammar-error labels, POS gold labels, or learner-essay claims are derived from this corpus.",
+    "exclusions": [
+        "The spoken collection is excluded because Linguorithm's product scope is written text.",
+        "Sentence boundaries are approximated from terminal punctuation for n-gram context; these counts are not syntax annotations."
+    ]
+}
