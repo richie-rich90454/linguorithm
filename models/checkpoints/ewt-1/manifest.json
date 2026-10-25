@@ -21,20 +21,21 @@
         },
         "parser.pt": {
             "path": "parser.pt",
-            "bytes": 1886217,
-            "sha256": "17bb7bea631b17ed6e9fe4c5ea88fff55bafbc7812a922f3afecce094822f72d",
+            "bytes": 1886281,
+            "sha256": "0fbbd98a19767322a378dadf634605492a0b2548c4de9556482d6728d2e636b4",
             "task": "transition-based dependency parser",
             "corpusManifests": [
                 "training/datasets/ewt-manifest.json",
                 "training/datasets/ud-english-manifest.json"
             ],
             "evaluation": {
-                "uas": 0.8198640331469488,
-                "las": 0.7762580956595196,
+                "uas": 0.8240878555050485,
+                "las": 0.7796773804256004,
                 "tokens": 24859,
                 "sentences": 1962,
                 "beamWidth": 4,
                 "pos": "predicted",
+                "trainingInputPosAccuracy": 0.9788228267808967,
                 "trainingOracleExamples": 942088,
                 "nonprojectiveTrainingSentencesExcluded": 887
             },
@@ -42,26 +43,34 @@
         },
         "error-classifier.pt": {
             "path": "error-classifier.pt",
-            "bytes": 1112769,
-            "sha256": "7eabb35df1738e0881021da288e578ba04c6028f60d769179d7905d0e2eb9743",
+            "bytes": 1112513,
+            "sha256": "339ee133b415b846ee635408b61c547cce3da684ae44b7966931c876a5e99db5",
             "task": "controlled-error classifier",
             "corpusManifests": ["training/datasets/ewt-manifest.json"],
             "evaluation": {
-                "agreement": {
-                    "precision": 0.8947368421052632,
-                    "recall": 0.384180790960452,
-                    "f1": 0.5375494071146245,
-                    "brier": 0.008988405577838421,
-                    "positives": 177,
-                    "predictions": 76
+                "status": "candidate fails browser no-regression and source-integrity gates; not promoted",
+                "source": "reports/candidate-generalization-browser.json",
+                "scope": "Exact packaged browser candidate on the fixed EWT regression fixture and controlled synthetic agreement mutations. The browser fixture was consulted during tokenizer development, so it is regression evidence rather than an untouched confirmatory estimate or learner-essay evaluation.",
+                "classifierOnlyAgreement": {
+                    "truePositives": 0,
+                    "falsePositives": 0,
+                    "falseNegatives": 63,
+                    "trueNegatives": 63,
+                    "eligibleMutationControlPairs": 63
+                },
+                "sourceEditIntegrity": {
+                    "passed": false,
+                    "cases": 411,
+                    "proposalsChecked": 227,
+                    "failures": 1
                 }
             },
             "featureModelHashes": {
                 "tagger.onnx": "9ac4f91427fb642b50e5814d55836c5cd851984cc59a0ccd0de989f36cc890f9",
-                "parser.onnx": "3f0826971d64cb78c4e584987aab40dfa059aedc22f43d05c4732b3fb977c5cc",
-                "lexicon.json": "77e6889e35e123a09fbf90eb38370003c41ae94bd408693abf399af5f01083ad",
+                "parser.onnx": "5296edbac9a8fade1fb7901301c2c155c1adc81526733f25f7334637a1127799",
+                "lexicon.json": "745a33e7fde5d4528778284b6b9206baed49126188f75627b9ef9887b4950f7f",
                 "tagger-manifest.json": "042cd7999f380fe57cf3025f97a2aaa784efd77b4cc9e8c26e2d8e25d39bf13b",
-                "parser-manifest.json": "8da3536150f7cd95caee324b26fb92d8ca68e994e36fe43f901e60c371e95c44"
+                "parser-manifest.json": "cbbda651381e2ac30661a139e857eae2f36ca3d7ff3e56696163f87951055662"
             }
         }
     }
