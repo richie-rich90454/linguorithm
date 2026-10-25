@@ -723,23 +723,36 @@ h1 {
 }
 .correction-preview {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 15px;
+    flex-direction: column;
+    gap: 8px;
+    margin: 2px 0 14px;
+}
+.correction-version {
+    padding: 9px 11px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: #fff;
+}
+.correction-version > span {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 600;
+}
+.correction-version p {
+    margin: 0;
     overflow-wrap: anywhere;
-    margin: 2px 0 13px;
+    color: #4a4a4a;
+    font-size: 12px;
+    line-height: 1.7;
 }
-.correction-preview del {
-    color: var(--red);
-    text-decoration-thickness: 1px;
+.correction-version.corrected {
+    border-color: #cbd8f5;
+    background: #f5f8ff;
 }
-.correction-preview > span {
-    font-size: 14px;
-    opacity: 0.4;
-}
-.correction-preview ins {
-    color: var(--blue);
-    text-decoration: none;
+.correction-version.corrected p {
+    color: #243c73;
 }
 .finding-detail > p {
     font-size: 12px;
