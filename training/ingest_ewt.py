@@ -5,6 +5,8 @@ import json
 import os
 import re
 import time
+from datetime import timezone
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -14,10 +16,52 @@ MANIFEST = ROOT / "training/datasets/ewt-manifest.json"
 DEST = ROOT / "training/datasets/raw/ewt"
 MAX_ATTEMPTS = 5
 TRANSIENT_STATUSES = {408, 425, 429, 500, 502, 503, 504}
+MAX_RETRY_DELAY_SECONDS = 3600
 
 
 def sha256(data):
     return hashlib.sha256(data).hexdigest()
+
+
+def retry_delay(error, attempt, now=None):
+    """Return a bounded retry delay, including explicit GitHub rate-limit 403s."""
+    headers = error.headers or {}
+    rate_limited = (
+        str(headers.get("X-RateLimit-Remaining", "")).strip() == "0"
+        or "Retry-After" in headers
+    )
+    if error.code not in TRANSIENT_STATUSES and not (
+        error.code == 403 and rate_limited
+    ):
+        return None
+
+    now = time.time() if now is None else now
+    retry_after = headers.get("Retry-After")
+    if retry_after:
+        try:
+            return min(MAX_RETRY_DELAY_SECONDS, max(0, int(retry_after)))
+        except ValueError:
+            try:
+                retry_at = parsedate_to_datetime(retry_after)
+                if retry_at.tzinfo is None:
+                    retry_at = retry_at.replace(tzinfo=timezone.utc)
+                return min(
+                    MAX_RETRY_DELAY_SECONDS,
+                    max(0, int(retry_at.timestamp() - now)),
+                )
+            except (TypeError, ValueError, OverflowError):
+                pass
+
+    reset_at = headers.get("X-RateLimit-Reset")
+    if error.code == 403 and reset_at:
+        try:
+            return min(
+                MAX_RETRY_DELAY_SECONDS,
+                max(0, int(float(reset_at) - now)),
+            )
+        except (TypeError, ValueError, OverflowError):
+            pass
+    return min(30, 2**attempt)
 
 
 def read_manifest(path=MANIFEST):
@@ -82,8 +126,9 @@ def download_verified(url, expected_hash, destination, opener=urlopen, wait=time
             return len(data)
         except HTTPError as error:
             last_error = error
-            if error.code not in TRANSIENT_STATUSES or attempt + 1 == MAX_ATTEMPTS:
-                if error.code == 403:
+            delay = retry_delay(error, attempt)
+            if delay is None or attempt + 1 == MAX_ATTEMPTS:
+                if error.code == 403 and delay is None:
                     raise RuntimeError(
                         "The pinned raw-file host denied this request. EWT ingestion "
                         "does not use the GitHub API; check network access or use the "
@@ -93,12 +138,6 @@ def download_verified(url, expected_hash, destination, opener=urlopen, wait=time
                     f"Unable to download pinned EWT file {destination.name} "
                     f"(HTTP {error.code})"
                 ) from error
-            retry_after = error.headers.get("Retry-After") if error.headers else None
-            delay = (
-                min(30, int(retry_after))
-                if retry_after and retry_after.isdigit()
-                else 2**attempt
-            )
             wait(delay)
         except (TimeoutError, URLError, ConnectionError, OSError) as error:
             last_error = error
@@ -115,12 +154,20 @@ def download_verified(url, expected_hash, destination, opener=urlopen, wait=time
 
 
 def ingest(root=ROOT, opener=urlopen, wait=time.sleep):
-    manifest = read_manifest(root / "training/datasets/ewt-manifest.json")
-    destination = root / "training/datasets/raw/ewt"
+    project_root = Path(root).resolve()
+    manifest_path = (project_root / "training/datasets/ewt-manifest.json").resolve()
+    if not manifest_path.is_relative_to(project_root):
+        raise ValueError("EWT manifest escapes the project directory")
+    manifest = read_manifest(manifest_path)
+    destination = (project_root / "training/datasets/raw/ewt").resolve()
+    if not destination.is_relative_to(project_root):
+        raise ValueError("EWT data directory escapes the project directory")
     destination.mkdir(parents=True, exist_ok=True)
     fetched, verified = [], []
     for name, entry in manifest["files"].items():
-        target = destination / name
+        target = (destination / name).resolve()
+        if target.parent != destination or not target.is_relative_to(project_root):
+            raise ValueError(f"EWT target escapes the project-local data directory: {name}")
         if target.is_file():
             actual = sha256(target.read_bytes())
             if actual == entry["sha256"]:
