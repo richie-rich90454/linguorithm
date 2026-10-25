@@ -118,11 +118,18 @@ export interface AnalysisReport {
 }
 
 export interface GoalMetadata {
-    id: string;
-    detection: "implemented-unvalidated" | "not-yet-detectable";
-    proficiencyBand: "emergent" | "developing" | "foundational" | "intermediate" | "advanced";
-    relevantToIntent: boolean;
-    diagnosticIds: readonly string[];
+    readonly id: string;
+    readonly detection: "implemented-unvalidated" | "not-yet-detectable";
+    readonly detectorMode: "diagnostic-pattern" | "evidence-cue" | "combined";
+    readonly detectorIds: readonly string[];
+    readonly proficiencyBand:
+        | "emergent"
+        | "developing"
+        | "foundational"
+        | "intermediate"
+        | "advanced";
+    readonly relevantToIntent: boolean;
+    readonly diagnosticIds: readonly string[];
 }
 
 const revisionSchema = z.object({
