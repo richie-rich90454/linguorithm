@@ -131,6 +131,7 @@ describe("writing intent and goal metadata", () => {
             ["neural-agreement", "writing.agreement"],
             ["verb-form", "writing.irregular"],
             ["neural-perfect-form", "writing.irregular"],
+            ["neural-modal-form", "writing.irregular"],
             ["article-sound", "writing.articles"],
             ["comma-splice", "writing.runons"],
             ["run-on", "writing.runons"],
