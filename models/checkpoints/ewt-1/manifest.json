@@ -48,21 +48,48 @@
             "task": "controlled-error classifier",
             "corpusManifests": ["training/datasets/ewt-manifest.json"],
             "evaluation": {
-                "status": "candidate fails browser no-regression and source-integrity gates; not promoted",
+                "status": "candidate not promoted: POS and LAS regressed against the frozen browser baseline, and the source-and-edit integrity gate failed",
                 "source": "reports/candidate-generalization-browser.json",
-                "scope": "Exact packaged browser candidate on the fixed EWT regression fixture and controlled synthetic agreement mutations. The browser fixture was consulted during tokenizer development, so it is regression evidence rather than an untouched confirmatory estimate or learner-essay evaluation.",
-                "classifierOnlyAgreement": {
-                    "truePositives": 0,
-                    "falsePositives": 0,
-                    "falseNegatives": 63,
-                    "trueNegatives": 63,
-                    "eligibleMutationControlPairs": 63
+                "scope": "The exact candidate browser artifacts were evaluated on the fixed 300-sentence EWT regression fixture and authored or controlled checks. This is within-corpus regression evidence, not an independent learner-writing evaluation.",
+                "browserSyntax": {
+                    "sentences": 300,
+                    "goldTokens": 3659,
+                    "alignedNeuralTokens": 3610,
+                    "posAccuracyAllGold": 0.934135009565455,
+                    "uasAllGold": 0.8204427439191035,
+                    "lasAllGold": 0.7753484558622574
+                },
+                "noRegressionComparedWithFrozenRelease": {
+                    "baselineSource": "reports/generalization.json",
+                    "baselineScope": "The fixed 300-sentence EWT browser regression fixture evaluated against the frozen production artifacts. It is within-corpus regression evidence, not independent learner-writing validation.",
+                    "baseline": {
+                        "posAccuracyAllGold": 0.9349549057119432,
+                        "uasAllGold": 0.8190762503416233,
+                        "lasAllGold": 0.7780814430172178
+                    },
+                    "candidate": {
+                        "posAccuracyAllGold": 0.934135009565455,
+                        "uasAllGold": 0.8204427439191035,
+                        "lasAllGold": 0.7753484558622574
+                    },
+                    "deltaPercentagePoints": {
+                        "pos": -0.08198961464882,
+                        "uas": 0.13664935774702,
+                        "las": -0.27329891599904
+                    },
+                    "regressedMetrics": ["POS", "LAS"],
+                    "passed": false
                 },
                 "sourceEditIntegrity": {
                     "passed": false,
                     "cases": 411,
                     "proposalsChecked": 227,
-                    "failures": 1
+                    "failures": [
+                        {
+                            "id": "quoted-speech",
+                            "issue": "Neural graph is not a single-root complete dependency graph"
+                        }
+                    ]
                 }
             },
             "featureModelHashes": {
