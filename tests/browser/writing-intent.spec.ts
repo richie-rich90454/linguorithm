@@ -17,10 +17,33 @@ test("writing intent stays with its draft across analysis and reload", async ({ 
 test("progress exposes a general, honest writing-goal map", async ({ page }) => {
     await page.getByRole("button", { name: "Your progress" }).click();
     await page.getByText("Explore writing goals", { exact: true }).click();
+    await expect(page.locator(".writing-goal-row")).toHaveCount(100);
     await page.getByLabel("Writing stage").selectOption("advanced");
     await expect(page.locator(".writing-goal-row").first()).toBeVisible();
-    await expect(page.locator(".writing-goal-list")).toContainText("no automated detector yet");
+    await expect(page.locator(".writing-goal-list")).toContainText(
+        "Optional surface cue · not independently validated",
+    );
+    await expect(page.locator(".writing-goal-list")).toContainText(
+        "Narrow diagnostic + optional cue · quality gate unmet",
+    );
     await expect(page.locator(".writing-goal-list")).not.toContainText("AP English");
+});
+
+test("writing evidence cues stay optional and never offer automatic corrections", async ({
+    page,
+}) => {
+    const analyze = () => page.getByRole("button", { name: /Analyze (?:essay|again)/ });
+    await page.getByRole("button", { name: "Edit text" }).click();
+    await page.getByLabel("Essay text").fill("The survey may suggest a change.");
+    await analyze().click();
+    await expect(page.getByText("Review a writing cue", { exact: true })).toHaveCount(0);
+
+    await page.getByRole("button", { name: "Edit text" }).click();
+    await page.getByLabel("Optional style observations").check();
+    await analyze().click();
+    const cue = page.locator(".finding-item").filter({ hasText: "Review a writing cue" });
+    await expect(cue.first()).toBeVisible({ timeout: 30_000 });
+    await expect(cue.first().getByRole("button", { name: "Apply correction" })).toHaveCount(0);
 });
 
 test("previously imported materials show source structure on the first visit", async ({ page }) => {
