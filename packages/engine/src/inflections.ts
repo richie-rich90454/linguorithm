@@ -27,7 +27,9 @@ export class CountNounInflections {
 }
 
 function verbAnalyses(analyses: readonly Morphology[]): readonly Morphology[] {
-    return analyses.filter((analysis) => analysis.pos === "VERB" || analysis.pos === "AUX");
+    return analyses.filter(
+        (analysis) => (analysis.pos === "VERB" || analysis.pos === "AUX") && analysis.lemma !== "_",
+    );
 }
 
 function present(analysis: Morphology): boolean {
@@ -41,7 +43,7 @@ function lemmaOf(analyses: readonly Morphology[]): string | undefined {
         !lemma ||
         lemma === "be" ||
         verbs.some((analysis) => analysis.pos !== "VERB") ||
-        analyses.some((analysis) => analysis.lemma !== lemma)
+        analyses.some((analysis) => analysis.lemma !== "_" && analysis.lemma !== lemma)
     )
         return undefined;
     return lemma;
@@ -192,22 +194,59 @@ export class PresentVerbInflections {
 }
 
 function pastParticiple(analysis: Morphology): boolean {
-    return analysis.pos === "VERB" && analysis.verbForm === "Part" && analysis.tense === "Past";
+    return (
+        analysis.pos === "VERB" &&
+        (analysis.verbForm ?? analysis.udFeatures?.VerbForm) === "Part" &&
+        (analysis.tense ?? analysis.udFeatures?.Tense) === "Past"
+    );
+}
+
+function infinitive(analysis: Morphology): boolean {
+    return (analysis.verbForm ?? analysis.udFeatures?.VerbForm) === "Inf";
 }
 
 /** Supplies observed forms; the caller must establish a perfect auxiliary context. */
 export class PastParticipleInflections {
     private readonly paradigms = new Map<string, Set<string>>();
+    private readonly baseForms = new Map<string, Set<string>>();
 
     constructor(private readonly forms: Forms) {
         for (const [surface, analyses] of Object.entries(forms)) {
             const lemma = lemmaOf(analyses);
-            if (!lemma || surface !== surface.toLowerCase() || !analyses.some(pastParticiple))
-                continue;
-            const surfaces = this.paradigms.get(lemma) ?? new Set<string>();
-            surfaces.add(surface);
-            this.paradigms.set(lemma, surfaces);
+            if (surface !== surface.toLowerCase()) continue;
+            if (lemma && analyses.some(pastParticiple)) {
+                const surfaces = this.paradigms.get(lemma) ?? new Set<string>();
+                surfaces.add(surface);
+                this.paradigms.set(lemma, surfaces);
+            }
+            for (const analysis of analyses)
+                if ((analysis.pos === "VERB" || analysis.pos === "AUX") && infinitive(analysis)) {
+                    const key = `${analysis.pos}\0${analysis.lemma.toLowerCase()}`;
+                    const surfaces = this.baseForms.get(key) ?? new Set<string>();
+                    surfaces.add(surface);
+                    this.baseForms.set(key, surfaces);
+                }
         }
+    }
+
+    /** Return one corpus-attested infinitive only when the source has no infinitive reading. */
+    baseForm(token: Token): string | undefined {
+        if (
+            !(token.pos === "VERB" || token.pos === "AUX") ||
+            !Object.hasOwn(this.forms, token.text.toLowerCase())
+        )
+            return undefined;
+        const observed = this.forms[token.text.toLowerCase()] ?? [];
+        const source = verbAnalyses([...observed, ...token.analyses]).filter(
+            (analysis) => analysis.pos === token.pos,
+        );
+        const lemmas = [...new Set(source.map((analysis) => analysis.lemma.toLowerCase()))];
+        if (lemmas.length !== 1 || source.some(infinitive)) return undefined;
+        const candidates = this.baseForms.get(`${token.pos}\0${lemmas[0]}`);
+        if (!candidates || candidates.size !== 1) return undefined;
+        const candidate = candidates.values().next().value;
+        if (!candidate || candidate === token.text.toLowerCase()) return undefined;
+        return preserveCase(token.text, candidate);
     }
 
     candidate(token: Token): string | undefined {
