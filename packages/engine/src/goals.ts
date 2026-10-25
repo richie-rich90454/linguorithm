@@ -1,5 +1,10 @@
 import type { SkillId, WritingIntent } from "./domain";
-import { detectableGoalIds } from "./goal-rules";
+import {
+    cueGoalIds,
+    detectableGoalIds,
+    diagnosticGoalIds,
+    goalDetectorIdsByGoal,
+} from "./goal-rules";
 
 export type ProficiencyBand =
     | "emergent"
@@ -9,6 +14,7 @@ export type ProficiencyBand =
     | "advanced";
 export type GoalControl = "learner-choice" | "sentence-level" | "text-level" | "conventions";
 export type DetectionStatus = "implemented-unvalidated" | "not-yet-detectable";
+export type DetectorMode = "diagnostic-pattern" | "evidence-cue" | "combined";
 export type CurriculumReference =
     | "head-start-elof"
     | "common-core-language"
@@ -26,6 +32,8 @@ export interface WritingGoal {
     band: ProficiencyBand;
     intents: readonly WritingIntent[];
     detection: DetectionStatus;
+    detectorMode: DetectorMode;
+    detectorIds: readonly string[];
     skill?: SkillId;
     practiceLink?: string;
     correctionPolicy: string;
@@ -934,6 +942,33 @@ const rows: Seed[] = [
         "advanced",
         ["inform", "persuade", "explain"],
     ],
+    [
+        "causal-reasoning",
+        "Explain causal relationships",
+        "Show how evidence supports a cause-and-effect claim, and distinguish causation from sequence or correlation.",
+        "Explain how reduced shade can cause soil to dry faster, using observations that support the link.",
+        "text-level",
+        "advanced",
+        ["explain", "inform", "analyze"],
+    ],
+    [
+        "source-evaluation",
+        "Evaluate sources for a purpose",
+        "Assess whether a source is credible, relevant, and suitable for the question being considered.",
+        "Compare a survey's sample and method with the population named in a claim.",
+        "text-level",
+        "advanced",
+        ["analyze", "inform", "persuade"],
+    ],
+    [
+        "pronoun-case",
+        "Choose pronoun case by grammatical role",
+        "Use subject, object, and possessive pronoun forms that fit their roles in a sentence.",
+        "She gave him her notes.",
+        "sentence-level",
+        "foundational",
+        ["tell-a-story", "inform", "analyze"],
+    ],
 ];
 
 const intentMap: Record<GoalIntent, WritingIntent> = {
@@ -953,6 +988,7 @@ const practiceSkillByGoal: Readonly<Record<string, SkillId>> = {
     agreement: "agreement",
     boundaries: "boundaries",
     runons: "boundaries",
+    "pronoun-case": "pronouns",
     irregular: "verb-forms",
     pronouns: "pronouns",
     parallelism: "usage",
@@ -994,8 +1030,14 @@ export const writingGoals: readonly WritingGoal[] = rows.map(
         const detection = detectableGoalIds.has(`writing.${slug}`)
             ? "implemented-unvalidated"
             : "not-yet-detectable";
+        const detectorIds = goalDetectorIdsByGoal[`writing.${slug}`] ?? [];
+        const goalId = `writing.${slug}`;
+        const hasDiagnostic = diagnosticGoalIds.has(goalId);
+        const hasCue = cueGoalIds.has(goalId);
+        const detectorMode =
+            hasDiagnostic && hasCue ? "combined" : hasCue ? "evidence-cue" : "diagnostic-pattern";
         return {
-            id: `writing.${slug}`,
+            id: goalId,
             name,
             description,
             example,
@@ -1020,6 +1062,8 @@ export const writingGoals: readonly WritingGoal[] = rows.map(
                 ]),
             ],
             detection,
+            detectorMode,
+            detectorIds,
             ...(practiceSkillByGoal[slug]
                 ? {
                       skill: practiceSkillByGoal[slug],
@@ -1027,9 +1071,13 @@ export const writingGoals: readonly WritingGoal[] = rows.map(
                   }
                 : {}),
             correctionPolicy:
-                detection === "implemented-unvalidated"
-                    ? "This pattern has a local detector, but its held-out quality gate is not met. Keep feedback as a review prompt; never edit automatically. Offer a correction only as a source-checked suggestion that the learner explicitly chooses."
-                    : "No local detector is available for this pattern. Do not present automated findings or corrections; support it through reflection or linked practice until a detector passes its quality gate.",
+                detectorMode === "evidence-cue"
+                    ? "A local surface cue can prompt reflection about this goal; it cannot judge mastery, quality, intent, source accuracy, or audience fit. Cues are optional, unvalidated, and never produce corrections."
+                    : detectorMode === "combined"
+                      ? "A narrow local diagnostic and an optional surface cue are associated with this goal. Both are unvalidated; cues never produce corrections, and any diagnostic edit remains learner-controlled and source-checked."
+                      : detection === "implemented-unvalidated"
+                        ? "This narrow local diagnostic pattern has not passed its held-out quality gate. Treat feedback as a review prompt; never edit automatically. Any available correction is only a source-checked suggestion the learner explicitly chooses."
+                        : "No local detector is available for this pattern. Do not present automated findings or corrections; support it through reflection or linked practice until a detector passes its quality gate.",
         };
     },
 );
