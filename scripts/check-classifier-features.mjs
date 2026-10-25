@@ -16,7 +16,9 @@ const fixtureBytes = readFileSync(fixturePath);
 const fixture = JSON.parse(fixtureBytes.toString("utf8"));
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const reportPath = resolve(
-    scoresMode ? "reports/classifier-score-parity.json" : "reports/classifier-feature-parity.json",
+    scoresMode
+        ? "reports/candidate-classifier-score-parity.json"
+        : "reports/candidate-classifier-feature-parity.json",
 );
 const report = {
     status: "failed",
