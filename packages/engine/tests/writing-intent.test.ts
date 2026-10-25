@@ -23,7 +23,12 @@ describe("writing intent and goal metadata", () => {
             expect(goal.detection, goal.id).toBe(
                 detectableGoalIds.has(goal.id) ? "implemented-unvalidated" : "not-yet-detectable",
             );
+            expect(goal.detectorIds.length, goal.id).toBeGreaterThan(0);
+            for (const detectorId of goal.detectorIds)
+                expect(goalByRule[detectorId], `${goal.id} -> ${detectorId}`).toContain(goal.id);
         }
+        expect(writingGoals).toHaveLength(100);
+        expect(detectableGoalIds.size).toBe(100);
         // These registry entries dispatch multiple concrete rule IDs instead of emitting their own.
         const dispatchers = new Set(["punctuation", "clause-punctuation"]);
         for (const rule of [...rules, ...advancedRules]) {
@@ -42,8 +47,11 @@ describe("writing intent and goal metadata", () => {
         );
         expect(repeated?.goalId).toBe("writing.sentence-variety");
         expect(report.goalMetadata?.find((goal) => goal.id === "writing.revision")?.detection).toBe(
-            "not-yet-detectable",
+            "implemented-unvalidated",
         );
+        expect(
+            report.goalMetadata?.find((goal) => goal.id === "writing.revision")?.detectorMode,
+        ).toBe("evidence-cue");
         expect(
             report.goalMetadata?.find((goal) => goal.id === "writing.revision")?.diagnosticIds,
         ).toEqual([]);
@@ -95,8 +103,22 @@ describe("writing intent and goal metadata", () => {
         ).toBe("writing.agreement");
 
         const synthesis = report.goalMetadata?.find((goal) => goal.id === "writing.synthesis");
-        expect(synthesis?.detection).toBe("not-yet-detectable");
+        expect(synthesis?.detection).toBe("implemented-unvalidated");
+        expect(synthesis?.detectorMode).toBe("evidence-cue");
+        expect(synthesis?.detectorIds).toContain("writing-cue-synthesis");
         expect(synthesis?.diagnosticIds).toEqual([]);
+    });
+
+    it("reuses frozen goal metadata for clean drafts without sharing mutable report state", () => {
+        const pipeline = createPipeline();
+        const first = pipeline.analyze("Clear words. Plain ideas.");
+        const second = pipeline.analyze("A different clean draft.");
+        expect(first.diagnostics).toEqual([]);
+        expect(second.diagnostics).toEqual([]);
+        expect(second.goalMetadata).toBe(first.goalMetadata);
+        expect(Object.isFrozen(first.goalMetadata)).toBe(true);
+        expect(Object.isFrozen(first.goalMetadata?.[0])).toBe(true);
+        expect(Object.isFrozen(first.goalMetadata?.[0]?.diagnosticIds)).toBe(true);
     });
 
     it("links both surfaced run-on rule IDs to the same stable goal", () => {
@@ -137,9 +159,9 @@ describe("writing intent and goal metadata", () => {
             ["run-on", "writing.runons"],
             ["parsed-boundary", "writing.runons"],
             ["dependent-fragment", "writing.fragments"],
-            ["pronoun-case", "writing.pronouns"],
+            ["pronoun-case", "writing.pronoun-case"],
             ["pronoun-reference", "writing.pronouns"],
-            ["subject-case", "writing.pronouns"],
+            ["subject-case", "writing.pronoun-case"],
             ["double-comparison", "writing.comparison"],
             ["possessive-apostrophe", "writing.possessive"],
             ["missing-contraction-apostrophe", "writing.apostrophe"],
