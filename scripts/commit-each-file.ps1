@@ -1,6 +1,6 @@
 # Creates one Conventional Commit per eligible file. Run from any directory.
 [CmdletBinding()]
-param()
+param([switch]$PreviewOnly)
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -25,7 +25,7 @@ $purposes = @{}
 .oxfmtrc.json|chore|format|configure consistent source formatting|Define the formatter settings used by local checks and the release workflow.
 .oxlintrc.json|chore|lint|configure static analysis rules|Establish repository lint rules for application, engine, and development scripts.
 oxfmt.json|chore|format|define repository formatting policy|Record the formatter configuration consumed by the project toolchain.
-Makefile|build|make|provide cross-platform project and release targets|Expose explicit development, installation, training, evaluation, model-beam experiments, and release commands through GNU Make.
+Makefile|build|make|provide cross-platform project and release targets|Expose explicit development, installation, pinned multi-corpus ingestion, staged model provenance sealing, training, evaluation, model-beam experiments, and release commands through GNU Make.
 package.json|build|workspace|declare root development tools and task scripts|Pin the workspace package manager and declare the tools required for builds, browser checks, linting, and evaluation.
 pnpm-lock.yaml|build|dependencies|lock workspace dependency resolution|Record resolved dependency versions and integrity metadata for reproducible project-local installations.
 pnpm-workspace.yaml|build|workspace|define package boundaries and installation policy|Connect the web application and engine packages without automatically reinstalling dependencies during tasks.
@@ -38,7 +38,7 @@ CODE_OF_CONDUCT.md|docs|community|establish contributor conduct expectations|Def
 CONTRIBUTING.md|docs|community|explain contribution and verification workflows|Describe local setup, contribution boundaries, and checks expected before proposing changes.
 SECURITY.md|docs|security|document vulnerability reporting and trust boundaries|Explain security reporting expectations and the application's handling of local documents and imported content.
 SUPPORT.md|docs|community|explain support requests and diagnostic context|Help users distinguish support questions from defects and provide useful reproducible information.
-apps/web/src/App.tsx|feat|web|add general writing intent and defer secondary workspace services|Persist the selected writing intent with each draft and analysis; keep learning and material services behind their views and actions to protect the initial bundle; render saved material analysis reactively after its deferred engine loads; preserve navigation state, imports, corrections, and progress workflows.
+apps/web/src/App.tsx|fix|web|serialize document saves before reporting durable progress|Serialize overlapping IndexedDB document writes and report a saved state only after the latest transaction completes; persist the selected writing intent with each draft and analysis; defer learning and material services to protect initial load; preserve navigation, imports, corrections, and progress workflows.
 apps/web/src/EssayLab.tsx|feat|editor|guide revision through intent-aware local findings|Keep the familiar essay workspace while adding general writing-intent selection, optional reflection prompts, clearer finding context, explicit keep-my-wording controls, a disabled intent control until the saved draft is ready, and a clear note that unvalidated edits are reviewed and applied only by the learner.
 apps/web/src/Workbench.tsx|feat|syntax|render inspectable sentence relationships|Expose token-level syntax, labeled dependency arcs, parse alternatives, and sentence inspection controls.
 apps/web/src/Practice.tsx|fix|learning|ignore answer completion after the active question changes|Guard the asynchronous submission result with the original question identity so a completed write cannot mark a different question as answered or change its session feedback.
@@ -77,7 +77,7 @@ packages/engine/src/material-analysis.ts|feat|materials|derive learning evidence
 packages/engine/src/statistics.ts|feat|evaluation|calculate uncertainty-aware evaluation statistics|Provide statistical summaries used to report development evidence and category-level uncertainty.
 packages/engine/src/progress-export.ts|feat|progress|export portable learning records safely|Serialize progress for user-controlled transfer while guarding CSV cells against spreadsheet formula execution.
 packages/engine/src/index.ts|feat|engine|export the goal catalog and traceable metadata API|Expose the stable writing-goal inventory and report annotation alongside the existing grammar, analysis, and learning services.
-scripts/task.mjs|build|make|dispatch tasks with project-contained runtime state|Run explicit tool entry points with argument arrays, local caches, and platform-aware runtime selection behind Make targets.
+scripts/task.mjs|build|make|dispatch pinned training and verification tasks|Route corpus ingestion, supplemental held-out evaluation, syntax-manifest sealing before classifier feature generation, classifier sealing before score parity, checkpoint creation, and release checks through project-local runtimes and caches.
 scripts/project-env.ps1|build|training|prepare a project-local Windows training environment|Expose the contained runtimes and cache locations needed for manual training commands without global installation.
 scripts/restore-models.mjs|build|models|restore verified resources from the frozen release archive|Validate archive structure, containment, hashes, and resource limits before restoring missing or modified production model files.
 scripts/package-model-release.mjs|build|models|package deterministic production model resources|Create the bounded frozen release archive and per-file integrity manifest from validated production assets.
@@ -95,23 +95,42 @@ reports/generalization.json|test|evaluation|record the current fixed-corpus prod
 reports/model-release-check.json|test|models|record frozen model restoration and corruption checks|Retain the local release-archive verification outcomes for clean restoration, repair of changed resources, and rejection of corrupt model data.
 reports/performance.json|perf|engine|record reproducible local analysis timings|Preserve the runtime, synthetic workload, cold and warm engine timings, sampled process memory, and explicit limits of the local benchmark.
 scripts/inspect-ui.mjs|test|interface|inspect key screens for accessibility privacy and overflow|Capture interface screenshots and check runtime errors, external requests, accessibility findings, and horizontal layout overflow.
-scripts/commit-each-file.ps1|chore|git|describe each pattern-gate change in a single-file commit|Extend the PowerShell commit workflow with detailed conventional American English messages for the new gerund review, exact-pattern quality gates, Make CLI declarations, updated evidence reports, and remaining validation limits.
-training/ingest_ewt.py|feat|training|ingest pinned EWT syntax data with split provenance|Prepare reproducible corpus splits and record upstream licensing and source integrity for supervised syntax training.
+scripts/commit-each-file.ps1|chore|git|audit detailed single-file Conventional Commits|Validate each project path, hash its exact contents, stage only that file, write an American English commit message, and preserve an audit record for the requested one-file-per-commit workflow.
+training/ingest_ewt.py|fix|training|fetch pinned EWT files without GitHub API calls|Use immutable raw-file URLs, local hash-verified cache hits, and atomic downloads so model training works without GitHub API rate limits and preserves upstream provenance.
 training/ingest_dictionary.py|feat|training|ingest the licensed local spelling dictionary|Expand the selected dictionary resources and preserve their upstream provenance and licensing metadata.
 training/train_tagger.py|feat|training|train and export the neural part-of-speech tagger|Build the character and sequence tagging model, evaluate held-out syntax data, and export inference resources.
-training/train_release.py|feat|training|train the transition-based dependency parser|Train the parser on the recorded corpus split and export the resources required for local sentence structure analysis.
-training/train_errors.py|feat|training|train the contextual error classifier on controlled mutations|Produce classifier resources and calibration evidence while retaining the distinction between synthetic tasks and natural learner errors.
-training/train_ranker.py|feat|training|train contextual correction ranking resources|Fit the bounded correction ranker and language-model features on controlled source-derived examples.
-training/evaluate_baseline.py|test|training|evaluate a sparse classifier reference baseline|Record a reproducible baseline for comparison with the neural classifier on the same scoped developmental task.
+training/train_release.py|feat|training|train syntax models with licensed supplemental data|Train on pinned EWT and eligible English UD splits, keep validation and test groups separate, publish per-source evaluation evidence, and save hash-verified neural checkpoints.
+training/train_errors.py|feat|training|train and checkpoint the controlled-error classifier|Prepare features after syntax manifests are sealed using a portable one-worker default, require candidate browser parity, produce classifier resources and calibration evidence, and record checkpoint provenance without conflating synthetic tasks with natural learner errors.
+training/train_ranker.py|feat|training|fit candidate correction ranking with licensed written context|Fit contextual ranking from eligible UD training splits and OANC written text, exclude exact held-out sentence overlap, and write candidate metrics separately from production evidence.
+training/evaluate_baseline.py|test|training|evaluate the candidate sparse classifier reference|Record a reproducible candidate baseline for comparison with the neural classifier on the same scoped developmental task, separate from frozen production metrics.
 training/evaluate_quantization.py|test|training|compare float and quantized model candidates|Measure held-out accuracy and asset sizes before any separate browser promotion decision.
 training/calibrate.py|feat|training|calibrate category-specific classifier decisions|Derive threshold evidence from the recorded evaluation split and retain unavailable or unsupported category states.
-training/package_models.py|build|models|package inference resources with full attribution|Validate inputs and export production models, metadata, dictionary resources, and runtime license notices.
-training/seal_manifests.py|build|models|seal accurate training provenance and integrity metadata|Preserve actual training settings and dependency versions while recording hashes for exported resources.
+training/package_models.py|build|models|package candidate inference resources with provenance|Validate pinned-source and parity evidence, package candidate models and runtime notices, and retain supplemental UD and OANC attribution without promoting an unvalidated candidate.
+training/seal_manifests.py|build|models|seal model provenance before parity evidence is generated|Apply pinned provenance, dependency locks, configuration, and weight hashes to syntax manifests before classifier preparation and seal classifier metadata before browser score checks.
 training/requirements.in|build|training|declare the Python model development toolchain|List the libraries required for training, evaluation, ONNX export, and Python source checks.
 training/requirements.lock.txt|build|training|pin the contained Python environment dependencies|Record exact dependency versions for reproducible installation into the project-local virtual environment.
-training/README.md|docs|training|document reproducible local model development and evaluation|Explain project-contained data and runtimes, the GNU Make training and packaging workflow, current fixed browser scores, and why those within-corpus results do not establish independent learner-writing accuracy.
+training/README.md|docs|training|document reproducible multi-source model development|Explain contained runtimes and corpus caches, eligible training and held-out splits, OANC's limited context role, explicit manifest sealing before classifier parity, tracked checkpoints, candidate reports, and within-corpus evidence limits.
 training/datasets/ewt-manifest.json|docs|data|record the pinned EWT source and split manifest|Retain corpus revision, integrity, and split information without committing downloaded raw training data.
 training/datasets/dictionary-manifest.json|docs|data|record dictionary selection provenance and integrity|Describe the selected lexical source and its reproducible ingestion metadata.
+training/datasets/ud-english-manifest.json|build|datasets|pin eligible English Universal Dependencies sources|List immutable treebank revisions, file hashes, split availability, attribution, and license policy so training and evaluation cannot silently mix held-out corpora.
+training/datasets/oanc-manifest.json|build|datasets|pin the Open American National Corpus archive|Declare the immutable OANC GrAF source, expected byte count and digest, selected written collections, license terms, and project-local cache path for repeatable ingestion.
+training/datasets/oanc-attribution.md|docs|datasets|preserve OANC archive attribution and use terms|Record the primary publisher, selected written collections, unrestricted-use statement, pinned archive digest, and the corpus's limited local-context role.
+training/ud_english_sources.py|feat|training|ingest pinned supplemental UD English treebanks|Validate immutable source records and licenses, download and hash-check files into project storage, preserve source and split IDs, and keep test-only corpora out of training.
+training/evaluate_ud_sources.py|test|training|evaluate supplementary English UD test splits|Measure each eligible held-out treebank after overlap checks, report POS/UAS/LAS with sample counts and descriptive intervals, and record provenance without training on evaluation data.
+training/ingest_oanc.py|feat|training|download and verify the pinned OANC archive locally|Stream the licensed corpus into project cache with bounded retries, expected-size and SHA-256 verification, and atomic replacement only after a complete valid transfer.
+training/oanc_context.py|feat|training|count context from selected OANC written texts|Read only the pinned written collections directly from the archive, process documents deterministically without extraction, and provide counts for correction-ranker features.
+training/training_stats.py|feat|training|calculate descriptive token-level confidence intervals|Provide a validated Wilson interval helper for reproducible model reports and make its token-level scope explicit for clustered corpus data.
+training/checkpoint_registry.py|feat|training|save hash-verified neural training checkpoints|Copy trained tensors into a versioned project directory and merge per-model details into a manifest with hashes and evaluation provenance.
+training/test_ingest_ewt.py|test|training|verify immutable EWT ingestion and cache reuse|Prove the downloader avoids GitHub API calls, reuses verified local bytes without network access, rejects hash mismatches, and installs complete downloads atomically.
+training/test_ud_english_sources.py|test|training|verify supplemental UD source split policy|Ensure manifest hashes and licenses are checked, training splits stay separate from held-out evaluation, caches work offline, and modified source bytes are rejected.
+training/test_oanc_context.py|test|training|verify OANC context selection and archive safety|Cover written-only document selection, sentence and token counts, deterministic ordering, bounded download integrity, mismatch handling, and interval calculation.
+training/test_checkpoint_registry.py|test|training|verify checkpoint manifests and hash integrity|Cover checkpoint byte preservation, digest calculation, metadata merging, and rejection of invalid checkpoint sources.
+models/checkpoints/README.md|docs|models|explain versioned model checkpoint contents|Document tracked checkpoint scope, SHA-256 provenance, trusted-checkout loading, and the boundary between candidate weights and the separately validated browser release.
+models/checkpoints/ewt-1/manifest.json|docs|models|record checkpoint hashes and candidate evaluation|Bind each trained artifact to its byte count, SHA-256 digest, corpus manifests, training configuration, and held-out score for regression comparison.
+models/checkpoints/ewt-1/tagger.pt|chore|models|retain the trained EWT part-of-speech checkpoint|Store candidate tagger weights with their content hash and fixed held-out token-accuracy evidence for reproducible comparison.
+models/checkpoints/ewt-1/parser.pt|chore|models|retain the trained EWT dependency-parser checkpoint|Store candidate transition-parser weights with their hash, predicted-POS UAS/LAS evidence, and training provenance for regression comparison.
+models/checkpoints/ewt-1/error-classifier.pt|chore|models|retain the controlled-error classifier checkpoint|Store review-only candidate weights with their hash and synthetic-task metrics without presenting them as independent learner-writing accuracy.
+docs/dataset-expansion-research-2026-10-25.md|docs|training|record licensed English corpus expansion research|Document the official inventory, immutable source pins, license filters, training and evaluation roles, OANC context counts, and why one hundred times as many distinct English UD corpora is unavailable.
 models/releases/manifest.json|build|models|declare frozen model archive and resource checksums|Record the release archive digest and individual asset hashes consumed by clean-checkout restoration.
 models/releases/ewt-1.tar.gz|feat|models|ship the frozen local inference resource bundle|Include the validated production models, lexical resources, browser runtime, metadata, and required notices for offline-capable restoration.
 models/manifests/registry.json|feat|models|register production syntax and classifier resources|Identify the active model manifests and policy that keeps natural-essay neural findings review-only pending independent evidence.
@@ -145,7 +164,7 @@ content/generalization-syntax.ATTRIBUTION.md|docs|corpus|attribute the generaliz
 content/generalization-syntax.LICENSE.txt|docs|licenses|preserve the syntax source license terms|Ship the source dataset license required for use and redistribution of the derived generalization examples.
 content/generalization-syntax.json|test|corpus|add varied source-linked syntax generalization cases|Provide checked-in examples spanning tokenization, dependencies, inflection, and realistic sentence structures beyond the compact regression set.
 packages/engine/src/inflections.ts|feat|morphology|derive count noun support from observed local paradigms|Build a compact countability lexicon from plural noun forms in the pinned training data and expose a typed token check for conservative contextual rules.
-scripts/check-classifier-features.mjs|test|models|verify browser classifier feature parity|Compare the TypeScript runtime feature vectors with the training implementation on recorded fixtures to prevent silent inference drift.
+scripts/check-classifier-features.mjs|test|models|verify candidate browser classifier parity|Compare TypeScript runtime features and ONNX scores with sealed candidate model resources, write candidate-scoped evidence, and leave frozen-release parity reports unchanged.
 scripts/evaluate-generalization.mjs|test|evaluation|measure production syntax and diagnostic generalization|Run the fixed corpus and authored challenge evaluation, retain each positive case's parse alternatives and explicit limitations, and report scoped metrics without treating development evidence as learner-population accuracy.
 scripts/render-social-preview.mjs|build|brand|render cross-browser icon and repository image assets|Generate PNG, ICO, install-icon, and repository preview files from the editable SVG sources using only the project-local browser tooling.
 training/ewt_splits.py|feat|training|preserve official EWT document-level split provenance|Assign reproducible source splits before training and exclude exact duplicates without implying independent author or prompt separation.
@@ -159,7 +178,7 @@ packages/engine/src/goal-metadata.ts|feat|goals|link emitted grammar rules to st
 packages/engine/tests/advanced-coverage.test.ts|test|grammar|cover parsed verb complements and noun-number controls|Exercise the conservative enjoy-or-avoid infinitive review, accepted gerund and licensed-infinitive controls, ambiguous and quoted abstention, dependency-beam agreement, training-derived noun countability, identifier controls, and source evidence without presenting synthetic fixtures as independent accuracy evidence.
 packages/engine/tests/goals.test.ts|test|goals|verify catalog completeness and honest detector status|Check stable identifiers, required goal fields, progression, available practice, unsupported-goal labels, and correction suppression policy.
 packages/engine/tests/writing-intent.test.ts|test|goals|verify backward compatibility and rule traceability|Test legacy documents, persisted intent semantics, report metadata, rule-registry integrity, accurate revision-goal scope, and links for each emitted diagnostic identifier.
-tests/browser/workflows.spec.ts|test|browser|verify learner-controlled corrections and document workflows|Check that suggestions disclose their unvalidated status, analysis and dismissal preserve source text, accepted changes remain undoable, and editing, persistence, and syntax inspection continue to work.
+tests/browser/workflows.spec.ts|test|browser|verify learner-controlled corrections and document workflows|Check that suggestions disclose their unvalidated status, analysis and dismissal preserve source text, accepted changes remain undoable, a confirmed durable save survives reload, and syntax inspection continues to work.
 tests/browser/noun-number.spec.ts|test|browser|verify production count noun analysis and correction policy|Use the real packaged local models to check a singular count noun after a plural quantity, confirm the finding is review-only, prove analysis leaves the draft intact, accept a valid plural control, and abstain on a numeric identifier or scheduled time.
 tests/browser/writing-intent.spec.ts|test|browser|verify writing intent materials and production grammar paths|Exercise intent persistence through reload, the general writing map, saved material structure on first visit, and real browser analysis that detects pronoun and noun-subject comma splices, applies the semicolon edit, and accepts coordinated and subordinate-clause controls.
 docs/writing-progression.md|docs|curriculum|map developmental goals to transferable writing skills|Document how Head Start, Common Core, and advanced public competency sources inform a general progression without AP product logic, speech assessment, or learner-readiness claims.
@@ -216,7 +235,7 @@ function Get-CommitDescription {
         return @('build', $scope, "configure $scope $kind", "Define the $scope $kind within the shared workspace so local tools resolve the package and check its declared interface.")
     }
     if ($Path -eq 'models/generated/.gitkeep') {
-        return @('chore', 'models', 'retain the generated model output directory', 'Keep the output location discoverable while excluding generated model candidates and training checkpoints from version control.')
+        return @('chore', 'models', 'retain the ignored generated model output directory', 'Keep the project-local candidate output location discoverable while generated exports remain ignored; versioned PyTorch checkpoints live separately in models/checkpoints.')
     }
     throw "No file-specific commit description for $Path. Add one before committing."
 }
@@ -224,7 +243,7 @@ function Get-CommitDescription {
 function Get-ContentOutline {
     param([string]$Path)
     $extension = [IO.Path]::GetExtension($Path).ToLowerInvariant()
-    if ($extension -in @('.png', '.ico', '.gz', '.pdf', '.docx', '.woff2')) {
+    if ($extension -in @('.png', '.ico', '.gz', '.pdf', '.docx', '.woff2', '.pt')) {
         return 'Binary resource: retain original bytes without source-text conversion.'
     }
     $text = [IO.File]::ReadAllText((Join-Path $projectRoot $Path))
@@ -295,6 +314,15 @@ $logPath = Join-Path $logDirectory ("commits-{0}.json" -f [DateTime]::UtcNow.ToS
 $records = [Collections.Generic.List[object]]::new()
 $utf8 = [Text.UTF8Encoding]::new($false)
 Write-Host "Preflight complete: $($plans.Count) files, one commit per file."
+if ($PreviewOnly) {
+    foreach ($plan in $plans) {
+        $description = @(Get-CommitDescription -Path $plan.Path)
+        $bytes = if ($plan.Digest -eq 'deleted') { 0 } else { (Get-Item -LiteralPath (Join-Path $projectRoot $plan.Path)).Length }
+        Write-Host "PREVIEW $($description[0])($($description[1])): $($description[2]) | $($plan.Path) | $bytes bytes | SHA-256 $($plan.Digest)"
+    }
+    Write-Host 'Preview complete: no files staged and no commits created.'
+    return
+}
 foreach ($plan in $plans) {
     if ($plan.Digest -ne 'deleted') {
         $currentDigest = (Get-FileHash -LiteralPath (Join-Path $projectRoot $plan.Path) -Algorithm SHA256).Hash.ToLowerInvariant()
