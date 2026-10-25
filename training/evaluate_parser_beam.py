@@ -35,7 +35,11 @@ def main():
         )
         emissions = tagger.run(
             None,
-            {"words": words.numpy(), "chars": chars.numpy(), "lengths": lengths.numpy()},
+            {
+                "words": words.numpy(),
+                "chars": chars.numpy(),
+                "lengths": lengths.numpy(),
+            },
         )[0]
         for index, row in enumerate(batch):
             row["predictedTags"] = [
