@@ -251,7 +251,7 @@ def advance(state, action):
     return stack, pointer, heads, relations, left, right, score
 
 
-def oracle(row, vocabulary):
+def oracle(row, vocabulary, predicted=False):
     n = len(row["tokens"])
     remaining = Counter(row["heads"])
     state, examples = initial_state(n), []
@@ -272,7 +272,9 @@ def oracle(row, vocabulary):
             if pointer >= n:
                 return []  # Non-projective tree; explicitly count excluded oracle sentences.
             action = "SHIFT"
-        examples.append((*state_features(state, row, vocabulary), action))
+        examples.append(
+            (*state_features(state, row, vocabulary, predicted=predicted), action)
+        )
         state = advance(state, action)
     return []
 
@@ -402,6 +404,7 @@ def main():
                 item["finite"] = features.get("VerbForm") == "Fin"
                 item["verbForm"] = features.get("VerbForm", "")
                 item["tense"] = features.get("Tense", "")
+            item["udFeatures"] = dict(features)
             lexical[word.lower()][json.dumps(item, sort_keys=True)] = item
     lexicon = {
         "version": "ewt-1",
@@ -590,7 +593,12 @@ def main():
         },
     )
     print(json.dumps({"event": "tagger-exported", **tag_test}), flush=True)
-    examples = [item for row in splits["train"] for item in oracle(row, vocabulary)]
+    parser_training_pos = evaluate_tagger(model, crf, splits["train"], vocabulary, characters)
+    examples = [
+        item
+        for row in splits["train"]
+        for item in oracle(row, vocabulary, predicted=True)
+    ]
     actions = sorted({item[2] for item in examples})
     xw = torch.tensor([e[0] for e in examples], dtype=torch.long)
     xt = torch.tensor([e[1] for e in examples], dtype=torch.long)
@@ -675,9 +683,10 @@ def main():
         "sentences": len(splits["test"]),
         "beamWidth": 4,
         "pos": "predicted",
+        "trainingInputPosAccuracy": parser_training_pos["tokenAccuracy"],
         "trainingOracleExamples": len(examples),
         "nonprojectiveTrainingSentencesExcluded": sum(
-            not oracle(row, vocabulary) for row in splits["train"]
+            not oracle(row, vocabulary, predicted=True) for row in splits["train"]
         ),
     }
     write_json(
@@ -693,6 +702,7 @@ def main():
                     "beamWidth": 4,
                     "featurePositions": 10,
                     "transitionSystem": "arc-standard",
+                    "posInput": "frozen selected tagger predictions",
                     "maximumTokens": 128,
                 },
             },
