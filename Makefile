@@ -9,7 +9,7 @@ endif
 .PHONY: release check-model-release generalization prepare-errors check-classifier-features train-errors test-training ingest-training-data train-ranker evaluate-baseline evaluate-parser-beam package-models package-release-models evaluate-quantization seal-syntax-model seal-classifier-model
 release check-model-release generalization prepare-errors check-classifier-features train-errors test-training ingest-training-data train-ranker evaluate-baseline evaluate-parser-beam package-models package-release-models evaluate-quantization seal-syntax-model seal-classifier-model:
 	"$(NODE)" scripts/task.mjs $@ $(ARGS)
-.PHONY: help dev check build preview test browser evaluate validate-models content bundle benchmark inspect train lint format typecheck install-pnpm install install-browsers install-python benchmark-browser ablation compare models social-preview
+.PHONY: help dev check build build-candidate preview test browser evaluate validate-models content bundle benchmark inspect train lint format typecheck install-pnpm install-browsers install-python benchmark-browser ablation compare models social-preview
 
-help dev check build preview test browser evaluate validate-models content bundle benchmark inspect train lint format typecheck install-pnpm install install-browsers install-python benchmark-browser ablation compare models social-preview:
+help dev check build build-candidate preview test browser evaluate validate-models content bundle benchmark inspect train lint format typecheck install-pnpm install install-browsers install-python benchmark-browser ablation compare models social-preview:
 	"$(NODE)" scripts/task.mjs $@ $(ARGS)
