@@ -140,6 +140,7 @@ const tasks = {
 dev             Start local Vite development server
 check           Lint, formatting, TypeScript, unit tests
 build           Build production site in apps/web/dist
+build-candidate Build the currently packaged candidate without restoring the frozen release
 preview         Serve production site at 127.0.0.1:4317
 test            Run engine unit tests
 browser         Run Playwright suite (build first)
@@ -198,6 +199,7 @@ No command installs prerequisites implicitly. See docs/quickstart.md.`),
         await tasks.models();
         await tool("vite", "vite", ["build", ...extra], join(root, "apps/web"));
     },
+    "build-candidate": () => tool("vite", "vite", ["build", ...extra], join(root, "apps/web")),
     browser: async () => {
         env.PLAYWRIGHT_PORT = String(await availableLoopbackPort());
         await tool("@playwright/test", "playwright", ["test", ...extra]);
