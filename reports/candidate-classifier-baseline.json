@@ -1,0 +1,55 @@
+{
+    "task": "Controlled synthetic EWT errors; not learner-essay evaluation",
+    "model": "Oracle-feature sparse logistic SGD reference",
+    "featureSource": "Gold UD POS, dependency heads and subject morphology; unavailable to the production neural classifier",
+    "cohort": "Gold-selected mutation targets and paired clean controls; no predicted-syntax eligibility exclusions or additional cross-POS clean controls",
+    "comparableHeadToHead": false,
+    "corpusHashes": {
+        "en_ewt-ud-train.conllu": "3fb78e2b55482c8ee00caa653af436c88c9e5bc9a73ce26e4ae3ddc79d2b7e7b",
+        "en_ewt-ud-dev.conllu": "531a54ff90d6ab12201c5a50c3e78e6ddac4de69abc4bce5d275d3cd29efe2b6",
+        "en_ewt-ud-test.conllu": "e266e515a0a7547657ed3d90d9ba46487d6bd251f27ad4269d4e8a427c8555cd"
+    },
+    "splitExclusions": { "train": 0, "dev": 68, "test": 115 },
+    "splitPolicy": "Official splits; exact token sequences and document groups excluded against earlier splits; train-only fit, dev-only alpha selection, untouched test evaluation",
+    "seed": 1729,
+    "alphaSelectedOnValidation": 0.0001,
+    "validationAccuracy": 0.9549409571162213,
+    "test": {
+        "clean": {
+            "precision": 0.997872340425532,
+            "recall": 0.9124513618677043,
+            "f1": 0.9532520325203252,
+            "support": 1542
+        },
+        "agreement": {
+            "precision": 0.6691176470588235,
+            "recall": 0.9927272727272727,
+            "f1": 0.7994143484626647,
+            "support": 275
+        },
+        "verb-form": {
+            "precision": 1.0,
+            "recall": 0.9523809523809523,
+            "f1": 0.975609756097561,
+            "support": 21
+        },
+        "spelling": { "precision": 1.0, "recall": 1.0, "f1": 1.0, "support": 1246 },
+        "punctuation": { "precision": 0.0, "recall": 0.0, "f1": 0.0, "support": 0 }
+    },
+    "neuralContextOnly": {
+        "evaluation": {
+            "agreement": {
+                "precision": 0.8947368421052632,
+                "recall": 0.384180790960452,
+                "f1": 0.5375494071146245,
+                "brier": 0.008988405577838421,
+                "positives": 177,
+                "predictions": 76
+            }
+        },
+        "featureSource": "Frozen predicted syntax and learned lexical morphology",
+        "cohort": "Tokenization-stable predicted-syntax cohort with additional cross-POS clean controls",
+        "operatingPoint": "Validation-calibrated per-category precision thresholds and runtime POS guards"
+    },
+    "policy": "This oracle-feature reference and deployed neural classifier have different features, cohorts and operating points (argmax versus calibrated thresholds). Their metrics are not a comparable head-to-head result and establish neither neural superiority nor natural-essay accuracy."
+}
