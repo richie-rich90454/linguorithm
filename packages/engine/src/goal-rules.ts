@@ -4,6 +4,7 @@ export const goalByRule: Readonly<Record<string, readonly string[]>> = {
     "neural-agreement": ["writing.agreement"],
     "verb-form": ["writing.irregular"],
     "neural-perfect-form": ["writing.irregular"],
+    "neural-modal-form": ["writing.irregular"],
     "article-sound": ["writing.articles"],
     "comma-splice": ["writing.runons", "writing.boundaries"],
     "run-on": ["writing.runons", "writing.boundaries"],
