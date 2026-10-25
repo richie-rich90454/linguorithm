@@ -93,6 +93,36 @@ export function EssayLab(props: Props) {
     const words = createMemo(
         () => props.draft.match(/[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu)?.length ?? 0,
     );
+    const correctionPreview = (diagnostic: Diagnostic) => {
+        const proposal = diagnostic.proposals[0];
+        if (!props.report) return undefined;
+
+        const edits = proposal?.edits ?? [];
+
+        const changedStart = Math.min(diagnostic.start, ...edits.map((edit) => edit.start));
+        const changedEnd = Math.max(diagnostic.end, ...edits.map((edit) => edit.end));
+        const sentence = props.report.sentences.find(
+            (item) => item.start <= changedStart && item.end >= changedEnd,
+        );
+        const start = sentence?.start ?? changedStart;
+        const end = sentence?.end ?? changedEnd;
+        const before = props.draft.slice(start, end);
+        if (!edits.length) return { before };
+
+        let after = before;
+        for (const edit of [...edits].sort((a, b) => b.start - a.start)) {
+            const relativeStart = edit.start - start;
+            const relativeEnd = edit.end - start;
+            if (
+                relativeStart < 0 ||
+                relativeEnd > after.length ||
+                after.slice(relativeStart, relativeEnd) !== edit.expected
+            )
+                return undefined;
+            after = after.slice(0, relativeStart) + edit.replacement + after.slice(relativeEnd);
+        }
+        return { before, after };
+    };
     const segments = createMemo(() => {
         const text = props.draft;
         if (props.stale)
@@ -548,24 +578,38 @@ export function EssayLab(props: Props) {
                                                     class="finding-detail"
                                                     id={`finding-detail-${d.id}`}
                                                 >
-                                                    <div class="correction-preview">
-                                                        <del>
-                                                            {props.draft.slice(d.start, d.end) ||
-                                                                "∅"}
-                                                        </del>
-                                                        <Show when={d.proposals[0]}>
-                                                            {(p) => (
-                                                                <>
-                                                                    <span>→</span>
-                                                                    <ins>
-                                                                        {p().edits[0]
-                                                                            ?.replacement ||
-                                                                            "Remove"}
-                                                                    </ins>
-                                                                </>
-                                                            )}
-                                                        </Show>
-                                                    </div>
+                                                    <Show when={correctionPreview(d)}>
+                                                        {(preview) => (
+                                                            <div
+                                                                class="correction-preview"
+                                                                aria-label={
+                                                                    preview().after
+                                                                        ? "Full sentence correction preview"
+                                                                        : "Finding context"
+                                                                }
+                                                            >
+                                                                <div class="correction-version">
+                                                                    <span>
+                                                                        {preview().after
+                                                                            ? "Before"
+                                                                            : "Context"}
+                                                                    </span>
+                                                                    <p>
+                                                                        {preview().before ||
+                                                                            "Empty text"}
+                                                                    </p>
+                                                                </div>
+                                                                <Show when={preview().after}>
+                                                                    {(suggestion) => (
+                                                                        <div class="correction-version corrected">
+                                                                            <span>Suggested</span>
+                                                                            <p>{suggestion()}</p>
+                                                                        </div>
+                                                                    )}
+                                                                </Show>
+                                                            </div>
+                                                        )}
+                                                    </Show>
                                                     <p>{d.explanation}</p>
                                                     <Show when={d.proposals.length}>
                                                         <p class="confidence-note">
