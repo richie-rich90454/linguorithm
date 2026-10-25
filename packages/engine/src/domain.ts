@@ -47,6 +47,8 @@ export type Pos =
 export interface Morphology {
     lemma: string;
     pos: Pos;
+    /** Complete observed Universal Dependencies FEATS for this lexical analysis. */
+    udFeatures?: Readonly<Record<string, string>>;
     number?: "singular" | "plural";
     person?: 1 | 2 | 3;
     finite?: boolean;
