@@ -52,7 +52,7 @@ describe("statistical interfaces", () => {
         const text = "“We   can learn today.” We can learn tomorrow. We can learn together.";
         const d = createPipeline()
             .analyze(text, 0, true)
-            .diagnostics.find((d) => d.category === "Style")!;
+            .diagnostics.find((d) => d.ruleId === "repeated-spacing")!;
         expect(d).toBeDefined();
         expect(text.slice(d.evidence[0]!.start, d.evidence[0]!.end)).toBe("We   can learn");
     });
