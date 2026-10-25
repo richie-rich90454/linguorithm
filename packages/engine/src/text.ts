@@ -59,7 +59,8 @@ export class MorphologyAnalyzer {
     constructor(private readonly lexicon?: Readonly<Record<string, readonly Morphology[]>>) {}
     analyze(surface: string): readonly Morphology[] {
         const w = surface.toLowerCase();
-        if (this.lexicon && Object.hasOwn(this.lexicon, w)) return this.lexicon[w]!;
+        const observed = this.lexicon?.[w]?.filter((analysis) => analysis.lemma !== "_");
+        if (observed?.length) return observed;
         if (/^[\p{P}\p{S}]+$/u.test(w)) return [{ lemma: w, pos: "PUNCT" }];
         if (/^\d/u.test(w)) return [{ lemma: w, pos: "NUM" }];
         if (pronouns.has(w))
