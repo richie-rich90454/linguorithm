@@ -20,6 +20,7 @@ test("source-linked correction, undo, persistence, and structure", async ({ page
     await expect(page.getByLabel("Annotated essay")).toContainText("details are often");
     await page.getByRole("button", { name: "Redo change" }).click();
     await expect(page.getByLabel("Annotated essay")).toContainText("details is often");
+    await expect(page.locator(".save-status")).toContainText(/saved on this device/i);
     await page.reload();
     await expect(page.getByLabel("Annotated essay")).toContainText("details is often");
     await page.getByRole("button", { name: "Sentence workbench" }).click();
