@@ -90,7 +90,7 @@ def main():
         },
         "policy": "This oracle-feature reference and deployed neural classifier have different features, cohorts and operating points (argmax versus calibrated thresholds). Their metrics are not a comparable head-to-head result and establish neither neural superiority nor natural-essay accuracy.",
     }
-    write_json(ROOT / "reports/classifier-baseline.json", result)
+    write_json(ROOT / "reports/candidate-classifier-baseline.json", result)
     print(json.dumps(metrics), flush=True)
 
 
