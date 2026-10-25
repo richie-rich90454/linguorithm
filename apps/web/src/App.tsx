@@ -105,6 +105,8 @@ export default function App() {
     let worker: Worker | undefined;
     let request = 0;
     let saveTimer: ReturnType<typeof setTimeout> | undefined;
+    let latestDocumentSave: Promise<void> = Promise.resolve();
+    let documentSaveSequence = 0;
     let timeout: ReturnType<typeof setTimeout> | undefined;
     let featureEnginePromise: Promise<FeatureEngine> | undefined;
     const bank = createMemo(() => [
@@ -153,14 +155,24 @@ export default function App() {
         );
     }
     async function persist(document: EssayDocument) {
+        const sequence = ++documentSaveSequence;
+        setStatus("Saving on this device…");
+        const save = latestDocumentSave
+            .catch(() => undefined)
+            .then(() => saveDocument(document.record));
+        latestDocumentSave = save;
         try {
-            await saveDocument(document.record);
+            await save;
             await refreshDocuments();
-            setStorageFailed(false);
-            setStatus("Saved on this device");
+            if (sequence === documentSaveSequence) {
+                setStorageFailed(false);
+                setStatus("Saved on this device");
+            }
         } catch (cause) {
-            setStorageFailed(true);
-            setStatus("Not saved · export text to keep your work");
+            if (sequence === documentSaveSequence) {
+                setStorageFailed(true);
+                setStatus("Not saved · export text to keep your work");
+            }
             throw cause instanceof Error
                 ? cause
                 : new Error(
@@ -205,10 +217,20 @@ export default function App() {
                 });
             setIgnored([]);
             setSelected(undefined);
-            setStatus(
-                storageFailed()
-                    ? "Analysis complete · not saved; export text to keep your work"
-                    : "Analysis complete · saved on this device",
+            const completedRequest = event.data.id;
+            void latestDocumentSave.then(
+                () => {
+                    if (completedRequest === request)
+                        setStatus(
+                            storageFailed()
+                                ? "Analysis complete · not saved; export text to keep your work"
+                                : "Analysis complete · saved on this device",
+                        );
+                },
+                () => {
+                    if (completedRequest === request)
+                        setStatus("Analysis complete · not saved; export text to keep your work");
+                },
             );
         };
         worker.onerror = () => {
