@@ -12,7 +12,8 @@ export default defineConfig({
     testDir: "./tests/browser",
     fullyParallel: true,
     retries: process.env.CI ? 1 : 0,
-    workers: 2,
+    // Loading local WASM models in several browser engines at once exhausts CI runner resources.
+    workers: process.env.CI ? 1 : 2,
     reporter: "list",
     timeout: 30_000,
     expect: { timeout: 15_000 },
