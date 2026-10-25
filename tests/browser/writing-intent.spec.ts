@@ -44,6 +44,9 @@ test("writing evidence cues stay optional and never offer automatic corrections"
     const cue = page.locator(".finding-item").filter({ hasText: "Review a writing cue" });
     await expect(cue.first()).toBeVisible({ timeout: 30_000 });
     await expect(cue.first().getByRole("button", { name: "Apply correction" })).toHaveCount(0);
+    await expect(cue.first().locator(".correction-preview")).toContainText(
+        "The survey may suggest a change.",
+    );
 });
 
 test("previously imported materials show source structure on the first visit", async ({ page }) => {
@@ -96,6 +99,12 @@ test("the production analyzer distinguishes a comma splice from coordinated clau
     const splice = boundaryFinding();
     await expect(splice).toBeVisible({ timeout: 30_000 });
     await expect(splice.locator(".correction-preview")).toContainText(";");
+    await expect(splice.locator(".correction-version").nth(0)).toContainText(
+        "I work hard, she studies daily.",
+    );
+    await expect(splice.locator(".correction-version").nth(1)).toContainText(
+        "I work hard; she studies daily.",
+    );
     await splice.getByRole("button", { name: "Apply correction" }).click();
     await expect(page.getByLabel("Annotated essay")).toContainText(
         "I work hard; she studies daily.",
