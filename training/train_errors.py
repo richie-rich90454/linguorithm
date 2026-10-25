@@ -16,6 +16,7 @@ from functools import lru_cache
 import numpy as np
 import onnxruntime as ort
 import torch
+from checkpoint_registry import record_checkpoint
 from predicted_syntax import PredictedSyntaxFeatures
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import brier_score_loss, precision_recall_fscore_support
@@ -451,7 +452,7 @@ def main():
         "--workers",
         type=int,
         choices=range(1, 5),
-        default=4,
+        default=1,
         help="Feature-preparation processes, each with one ONNX thread (1–4)",
     )
     args = arguments.parse_args()
@@ -565,7 +566,7 @@ def main():
         )
     if args.prepare_features:
         return
-    parity_path = ROOT / "reports/classifier-feature-parity.json"
+    parity_path = ROOT / "reports/candidate-classifier-feature-parity.json"
     if not parity_path.exists():
         raise ValueError(
             "Run browser classifier feature parity on prepared fixtures before --train"
@@ -833,6 +834,32 @@ def main():
                 "Categories failing gates are review-only",
                 "Punctuation lacks enough training examples and is disabled",
             ],
+        },
+    )
+    classifier_checkpoint = out / "error-classifier.pt"
+    torch.save(
+        {
+            "model": model.state_dict(),
+            "labels": LABELS,
+            "calibrators": calibrators,
+            "featureModelHashes": feature_model_hashes,
+            "evaluation": metrics,
+            "training": {
+                "seed": SEED,
+                "featurePolicy": FEATURE_POLICY,
+                "splitPolicy": "Official EWT splits and document groups; train-only fit and validation-only calibration",
+            },
+        },
+        classifier_checkpoint,
+    )
+    record_checkpoint(
+        "error-classifier.pt",
+        classifier_checkpoint,
+        {
+            "task": "controlled-error classifier",
+            "corpusManifests": ["training/datasets/ewt-manifest.json"],
+            "evaluation": metrics,
+            "featureModelHashes": feature_model_hashes,
         },
     )
     print(json.dumps({"event": "classifier-complete", "metrics": metrics}), flush=True)
