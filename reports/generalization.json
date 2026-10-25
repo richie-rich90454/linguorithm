@@ -1,5 +1,5 @@
 {
-    "generatedAt": "2026-10-25T03:51:38.497Z",
+    "generatedAt": "2026-10-25T06:28:25.048Z",
     "scope": "Production browser worker inference on a fixed EWT syntax regression fixture consulted during tokenizer development, plus newly authored development challenges and controlled gold-guided agreement mutations. The syntax fixture remains held out from model fitting but is not an untouched confirmatory test. This is not an independent learner-essay accuracy or learning-effectiveness study. Model weights are not changed by this evaluation.",
     "production": {
         "baseUrl": "http://127.0.0.1:4317",
@@ -27,12 +27,12 @@
                 "classifierWeights": "580a0205b0018541be7d207d2bdf7cc5458c6b6b6d7d1a9d0f43af879e73f132",
                 "dictionary": "26f2b4b2b612a8107586cff814c4af77f32a08e1dd20f706a04d1d380b864da9"
             },
-            "worker": "analysis.worker-CkHVWNM-.js",
-            "workerSha256": "474cef9b4624c714c40c47d76ba09f963f1e3c367f7b793647046bcae61154b6"
+            "worker": "analysis.worker-D947lM43.js",
+            "workerSha256": "ae5e08d3b4f728311049680b5bbae5bea25c953241719978d4caac9fd90b55b6"
         },
         "classifierConfidence": {
             "calibratedReviewWarnings": 0,
-            "uncalibratedReviewWarnings": 181,
+            "uncalibratedReviewWarnings": 191,
             "policy": "A numeric synthetic-task probability is shown only for the ASCII tokenization-stable cohort with learned subject morphology used for calibration. Natural essay confidence remains unestablished."
         }
     },
@@ -11958,8 +11958,8 @@
         "positiveCoverageBySkill": {
             "agreement": {
                 "cases": 5,
-                "detected": 4,
-                "expectedCorrectionOffered": 4
+                "detected": 5,
+                "expectedCorrectionOffered": 5
             },
             "verb-forms": {
                 "cases": 4,
@@ -13524,11 +13524,28 @@
                     "Document-disjoint and exact-deduplicated official splits; author/prompt independence unverified",
                     "POS and parser scores are not calibrated grammatical-error confidence"
                 ],
-                "diagnostics": [],
+                "diagnostics": [
+                    {
+                        "rule": "neural-agreement",
+                        "skill": "agreement",
+                        "certainty": "Possible issue",
+                        "start": 44,
+                        "end": 47,
+                        "text": "are",
+                        "proposals": [
+                            [
+                                {
+                                    "expected": "are",
+                                    "replacement": "is"
+                                }
+                            ]
+                        ]
+                    }
+                ],
                 "integrity": {
                     "passed": true,
                     "issues": [],
-                    "proposalsChecked": 0
+                    "proposalsChecked": 1
                 },
                 "syntaxSources": ["neural"],
                 "expected": {
@@ -13538,8 +13555,8 @@
                     "original": "are",
                     "replacement": "is"
                 },
-                "detected": false,
-                "suggestedExpectedCorrection": false,
+                "detected": true,
+                "suggestedExpectedCorrection": true,
                 "predictedSyntax": [
                     {
                         "syntaxSource": "neural",
@@ -18145,9 +18162,9 @@
                     "TN": 63
                 },
                 "entireHybrid": {
-                    "TP": 47,
+                    "TP": 53,
                     "FP": 0,
-                    "FN": 16,
+                    "FN": 10,
                     "TN": 63
                 }
             }
@@ -18289,6 +18306,22 @@
                         ]
                     },
                     {
+                        "rule": "run-on",
+                        "skill": "boundaries",
+                        "certainty": "Possible issue",
+                        "start": 9,
+                        "end": 10,
+                        "text": " ",
+                        "proposals": [
+                            [
+                                {
+                                    "expected": " ",
+                                    "replacement": "; "
+                                }
+                            ]
+                        ]
+                    },
+                    {
                         "rule": "neural-agreement",
                         "skill": "agreement",
                         "certainty": "Possible issue",
@@ -18308,7 +18341,7 @@
                 "integrity": {
                     "passed": true,
                     "issues": [],
-                    "proposalsChecked": 2
+                    "proposalsChecked": 3
                 }
             },
             {
@@ -18388,13 +18421,30 @@
                 "category": "agreement",
                 "classifierHit": false,
                 "classifierFalsePositiveOnControl": false,
-                "hybridHit": false,
+                "hybridHit": true,
                 "hybridFalsePositiveOnControl": false,
-                "diagnostics": [],
+                "diagnostics": [
+                    {
+                        "rule": "neural-agreement",
+                        "skill": "agreement",
+                        "certainty": "Possible issue",
+                        "start": 9,
+                        "end": 12,
+                        "text": "are",
+                        "proposals": [
+                            [
+                                {
+                                    "expected": "are",
+                                    "replacement": "is"
+                                }
+                            ]
+                        ]
+                    }
+                ],
                 "integrity": {
                     "passed": true,
                     "issues": [],
-                    "proposalsChecked": 0
+                    "proposalsChecked": 1
                 }
             },
             {
@@ -18610,13 +18660,30 @@
                 "category": "agreement",
                 "classifierHit": false,
                 "classifierFalsePositiveOnControl": false,
-                "hybridHit": false,
+                "hybridHit": true,
                 "hybridFalsePositiveOnControl": false,
-                "diagnostics": [],
+                "diagnostics": [
+                    {
+                        "rule": "neural-agreement",
+                        "skill": "agreement",
+                        "certainty": "Possible issue",
+                        "start": 36,
+                        "end": 40,
+                        "text": "were",
+                        "proposals": [
+                            [
+                                {
+                                    "expected": "were",
+                                    "replacement": "was"
+                                }
+                            ]
+                        ]
+                    }
+                ],
                 "integrity": {
                     "passed": true,
                     "issues": [],
-                    "proposalsChecked": 0
+                    "proposalsChecked": 1
                 }
             },
             {
@@ -18871,13 +18938,30 @@
                 "category": "agreement",
                 "classifierHit": false,
                 "classifierFalsePositiveOnControl": false,
-                "hybridHit": false,
+                "hybridHit": true,
                 "hybridFalsePositiveOnControl": false,
-                "diagnostics": [],
+                "diagnostics": [
+                    {
+                        "rule": "neural-agreement",
+                        "skill": "agreement",
+                        "certainty": "Possible issue",
+                        "start": 14,
+                        "end": 16,
+                        "text": "is",
+                        "proposals": [
+                            [
+                                {
+                                    "expected": "is",
+                                    "replacement": "are"
+                                }
+                            ]
+                        ]
+                    }
+                ],
                 "integrity": {
                     "passed": true,
                     "issues": [],
-                    "proposalsChecked": 0
+                    "proposalsChecked": 1
                 }
             },
             {
@@ -19527,13 +19611,30 @@
                 "category": "agreement",
                 "classifierHit": false,
                 "classifierFalsePositiveOnControl": false,
-                "hybridHit": false,
+                "hybridHit": true,
                 "hybridFalsePositiveOnControl": false,
-                "diagnostics": [],
+                "diagnostics": [
+                    {
+                        "rule": "neural-agreement",
+                        "skill": "agreement",
+                        "certainty": "Possible issue",
+                        "start": 10,
+                        "end": 13,
+                        "text": "are",
+                        "proposals": [
+                            [
+                                {
+                                    "expected": "are",
+                                    "replacement": "is"
+                                }
+                            ]
+                        ]
+                    }
+                ],
                 "integrity": {
                     "passed": true,
                     "issues": [],
-                    "proposalsChecked": 0
+                    "proposalsChecked": 1
                 }
             },
             {
@@ -20314,7 +20415,7 @@
                 "category": "agreement",
                 "classifierHit": false,
                 "classifierFalsePositiveOnControl": false,
-                "hybridHit": false,
+                "hybridHit": true,
                 "hybridFalsePositiveOnControl": false,
                 "diagnostics": [
                     {
@@ -20332,12 +20433,28 @@
                                 }
                             ]
                         ]
+                    },
+                    {
+                        "rule": "neural-agreement",
+                        "skill": "agreement",
+                        "certainty": "Possible issue",
+                        "start": 15,
+                        "end": 17,
+                        "text": "is",
+                        "proposals": [
+                            [
+                                {
+                                    "expected": "is",
+                                    "replacement": "are"
+                                }
+                            ]
+                        ]
                     }
                 ],
                 "integrity": {
                     "passed": true,
                     "issues": [],
-                    "proposalsChecked": 1
+                    "proposalsChecked": 2
                 }
             },
             {
@@ -20637,13 +20754,30 @@
                 "category": "agreement",
                 "classifierHit": false,
                 "classifierFalsePositiveOnControl": false,
-                "hybridHit": false,
+                "hybridHit": true,
                 "hybridFalsePositiveOnControl": false,
-                "diagnostics": [],
+                "diagnostics": [
+                    {
+                        "rule": "neural-agreement",
+                        "skill": "agreement",
+                        "certainty": "Possible issue",
+                        "start": 10,
+                        "end": 13,
+                        "text": "are",
+                        "proposals": [
+                            [
+                                {
+                                    "expected": "are",
+                                    "replacement": "is"
+                                }
+                            ]
+                        ]
+                    }
+                ],
                 "integrity": {
                     "passed": true,
                     "issues": [],
-                    "proposalsChecked": 0
+                    "proposalsChecked": 1
                 }
             },
             {
@@ -20923,7 +21057,7 @@
     "sourceAndEditIntegrity": {
         "passed": true,
         "cases": 411,
-        "proposalsChecked": 219,
+        "proposalsChecked": 229,
         "failures": []
     },
     "failuresAreReportedWithoutSuppressingReport": true
