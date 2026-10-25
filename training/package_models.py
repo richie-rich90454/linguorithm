@@ -7,8 +7,8 @@ import re
 import shutil
 
 from onnxruntime.quantization import QuantType, quantize_dynamic
-from seal_manifests import main as seal_manifests
 from train_release import ROOT, write_json
+from ud_english_sources import read_manifest as read_ud_sources_manifest
 
 
 def require_classifier_score_parity(source, report_path):
@@ -50,7 +50,7 @@ def require_classifier_score_parity(source, report_path):
 
 source = ROOT / "models/generated/ewt-1"
 classifier_score_parity = require_classifier_score_parity(
-    source, ROOT / "reports/classifier-score-parity.json"
+    source, ROOT / "reports/candidate-classifier-score-parity.json"
 )
 
 # Verify dictionary inputs again at packaging time: ingestion may have happened
@@ -66,7 +66,6 @@ for record in dictionary_provenance["files"]:
     if hashlib.sha256(target.read_bytes()).hexdigest() != record["sha256"]:
         raise ValueError(f"Dictionary hash changed: {target.name}")
 
-seal_manifests()
 destination = ROOT / "apps/web/public/models"
 weights = destination / "weights"
 weights.mkdir(parents=True, exist_ok=True)
@@ -114,6 +113,25 @@ shutil.copy2(
     ROOT / "training/datasets/raw/dictionary/license",
     licenses / "dictionary-notices.txt",
 )
+shutil.copy2(
+    ROOT / "training/datasets/oanc-attribution.md",
+    licenses / "oanc-attribution.md",
+)
+shutil.copy2(
+    ROOT / "training/datasets/oanc-manifest.json",
+    licenses / "oanc-manifest.json",
+)
+for source in read_ud_sources_manifest(ROOT)["sources"]:
+    source_directory = ROOT / "training/datasets/raw/ud-english" / source["id"]
+    label = source["treebank"].lower().replace("english-", "").replace(" ", "-")
+    shutil.copy2(
+        source_directory / "LICENSE.txt",
+        licenses / f"ud-{label}-license.txt",
+    )
+    shutil.copy2(
+        source_directory / "README.md",
+        licenses / f"ud-{label}-attribution.md",
+    )
 
 affixes, cross = {}, {}
 for line in (
@@ -204,11 +222,12 @@ registry = {
 }
 write_json(destination / "registry.json", registry)
 write_json(
-    ROOT / "models/manifests/registry.json",
+    ROOT / "reports/candidate-model-registry.json",
     {
         **registry,
-        "assetDirectory": "apps/web/public/models",
-        "promotionPolicy": "Float syntax passed EWT/parity gates. Natural essay neural findings remain review-only. Int8 candidates require separate browser promotion checks.",
+        "candidateStatus": "not promoted",
+        "artifactDirectory": "models/generated/ewt-1",
+        "promotionPolicy": "This candidate package does not replace the frozen release. Run all release and generalization gates before explicit promotion; unsupported neural learner-error findings remain review-only.",
     },
 )
 runtime = ROOT / "apps/web/node_modules/onnxruntime-web/dist"
@@ -216,7 +235,7 @@ runtime = ROOT / "apps/web/node_modules/onnxruntime-web/dist"
 for name in ["ort-wasm-simd-threaded.mjs", "ort-wasm-simd-threaded.wasm"]:
     shutil.copy2(runtime / name, destination / "runtime" / name)
 write_json(
-    ROOT / "reports/model-packaging.json",
+    ROOT / "reports/candidate-model-packaging.json",
     {
         "dictionaryForms": len(words),
         "classifierBrowserScoreParity": classifier_score_parity,
