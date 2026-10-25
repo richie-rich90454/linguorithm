@@ -165,6 +165,8 @@ evaluate-baseline  Evaluate the separately labeled oracle-feature reference
 package-models  Package licensed and parity-verified candidate model assets
 package-release-models  Promote parity-verified assets into the tracked model bundle
 evaluate-quantization  Compare candidate float32 and int8 syntax assets
+seal-syntax-model  Finalize syntax provenance before preparing classifier features
+seal-classifier-model  Finalize classifier provenance before browser score parity
 No command installs prerequisites implicitly. See docs/quickstart.md.`),
     "social-preview": () => script("render-social-preview.mjs"),
     dev: async () => {
@@ -207,6 +209,10 @@ No command installs prerequisites implicitly. See docs/quickstart.md.`),
     generalization: () => script("evaluate-generalization.mjs", extra),
     "prepare-errors": () =>
         run(python(), [join(root, "training/train_errors.py"), "--prepare-features", ...extra]),
+    "seal-syntax-model": () =>
+        run(python(), [join(root, "training/seal_manifests.py"), "--syntax-only"]),
+    "seal-classifier-model": () =>
+        run(python(), [join(root, "training/seal_manifests.py"), "--classifier-only"]),
     "check-classifier-features": () => script("check-classifier-features.mjs", extra),
     "train-errors": () =>
         run(python(), [join(root, "training/train_errors.py"), "--train", ...extra]),
@@ -221,6 +227,10 @@ No command installs prerequisites implicitly. See docs/quickstart.md.`),
             "test_*.py",
             ...extra,
         ]),
+    "ingest-training-data": async () => {
+        for (const name of ["ingest_ewt.py", "ud_english_sources.py", "ingest_oanc.py"])
+            await run(python(), [join(root, "training", name)]);
+    },
     "train-ranker": () => run(python(), [join(root, "training/train_ranker.py"), ...extra]),
     "evaluate-baseline": () =>
         run(python(), [join(root, "training/evaluate_baseline.py"), ...extra]),
@@ -295,11 +305,16 @@ No command installs prerequisites implicitly. See docs/quickstart.md.`),
     train: async () => {
         for (const [name, ...args] of [
             ["ingest_ewt.py"],
+            ["ud_english_sources.py"],
+            ["ingest_oanc.py"],
             ["ingest_dictionary.py"],
             ["train_release.py", "--epochs", "12", "--parser-epochs", "6", ...extra],
+            ["evaluate_ud_sources.py"],
+            ["seal_manifests.py", "--syntax-only"],
             ["train_errors.py", "--prepare-features"],
             ["check-classifier-features.mjs"],
             ["train_errors.py", "--train"],
+            ["seal_manifests.py", "--classifier-only"],
             ["check-classifier-features.mjs", "--scores"],
             ["train_ranker.py"],
             ["evaluate_baseline.py"],
