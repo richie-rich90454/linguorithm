@@ -227,6 +227,7 @@ export class LocalSyntaxRuntime {
                         z.object({
                             lemma: z.string(),
                             pos,
+                            udFeatures: z.record(z.string(), z.string()).optional(),
                             number: z.enum(["singular", "plural"]).optional(),
                             person: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional(),
                             finite: z.boolean().optional(),
