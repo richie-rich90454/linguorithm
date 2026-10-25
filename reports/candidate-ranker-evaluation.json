@@ -1,0 +1,107 @@
+{
+    "seed": 1729,
+    "corpusHashes": {
+        "en_ewt-ud-train.conllu": "3fb78e2b55482c8ee00caa653af436c88c9e5bc9a73ce26e4ae3ddc79d2b7e7b",
+        "en_ewt-ud-dev.conllu": "531a54ff90d6ab12201c5a50c3e78e6ddac4de69abc4bce5d275d3cd29efe2b6",
+        "en_ewt-ud-test.conllu": "e266e515a0a7547657ed3d90d9ba46487d6bd251f27ad4269d4e8a427c8555cd"
+    },
+    "splitExclusions": { "train": 0, "dev": 68, "test": 115 },
+    "supplementalTraining": {
+        "sources": {
+            "ud-en-atis-r2.18": {
+                "sentences": 4273,
+                "sourceSentences": 4274,
+                "tokens": 48647,
+                "license": "CC-BY-SA-4.0"
+            },
+            "ud-en-childes-r2.18": {
+                "sentences": 33567,
+                "sourceSentences": 34732,
+                "tokens": 216487,
+                "license": "CC-BY-SA-4.0"
+            },
+            "ud-en-eslspok-r2.18": {
+                "sentences": 1705,
+                "sourceSentences": 1856,
+                "tokens": 16279,
+                "license": "CC-BY-SA-4.0"
+            }
+        },
+        "corpusHashes": {
+            "ud-en-atis-r2.18/en_atis-ud-train.conllu": "de10d45dd7fc2517b39ae8df074f78ebaea3fd42aeccc0d059b5d42cec6ef118",
+            "ud-en-childes-r2.18/en_childes-ud-train.conllu": "3275a76cbfb32f73264f04bc02166ecc5662039bd6c604c65ffde23e45883c58",
+            "ud-en-eslspok-r2.18/en_eslspok-ud-train.conllu": "2d98d2a9520fbc9e20154ab0b51bb688d704c3c59b0e9ae09d82df0a4b1c6330"
+        }
+    },
+    "contextSources": {
+        "oanc": {
+            "id": "open-american-national-corpus-graf-2026-09-25",
+            "archiveSha256": "5a26559a1becba41a527cb674fff4fb9c4fb70b276f60422c4f07a0ef23fd867",
+            "selectedDocuments": 6424,
+            "documents": 6424,
+            "sentences": 555120,
+            "tokens": 13738685,
+            "exactHeldOutSentenceDuplicatesExcluded": 2193,
+            "collections": ["written_1", "written_2"],
+            "role": "word and bigram context counts for candidate ranking only; no syntax or learner-error labels"
+        },
+        "ud": {
+            "sources": {
+                "ud-en-atis-r2.18": {
+                    "sentences": 4273,
+                    "sourceSentences": 4274,
+                    "tokens": 48647,
+                    "license": "CC-BY-SA-4.0"
+                },
+                "ud-en-childes-r2.18": {
+                    "sentences": 33567,
+                    "sourceSentences": 34732,
+                    "tokens": 216487,
+                    "license": "CC-BY-SA-4.0"
+                },
+                "ud-en-eslspok-r2.18": {
+                    "sentences": 1705,
+                    "sourceSentences": 1856,
+                    "tokens": 16279,
+                    "license": "CC-BY-SA-4.0"
+                }
+            },
+            "corpusHashes": {
+                "ud-en-atis-r2.18/en_atis-ud-train.conllu": "de10d45dd7fc2517b39ae8df074f78ebaea3fd42aeccc0d059b5d42cec6ef118",
+                "ud-en-childes-r2.18/en_childes-ud-train.conllu": "3275a76cbfb32f73264f04bc02166ecc5662039bd6c604c65ffde23e45883c58",
+                "ud-en-eslspok-r2.18/en_eslspok-ud-train.conllu": "2d98d2a9520fbc9e20154ab0b51bb688d704c3c59b0e9ae09d82df0a4b1c6330"
+            }
+        },
+        "ewt": { "id": "ud-english-ewt-2.16", "role": "train split only" }
+    },
+    "contextCounts": {
+        "bigramTypes": 2874518,
+        "retainedBigramTypes": 80000,
+        "unigramTypes": 181183
+    },
+    "splitPolicy": "Official splits; exact token sequences and document groups excluded against earlier splits; train-only fit, no test tuning",
+    "oancHeldOutOverlapPolicy": "Normalized exact sentence matches against EWT validation/test and every supplemental UD test split are excluded from OANC contextual counts; OANC has no labels and does not enter error-classifier evaluation.",
+    "metrics": {
+        "train": {
+            "groups": 20661,
+            "correct": 20084,
+            "top1Accuracy": 0.972072987754707,
+            "top1Accuracy95PercentCI": [0.9697370847511486, 0.9742333801988028]
+        },
+        "dev": {
+            "groups": 2437,
+            "correct": 2197,
+            "top1Accuracy": 0.9015182601559294,
+            "top1Accuracy95PercentCI": [0.8890487554138383, 0.9127239254490701]
+        },
+        "test": {
+            "groups": 2450,
+            "correct": 2215,
+            "top1Accuracy": 0.9040816326530612,
+            "top1Accuracy95PercentCI": [0.8917804494864717, 0.9151176461026295]
+        }
+    },
+    "smoothing": "Interpolated absolute-discount Kneser-Ney bigram",
+    "discount": 0.716383024137423,
+    "scope": "EWT controlled single-deletion candidates; train-only pairwise logistic fit; not natural correction accuracy"
+}
