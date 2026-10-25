@@ -47,9 +47,14 @@ const forms: Record<string, Morphology> = {
     toys: { lemma: "toy", pos: "NOUN", number: "plural" },
     water: { lemma: "water", pos: "NOUN", number: "singular" },
 };
-function parsed(text: string, edges: readonly Edge[], offset = 0): Sentence {
+function parsed(
+    text: string,
+    edges: readonly Edge[],
+    offset = 0,
+    extraForms: Readonly<Record<string, Morphology>> = {},
+): Sentence {
     const tokens = new Tokenizer().tokenize(text, offset).map((token) => {
-        const form = forms[token.text.toLowerCase()];
+        const form = extraForms[token.text.toLowerCase()] ?? forms[token.text.toLowerCase()];
         return form ? { ...token, pos: form.pos, analyses: [form] } : token;
     });
     const index = (word: string) => {
@@ -100,6 +105,78 @@ const clauses = (relation = "parataxis"): Edge[] => [
     ["arrived", "departed", relation],
     ["departed", "driver", "nsubj"],
 ];
+
+describe("parsed coordinated-subject agreement", () => {
+    const observed = {
+        walk: [
+            {
+                lemma: "walk",
+                pos: "VERB" as const,
+                number: "plural" as const,
+                finite: true,
+                verbForm: "Fin",
+                tense: "Pres",
+            },
+        ],
+        walks: [
+            {
+                lemma: "walk",
+                pos: "VERB" as const,
+                number: "singular" as const,
+                person: 3 as const,
+                finite: true,
+                verbForm: "Fin",
+                tense: "Pres",
+            },
+        ],
+    };
+    const agreement = new GrammarConstraintEngine(
+        createAdvancedRules(new PresentVerbInflections(observed)),
+    );
+    const tokenForms = Object.fromEntries(
+        Object.entries(observed).map(([word, analyses]) => [word, analyses[0]!]),
+    );
+    const edges: Edge[] = [
+        ["walks", "walks", "root"],
+        ["walks", "student", "nsubj"],
+        ["student", "teacher", "conj"],
+        ["teacher", "and", "cc"],
+        ["student", "the", "det"],
+        ["teacher", "the", "det"],
+    ];
+
+    it("uses plural agreement for an unambiguous and-coordinated subject", () => {
+        const sentence = parsed("The student and the teacher walks home.", edges, 0, tokenForms);
+        const issue = agreement
+            .evaluate(sentence)
+            .find((item) => item.ruleId === "neural-agreement");
+        expect(issue?.proposals[0]?.edits[0]?.replacement).toBe("walk");
+        expect(issue?.evidence.map((evidence) => evidence.label)).toContain(
+            "Parsed grammatical subject",
+        );
+    });
+
+    it.each([
+        ["The student and the teacher walk home.", "and", "walk"],
+        ["The student or the teacher walks home.", "or", "walks"],
+    ])(
+        "leaves valid agreement or alternative coordination unchanged: %s",
+        (text, coordinator, verb) => {
+            const parsedEdges: Edge[] = edges.map(([head, dependent, relation]) => [
+                head === "walks" ? verb! : head,
+                relation === "cc" ? coordinator! : dependent === "walks" ? verb! : dependent,
+                relation,
+            ]);
+            const sentence = parsed(text, parsedEdges, 0, {
+                ...tokenForms,
+            });
+            expect(sentence.tokens.some((token) => token.text === verb)).toBe(true);
+            expect(
+                agreement.evaluate(sentence).filter((item) => item.ruleId === "neural-agreement"),
+            ).toEqual([]);
+        },
+    );
+});
 
 describe("parsed gerund complement reviews", () => {
     const rule = advancedRules.find((candidate) => candidate.id === "gerund-complement")!;
