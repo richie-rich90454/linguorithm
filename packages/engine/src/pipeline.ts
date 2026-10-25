@@ -8,6 +8,7 @@ import {
 import { DiagnosticResolver, GrammarConstraintEngine } from "./grammar";
 import { attachGoalMetadata } from "./goal-metadata";
 import { documentFeedback } from "./document-feedback";
+import { writingGoalObservations } from "./writing-goal-cues";
 import {
     ConservativeDependencyParser,
     LexicalTagger,
@@ -179,6 +180,7 @@ export class AnalysisPipeline {
                 }
         }
         diagnostics.push(...documentFeedback(sentences, text, style));
+        if (style) diagnostics.push(...writingGoalObservations(sentences, text, writingIntent));
         return attachGoalMetadata(
             {
                 revision,
