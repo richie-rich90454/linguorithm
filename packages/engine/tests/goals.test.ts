@@ -3,7 +3,7 @@ import { writingGoalById, writingGoals } from "../src/goals";
 
 describe("general writing goal catalog", () => {
     it("provides a stable, traceable progression with complete learner-facing fields", () => {
-        expect(writingGoals.length).toBeGreaterThan(70);
+        expect(writingGoals).toHaveLength(100);
         expect(
             writingGoals.every((goal) => !["validated", "completed"].includes(goal.detection)),
         ).toBe(true);
@@ -18,9 +18,14 @@ describe("general writing goal catalog", () => {
             expect(goal.curriculumReferences.length).toBeGreaterThan(0);
             expect(goal.intents.length).toBeGreaterThan(0);
             expect(goal.correctionPolicy.trim()).not.toBe("");
-            if (goal.detection === "implemented-unvalidated")
-                expect(goal.correctionPolicy).toContain("never edit automatically");
-            else expect(goal.correctionPolicy).toContain("No local detector is available");
+            expect(goal.detection).toBe("implemented-unvalidated");
+            expect(goal.detectorIds.length).toBeGreaterThan(0);
+            if (goal.detectorMode === "evidence-cue")
+                expect(goal.correctionPolicy).toContain("never produce corrections");
+            else if (goal.detectorMode === "combined") {
+                expect(goal.correctionPolicy).toContain("optional surface cue");
+                expect(goal.correctionPolicy).toContain("learner-controlled");
+            } else expect(goal.correctionPolicy).toContain("never edit automatically");
             expect(["learner-choice", "sentence-level", "text-level", "conventions"]).toContain(
                 goal.control,
             );
@@ -40,14 +45,15 @@ describe("general writing goal catalog", () => {
         expect(early.every((goal) => goal.intents.every((intent) => intent !== "analytical"))).toBe(
             true,
         );
-        expect(early.every((goal) => goal.detection === "not-yet-detectable")).toBe(true);
+        expect(early.every((goal) => goal.detectorMode === "evidence-cue")).toBe(true);
         expect(writingGoalById("writing.agreement")?.skill).toBe("agreement");
         expect(writingGoalById("writing.agreement")?.detection).toBe("implemented-unvalidated");
         expect(writingGoalById("writing.sentence")?.detection).toBe("implemented-unvalidated");
         expect(writingGoalById("writing.boundaries")?.detection).toBe("implemented-unvalidated");
-        expect(writingGoalById("writing.synthesis")?.detection).toBe("not-yet-detectable");
+        expect(writingGoalById("writing.synthesis")?.detectorMode).toBe("evidence-cue");
+        expect(writingGoalById("writing.cohesion")?.detectorMode).toBe("combined");
         expect(writingGoalById("writing.ap")).toBeUndefined();
-        expect(writingGoalById("writing.capitalnames")?.detection).toBe("not-yet-detectable");
+        expect(writingGoalById("writing.capitalnames")?.detectorMode).toBe("evidence-cue");
         expect(writingGoalById("writing.capitals")?.detection).toBe("implemented-unvalidated");
         expect(writingGoalById("writing.endmarks")?.detection).toBe("implemented-unvalidated");
         expect(writingGoalById("writing.commas")?.detection).toBe("implemented-unvalidated");
@@ -75,5 +81,16 @@ describe("general writing goal catalog", () => {
             "writing.rhetorical-situation",
         ])
             expect(writingGoalById(id)).toBeDefined();
+    });
+
+    it("reports mutually accurate detector modes for all connected goals", () => {
+        const counts = writingGoals.reduce(
+            (result, goal) => {
+                result[goal.detectorMode]++;
+                return result;
+            },
+            { "diagnostic-pattern": 0, "evidence-cue": 0, combined: 0 },
+        );
+        expect(counts).toEqual({ "diagnostic-pattern": 32, "evidence-cue": 67, combined: 1 });
     });
 });
