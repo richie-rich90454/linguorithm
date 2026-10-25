@@ -1,5 +1,5 @@
 {
-    "generatedAt": "2026-10-25T07:57:23.741Z",
+    "generatedAt": "2026-10-25T09:55:19.919Z",
     "scope": "Production browser worker inference on a fixed EWT syntax regression fixture consulted during tokenizer development, plus newly authored development challenges and controlled gold-guided agreement mutations. The syntax fixture remains held out from model fitting but is not an untouched confirmatory test. This is not an independent learner-essay accuracy or learning-effectiveness study. Model weights are not changed by this evaluation.",
     "production": {
         "baseUrl": "http://127.0.0.1:4317",
@@ -27,8 +27,8 @@
                 "classifierWeights": "580a0205b0018541be7d207d2bdf7cc5458c6b6b6d7d1a9d0f43af879e73f132",
                 "dictionary": "26f2b4b2b612a8107586cff814c4af77f32a08e1dd20f706a04d1d380b864da9"
             },
-            "worker": "analysis.worker-C3bsyMMp.js",
-            "workerSha256": "dba0bb13f700b9be2750f5736f240f11998888c7673fc91c19aaba700a5d9d26"
+            "worker": "analysis.worker-CAhRPbr1.js",
+            "workerSha256": "fca3335276d02f19d0ca6c0afa82f16f93fbe0f1783cbe82d2c4263df6f3f53e"
         },
         "classifierConfidence": {
             "calibratedReviewWarnings": 0,
