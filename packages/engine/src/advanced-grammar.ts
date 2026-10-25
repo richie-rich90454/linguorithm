@@ -406,17 +406,71 @@ const subordinateMarkers = new Set([
     "wherever",
     "while",
 ]);
+function closesIntroductorySubordinate(s: Sentence, comma: Token): boolean {
+    if (s.tokens.find((token) => token.text === ",")?.start !== comma.start) return false;
+    const markerIndex = s.tokens.findIndex((token) => /\p{L}/u.test(token.text));
+    const marker = s.tokens[markerIndex];
+    if (!marker || !subordinateMarkers.has(marker.text.toLowerCase())) return false;
+
+    // A sentence-initial word such as "as" can also begin a phrase ("as usual")
+    // before an independent clause. When a parser omitted the `mark` edge, use
+    // the subject's surface position as clause evidence instead of suppressing
+    // every comma after any sentence-initial subordinator-looking word.
+    const leftClause = s.graph.find((edge) => {
+        if (!subjectRelation(edge.relation) || !stableEdge(s, edge)) return false;
+        const subject = s.tokens[edge.dependent]!;
+        const predicate = s.tokens[edge.head]!;
+        if (
+            subject.start <= marker.end ||
+            subject.end > comma.start ||
+            predicate.end > comma.start ||
+            !["VERB", "AUX"].includes(predicate.pos) ||
+            !surfaceTensedPredicate(predicate)
+        )
+            return false;
+
+        if (
+            s.graph.some(
+                (candidate) =>
+                    candidate.head === edge.head &&
+                    candidate.relation === "mark" &&
+                    stableEdge(s, candidate) &&
+                    subordinateMarkers.has(s.tokens[candidate.dependent]!.text.toLowerCase()),
+            )
+        )
+            return true;
+
+        const between = s.tokens.filter(
+            (token) => token.start >= marker.end && token.end <= subject.start,
+        );
+        // Personal pronouns cannot take an attributive adjective before them:
+        // "as usual I rose" is an initial phrase plus a main clause, while
+        // "when I arrived" and "as she predicted" have clause-shaped openings.
+        if (subject.pos === "PRON") return between.length === 0;
+        return (
+            ["NOUN", "PROPN"].includes(subject.pos) &&
+            between.every((token) => ["DET", "ADJ", "ADV", "NUM"].includes(token.pos))
+        );
+    });
+    return leftClause !== undefined;
+}
 function parsedSubjectsAroundComma(s: Sentence): Diagnostic[] {
     const subjects = s.graph.filter(
         (edge) => subjectRelation(edge.relation) && stableEdge(s, edge),
     );
     const findings: Diagnostic[] = [];
     for (const comma of s.tokens.filter((token) => token.text === ",")) {
+        // Some valid introductory clauses lose their `mark` edge in an
+        // uncertain browser parse. The first comma after a sentence-initial
+        // subordinator closes that dependent clause; later commas still go
+        // through the full clause check (for example, a splice after the main
+        // clause in a three-clause sentence).
+        if (closesIntroductorySubordinate(s, comma)) continue;
         const left = subjects.filter((edge) => {
             const subject = s.tokens[edge.dependent]!;
             const predicate = s.tokens[edge.head]!;
             return (
-                subject.start < predicate.start &&
+                subject.end <= comma.start &&
                 predicate.end <= comma.start &&
                 ["VERB", "AUX"].includes(predicate.pos) &&
                 surfaceTensedPredicate(predicate)
@@ -427,7 +481,7 @@ function parsedSubjectsAroundComma(s: Sentence): Diagnostic[] {
             const predicate = s.tokens[edge.head]!;
             return (
                 subject.start >= comma.end &&
-                subject.start < predicate.start &&
+                predicate.start >= comma.end &&
                 ["VERB", "AUX"].includes(predicate.pos) &&
                 surfaceTensedPredicate(predicate)
             );
@@ -435,8 +489,17 @@ function parsedSubjectsAroundComma(s: Sentence): Diagnostic[] {
         for (const first of left) {
             const firstPredicate = s.tokens[first.head]!;
             const firstSubject = s.tokens[first.dependent]!;
-            const prefix = s.tokens.filter((token) => token.start < firstPredicate.start);
-            if (prefix.some((token) => subordinateMarkers.has(token.text.toLowerCase()))) continue;
+            // Inspect the marker attached to this clause, rather than every
+            // earlier word in the sentence. A marker inside an embedded
+            // complement ("I know when you arrived, she left") must not hide
+            // the independent clause headed by "know".
+            const firstClauseIsMarkedSubordinate = s.graph.some(
+                (edge) =>
+                    edge.head === first.head &&
+                    edge.relation === "mark" &&
+                    subordinateMarkers.has(s.tokens[edge.dependent]!.text.toLowerCase()),
+            );
+            if (firstClauseIsMarkedSubordinate) continue;
             for (const second of right) {
                 const secondPredicate = s.tokens[second.head]!;
                 const secondSubject = s.tokens[second.dependent]!;
@@ -445,16 +508,11 @@ function parsedSubjectsAroundComma(s: Sentence): Diagnostic[] {
                         ["advcl", "conj", "parataxis"].includes(edge.relation) &&
                         ((edge.head === first.head && edge.dependent === second.head) ||
                             (edge.head === second.head && edge.dependent === first.head)) &&
-                        (s.alternatives ?? []).every((alternative) =>
-                            alternative.graph.some(
-                                (candidate) =>
-                                    candidate.head === edge.head &&
-                                    candidate.dependent === edge.dependent,
-                            ),
-                        ),
+                        stableEdge(s, edge),
                 );
+                const secondStart = Math.min(secondSubject.start, secondPredicate.start);
                 const between = s.tokens.filter(
-                    (token) => token.start >= comma.end && token.start < secondPredicate.start,
+                    (token) => token.start >= comma.end && token.start < secondStart,
                 );
                 if (
                     first.head === second.head ||
@@ -491,13 +549,18 @@ function parsedSubjectsAroundComma(s: Sentence): Diagnostic[] {
                         ],
                     ),
                 );
-                break;
             }
-            if (findings.length) break;
         }
-        if (findings.length) break;
     }
-    return findings;
+    return findings.filter(
+        (diagnostic, index) =>
+            findings.findIndex(
+                (candidate) =>
+                    candidate.ruleId === diagnostic.ruleId &&
+                    candidate.start === diagnostic.start &&
+                    candidate.end === diagnostic.end,
+            ) === index,
+    );
 }
 function independentClause(s: Sentence, head: number, seen = new Set<number>()): boolean {
     if (seen.has(head)) return false;
@@ -589,6 +652,7 @@ const boundaries: GrammarRule = {
                 )
                     return [];
                 const comma = [...between].reverse().find((t) => t.text === ",");
+                if (comma && closesIntroductorySubordinate(s, comma)) return [];
                 // Consume existing whitespace for an exact, well-spaced repair.
                 const span = comma ?? { start: start - 1, end: start };
                 if (!comma && s.text.slice(span.start - s.start, span.end - s.start) !== " ")
@@ -621,7 +685,17 @@ const boundaries: GrammarRule = {
                     ),
                 ];
             });
-        return parsed.length ? parsed : parsedSubjectsAroundComma(s);
+        const fallback = parsedSubjectsAroundComma(s);
+        const findings = [...parsed, ...fallback];
+        return findings.filter(
+            (diagnostic, index) =>
+                findings.findIndex(
+                    (candidate) =>
+                        candidate.ruleId === diagnostic.ruleId &&
+                        candidate.start === diagnostic.start &&
+                        candidate.end === diagnostic.end,
+                ) === index,
+        );
     },
 };
 const subordinateFragments: GrammarRule = {
