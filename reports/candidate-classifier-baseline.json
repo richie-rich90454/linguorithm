@@ -37,16 +37,7 @@
         "punctuation": { "precision": 0.0, "recall": 0.0, "f1": 0.0, "support": 0 }
     },
     "neuralContextOnly": {
-        "evaluation": {
-            "agreement": {
-                "precision": 0.8947368421052632,
-                "recall": 0.384180790960452,
-                "f1": 0.5375494071146245,
-                "brier": 0.008988405577838421,
-                "positives": 177,
-                "predictions": 76
-            }
-        },
+        "evaluation": {},
         "featureSource": "Frozen predicted syntax and learned lexical morphology",
         "cohort": "Tokenization-stable predicted-syntax cohort with additional cross-POS clean controls",
         "operatingPoint": "Validation-calibrated per-category precision thresholds and runtime POS guards"
