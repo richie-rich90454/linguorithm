@@ -13,6 +13,7 @@ import { EssayDocument } from "./domain";
 import { DiagnosticResolver, finding, GrammarConstraintEngine } from "./grammar";
 import { advancedRules, createAdvancedRules, documentRelationships } from "./advanced-grammar";
 import { documentFeedback } from "./document-feedback";
+import { writingGoalObservations } from "./writing-goal-cues";
 import {
     CountNounInflections,
     PastParticipleInflections,
@@ -349,6 +350,7 @@ export class HybridAnalysisPipeline {
         }
         diagnostics.push(...documentFeedback(sentences, text, style));
         diagnostics.push(...documentRelationships(sentences, style, writingIntent));
+        if (style) diagnostics.push(...writingGoalObservations(sentences, text, writingIntent));
         return attachGoalMetadata(
             {
                 ...report,
