@@ -61,13 +61,16 @@ test("previously imported materials show source structure on the first visit", a
 test("the production analyzer distinguishes a comma splice from coordinated clauses", async ({
     page,
 }) => {
+    const boundaryFinding = () =>
+        page.locator(".finding-item").filter({
+            hasText:
+                /(?:Give two clauses a stronger boundary|Check the boundary between independent clauses)/,
+        });
     await page.getByRole("button", { name: "Edit text" }).click();
     await page.getByLabel("Essay text").fill("I work hard, she studies daily.");
     await page.getByLabel("Include possible issues").check();
     await page.getByRole("button", { name: "Analyze essay" }).click();
-    const splice = page
-        .locator(".finding-item")
-        .filter({ hasText: "Check the boundary between independent clauses" });
+    const splice = boundaryFinding();
     await expect(splice).toBeVisible({ timeout: 30_000 });
     await expect(splice.locator(".correction-preview")).toContainText(";");
     await splice.getByRole("button", { name: "Apply correction" }).click();
@@ -78,31 +81,19 @@ test("the production analyzer distinguishes a comma splice from coordinated clau
     await page.getByRole("button", { name: "Edit text" }).click();
     await page.getByLabel("Essay text").fill("I work hard, and she studies daily.");
     await page.getByRole("button", { name: "Analyze essay" }).click();
-    await expect(
-        page
-            .locator(".finding-item")
-            .filter({ hasText: "Check the boundary between independent clauses" }),
-    ).toHaveCount(0);
+    await expect(boundaryFinding()).toHaveCount(0);
 
     await page.getByRole("button", { name: "Edit text" }).click();
     await page
         .getByLabel("Essay text")
         .fill("The storm damaged the lighthouse, the keeper repaired the lamp.");
     await page.getByRole("button", { name: "Analyze essay" }).click();
-    await expect(
-        page
-            .locator(".finding-item")
-            .filter({ hasText: "Check the boundary between independent clauses" }),
-    ).toBeVisible({ timeout: 30_000 });
+    await expect(boundaryFinding()).toBeVisible({ timeout: 30_000 });
 
     await page.getByRole("button", { name: "Edit text" }).click();
     await page
         .getByLabel("Essay text")
         .fill("When the storm damaged the lighthouse, the keeper repaired the lamp.");
     await page.getByRole("button", { name: "Analyze essay" }).click();
-    await expect(
-        page
-            .locator(".finding-item")
-            .filter({ hasText: "Check the boundary between independent clauses" }),
-    ).toHaveCount(0);
+    await expect(boundaryFinding()).toHaveCount(0);
 });
