@@ -11,10 +11,10 @@
         "tokens": 100028,
         "posAccuracy": 0.9483144719478546,
         "posAccuracy95PercentCI": [0.9469251933534056, 0.9496693178745131],
-        "uas": 0.8463530211540768,
-        "uas95PercentCI": [0.8441049935736498, 0.8485744471874608],
-        "las": 0.7944575518854721,
-        "las95PercentCI": [0.791942041212492, 0.7969504468284303]
+        "uas": 0.8475226936457791,
+        "uas95PercentCI": [0.8452816052712133, 0.8497370906369328],
+        "las": 0.794597512696445,
+        "las95PercentCI": [0.7920826288550785, 0.7970897700581386]
     },
     "overlapSentencesExcluded": {
         "ud-en-atis-r2.18": 0,
@@ -32,15 +32,15 @@
             "tokens": 6580,
             "posAccuracy": 0.9860182370820668,
             "posAccuracy95PercentCI": [0.9828843523114718, 0.9885849699686032],
-            "uas": 0.9416413373860182,
-            "uas95PercentCI": [0.9357153508506864, 0.947051957012321],
-            "las": 0.9124620060790274,
-            "las95PercentCI": [0.9053903557004612, 0.9190523399431048],
+            "uas": 0.9398176291793313,
+            "uas95PercentCI": [0.9338106140864143, 0.9453114055128781],
+            "las": 0.9080547112462006,
+            "las95PercentCI": [0.90083298701052, 0.9148002619957344],
             "overlapSentencesExcluded": 0,
             "license": "CC-BY-SA-4.0",
             "domain": "spoken flight-information queries",
             "sha256": "a98df5e2f11e81deb4698a05ffcb361cff5d74cbba61b234b59685ec304d66a7",
-            "seconds": 5.934
+            "seconds": 6.034
         },
         "ud-en-childes-r2.18": {
             "status": "scored",
@@ -48,15 +48,15 @@
             "tokens": 52497,
             "posAccuracy": 0.9609501495323542,
             "posAccuracy95PercentCI": [0.9592590690414636, 0.9625737750656244],
-            "uas": 0.8886603043983465,
-            "uas95PercentCI": [0.885941061985782, 0.8913226706728111],
-            "las": 0.8446196925538603,
-            "las95PercentCI": [0.8414955743125777, 0.8476933795136258],
+            "uas": 0.8925652894451112,
+            "uas95PercentCI": [0.8898875605306427, 0.895185570770096],
+            "las": 0.848238946987447,
+            "las95PercentCI": [0.8451443088800441, 0.8512826241754647],
             "overlapSentencesExcluded": 1294,
             "license": "CC-BY-SA-4.0",
             "domain": "child-adult conversation transcripts; syntax training only, not a speech-analysis feature",
             "sha256": "a985573aeb9fabc10ab54bd3f99fb739628e4bb16da95fd814f84aee19d95f90",
-            "seconds": 71.488
+            "seconds": 44.591
         },
         "ud-en-ctetex-r2.18": {
             "status": "scored",
@@ -64,15 +64,15 @@
             "tokens": 9092,
             "posAccuracy": 0.8498680158380995,
             "posAccuracy95PercentCI": [0.8423780427977786, 0.8570624684295197],
-            "uas": 0.6818081830180378,
-            "uas95PercentCI": [0.6721591012868022, 0.6913036981657987],
-            "las": 0.5739111306643203,
-            "las95PercentCI": [0.5637174026053585, 0.5840424287510529],
+            "uas": 0.6800483941926969,
+            "uas95PercentCI": [0.6703860242284415, 0.689558684001388],
+            "las": 0.5681918169819622,
+            "las95PercentCI": [0.5579836378481873, 0.5783423970342161],
             "overlapSentencesExcluded": 2,
             "license": "CC-BY-SA-4.0",
             "domain": "textbook prose",
             "sha256": "626b1da3281f9f203d9b0c68c8132a2d4211a742a348498a1d8388de89a3aa64",
-            "seconds": 30.96
+            "seconds": 13.47
         },
         "ud-en-eslspok-r2.18": {
             "status": "scored",
@@ -80,15 +80,15 @@
             "tokens": 2161,
             "posAccuracy": 0.954650624710782,
             "posAccuracy95PercentCI": [0.9450419881563976, 0.9626457281858611],
-            "uas": 0.8954187875983342,
-            "uas95PercentCI": [0.881807389472986, 0.9076268635697217],
-            "las": 0.8588616381304951,
-            "las95PercentCI": [0.8435447756760212, 0.8729049179864944],
+            "uas": 0.8981952799629801,
+            "uas95PercentCI": [0.8847310176584606, 0.9102463664764133],
+            "las": 0.8607126330402591,
+            "las95PercentCI": [0.8454730637634514, 0.8746720506271753],
             "overlapSentencesExcluded": 24,
             "license": "CC-BY-SA-4.0",
             "domain": "spoken second-language English; syntax training only, not written-error labels",
             "sha256": "7d3b37af353205dc3b2964937e7c511e7763cdca25ec9c830638a2540ffe04be",
-            "seconds": 1.979
+            "seconds": 1.949
         },
         "ud-en-littleprince-r2.18": {
             "status": "scored",
@@ -96,15 +96,15 @@
             "tokens": 6817,
             "posAccuracy": 0.9628869003960686,
             "posAccuracy95PercentCI": [0.9581324190721437, 0.9671199912208165],
-            "uas": 0.8439196127328737,
-            "uas95PercentCI": [0.8351107539396309, 0.8523410844162068],
-            "las": 0.7903769986797712,
-            "las95PercentCI": [0.780552329314201, 0.7998745907222163],
+            "uas": 0.8393721578406924,
+            "uas95PercentCI": [0.8304649445339696, 0.847897106238575],
+            "las": 0.7868563884406631,
+            "las95PercentCI": [0.7769746816913782, 0.7964149834418445],
             "overlapSentencesExcluded": 11,
             "license": "CC-BY-SA-4.0",
             "domain": "literary prose",
             "sha256": "b1832f66187dea5b8ff27cf7bd607d4fa33962850b84435066c06c4cc1c35232",
-            "seconds": 6.733
+            "seconds": 6.761
         },
         "ud-en-pud-r2.18": {
             "status": "scored",
@@ -112,15 +112,15 @@
             "tokens": 21180,
             "posAccuracy": 0.9412181303116147,
             "posAccuracy95PercentCI": [0.9379696393955418, 0.9443066010272126],
-            "uas": 0.7823418319169028,
-            "uas95PercentCI": [0.7767335103592986, 0.7878477542450965],
-            "las": 0.7271954674220963,
-            "las95PercentCI": [0.7211562557240011, 0.7331522802753884],
+            "uas": 0.7788007554296507,
+            "uas95PercentCI": [0.7731607553488036, 0.7843396405523593],
+            "las": 0.7217658168083098,
+            "las95PercentCI": [0.7156908590864158, 0.7277603449013507],
             "overlapSentencesExcluded": 0,
             "license": "CC-BY-SA-3.0",
             "domain": "news and Wikipedia translations; the publisher labels this set test-only",
             "sha256": "c80584f2bc2b31d5bada78a1136f9feec7ac49e5e18898db02dea434b5b8f0aa",
-            "seconds": 22.537
+            "seconds": 23.521
         },
         "ud-en-pronouns-r2.18": {
             "status": "scored",
@@ -128,15 +128,15 @@
             "tokens": 1701,
             "posAccuracy": 0.9606114050558495,
             "posAccuracy95PercentCI": [0.9502819023189776, 0.9688651490930379],
-            "uas": 0.7960023515579071,
-            "uas95PercentCI": [0.7761954785736329, 0.814475281331855],
-            "las": 0.7407407407407407,
-            "las95PercentCI": [0.719389156588734, 0.7610074197395624],
+            "uas": 0.8195179306290418,
+            "uas95PercentCI": [0.8005279188096118, 0.8370680255968087],
+            "las": 0.7642563198118754,
+            "las95PercentCI": [0.7435034484969495, 0.7838183123322796],
             "overlapSentencesExcluded": 1,
             "license": "CC-BY-SA-4.0",
             "domain": "targeted pronoun syntax examples, not representative prose",
             "sha256": "b4e42921354d71e44e4758892f1a78f53773705e21425a64f454022570caf5b0",
-            "seconds": 1.226
+            "seconds": 1.254
         }
     }
 }
