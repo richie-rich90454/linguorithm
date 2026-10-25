@@ -17,3 +17,4 @@ export * from "./annotations";
 export * from "./inflections";
 export * from "./goals";
 export * from "./goal-metadata";
+export * from "./writing-goal-cues";
