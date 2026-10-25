@@ -7,11 +7,11 @@
     },
     "parser": {
         "path": "parser-manifest.json",
-        "sha256": "8da3536150f7cd95caee324b26fb92d8ca68e994e36fe43f901e60c371e95c44"
+        "sha256": "cbbda651381e2ac30661a139e857eae2f36ca3d7ff3e56696163f87951055662"
     },
     "lexicon": {
         "path": "lexicon.json",
-        "sha256": "77e6889e35e123a09fbf90eb38370003c41ae94bd408693abf399af5f01083ad"
+        "sha256": "745a33e7fde5d4528778284b6b9206baed49126188f75627b9ef9887b4950f7f"
     },
     "contextual": {
         "path": "contextual.json",
@@ -19,7 +19,7 @@
     },
     "classifier": {
         "path": "classifier-manifest.json",
-        "sha256": "018ddc58dc0d5c81011780377b84e28088e7be37d611b75fd74cc5b0ebb9abc2"
+        "sha256": "c445b8bb45ab41b9bb08b9cbba7c29ddcc955d760a5ceddbd82398995b2d4ea0"
     },
     "dictionary": {
         "path": "dictionary.json",
