@@ -1,4 +1,6 @@
-export const goalByRule: Readonly<Record<string, readonly string[]>> = {
+import { writingGoalCueRules } from "./writing-goal-cues";
+
+const grammarGoalByRule: Readonly<Record<string, readonly string[]>> = {
     "count-noun-number": ["writing.plural"],
     agreement: ["writing.agreement"],
     "neural-agreement": ["writing.agreement"],
@@ -11,9 +13,9 @@ export const goalByRule: Readonly<Record<string, readonly string[]>> = {
     "parsed-boundary": ["writing.runons", "writing.boundaries"],
     "parsed-dependent-fragment": ["writing.fragments", "writing.sentence"],
     "dependent-fragment": ["writing.fragments", "writing.sentence"],
-    "pronoun-case": ["writing.pronouns"],
-    "pronoun-reference": ["writing.pronouns"],
-    "subject-case": ["writing.pronouns"],
+    "pronoun-case": ["writing.pronoun-case"],
+    "pronoun-reference": ["writing.pronouns", "writing.cohesion"],
+    "subject-case": ["writing.pronoun-case"],
     "double-comparison": ["writing.comparison"],
     "possessive-apostrophe": ["writing.possessive", "writing.editing"],
     "missing-contraction-apostrophe": ["writing.apostrophe", "writing.contractions"],
@@ -23,7 +25,7 @@ export const goalByRule: Readonly<Record<string, readonly string[]>> = {
     "contextual-usage": ["writing.homophones"],
     "parallel-forms": ["writing.parallelism"],
     "modifier-attachment": ["writing.modifiers"],
-    "document-repetition": ["writing.sentence-variety", "writing.concision"],
+    "document-repetition": ["writing.sentence-variety"],
     "repeated-word": ["writing.concision"],
     "introductory-comma": ["writing.introductory-comma"],
     "introductory-clause-comma": ["writing.introductory-comma"],
@@ -37,4 +39,26 @@ export const goalByRule: Readonly<Record<string, readonly string[]>> = {
     "gerund-complement": ["writing.gerunds"],
 };
 
-export const detectableGoalIds: ReadonlySet<string> = new Set(Object.values(goalByRule).flat());
+const writingCueGoalByRule = Object.fromEntries(
+    writingGoalCueRules.map((rule) => [rule.id, [rule.goalId]]),
+);
+
+export const goalByRule: Readonly<Record<string, readonly string[]>> = {
+    ...grammarGoalByRule,
+    ...writingCueGoalByRule,
+};
+
+const goalDetectorIds: Record<string, readonly string[]> = {};
+for (const [ruleId, goalIds] of Object.entries(goalByRule)) {
+    for (const goalId of goalIds)
+        goalDetectorIds[goalId] = [...(goalDetectorIds[goalId] ?? []), ruleId];
+}
+
+export const goalDetectorIdsByGoal: Readonly<Record<string, readonly string[]>> = goalDetectorIds;
+export const detectableGoalIds: ReadonlySet<string> = new Set(Object.keys(goalDetectorIdsByGoal));
+export const diagnosticGoalIds: ReadonlySet<string> = new Set(
+    Object.values(grammarGoalByRule).flat(),
+);
+export const cueGoalIds: ReadonlySet<string> = new Set(
+    writingGoalCueRules.map((rule) => rule.goalId),
+);
