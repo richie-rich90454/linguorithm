@@ -1,0 +1,194 @@
+{
+    "schemaVersion": 1,
+    "release": "Universal Dependencies r2.18",
+    "scope": "English-only supplementary syntax training and source-held-out evaluation",
+    "licensePolicy": "Each treebank is licensed separately. Only files with a redistribution-compatible license are included; preserve each repository README and LICENSE.txt.",
+    "sources": [
+        {
+            "id": "ud-en-atis-r2.18",
+            "treebank": "English-Atis",
+            "repository": "https://github.com/UniversalDependencies/UD_English-Atis",
+            "commit": "dce409dd1b526745ab0980360ed2b9f803e93531",
+            "license": "CC-BY-SA-4.0",
+            "use": "syntax-training-and-held-out-evaluation",
+            "domain": "spoken flight-information queries",
+            "files": {
+                "README.md": {
+                    "sha256": "be68735431008cd7613a91698ddc0bd7aa770fc7667be0a2c29a21c7f7d6f116"
+                },
+                "LICENSE.txt": {
+                    "sha256": "899b1804a12ebc090b96339614eede1b64b686721b650a71430b55b5235f7f79"
+                },
+                "en_atis-ud-train.conllu": {
+                    "sha256": "de10d45dd7fc2517b39ae8df074f78ebaea3fd42aeccc0d059b5d42cec6ef118"
+                },
+                "en_atis-ud-dev.conllu": {
+                    "sha256": "3d289550aa64dea20830c7c109a1afde09de83fdc00bb6c895205681f35e8d52"
+                },
+                "en_atis-ud-test.conllu": {
+                    "sha256": "a98df5e2f11e81deb4698a05ffcb361cff5d74cbba61b234b59685ec304d66a7"
+                }
+            },
+            "splits": {
+                "train": "en_atis-ud-train.conllu",
+                "dev": "en_atis-ud-dev.conllu",
+                "test": "en_atis-ud-test.conllu"
+            }
+        },
+        {
+            "id": "ud-en-childes-r2.18",
+            "treebank": "English-CHILDES",
+            "repository": "https://github.com/UniversalDependencies/UD_English-CHILDES",
+            "commit": "41596ed7793a47cb0cba96e40bf654404dbc171e",
+            "license": "CC-BY-SA-4.0",
+            "use": "syntax-training-and-held-out-evaluation",
+            "domain": "child-adult conversation transcripts; syntax training only, not a speech-analysis feature",
+            "files": {
+                "README.md": {
+                    "sha256": "c22c2350eed8282d4f48c5015f32e225ff9eea6bed8ccba3b38521f07ef012cf"
+                },
+                "LICENSE.txt": {
+                    "sha256": "899b1804a12ebc090b96339614eede1b64b686721b650a71430b55b5235f7f79"
+                },
+                "en_childes-ud-train.conllu": {
+                    "sha256": "3275a76cbfb32f73264f04bc02166ecc5662039bd6c604c65ffde23e45883c58"
+                },
+                "en_childes-ud-dev.conllu": {
+                    "sha256": "50233b8123256b2910b6adbf5abcaef8a58af9054affe9c95bbdc643fec87972"
+                },
+                "en_childes-ud-test.conllu": {
+                    "sha256": "a985573aeb9fabc10ab54bd3f99fb739628e4bb16da95fd814f84aee19d95f90"
+                }
+            },
+            "splits": {
+                "train": "en_childes-ud-train.conllu",
+                "dev": "en_childes-ud-dev.conllu",
+                "test": "en_childes-ud-test.conllu"
+            }
+        },
+        {
+            "id": "ud-en-ctetex-r2.18",
+            "treebank": "English-CTeTex",
+            "repository": "https://github.com/UniversalDependencies/UD_English-CTeTex",
+            "commit": "3208ccc0be5c003d8357ad52ca2b359ae31eb6a4",
+            "license": "CC-BY-SA-4.0",
+            "use": "held-out-evaluation-only",
+            "domain": "textbook prose",
+            "files": {
+                "README.md": {
+                    "sha256": "ebf0af8013806df170b09e1691fdd3ea33fbf22cfacc8ee3371d2d50370ee585"
+                },
+                "LICENSE.txt": {
+                    "sha256": "899b1804a12ebc090b96339614eede1b64b686721b650a71430b55b5235f7f79"
+                },
+                "en_ctetex-ud-test.conllu": {
+                    "sha256": "626b1da3281f9f203d9b0c68c8132a2d4211a742a348498a1d8388de89a3aa64"
+                }
+            },
+            "splits": {
+                "test": "en_ctetex-ud-test.conllu"
+            }
+        },
+        {
+            "id": "ud-en-eslspok-r2.18",
+            "treebank": "English-ESLSpok",
+            "repository": "https://github.com/UniversalDependencies/UD_English-ESLSpok",
+            "commit": "f4d0ebe5eae0bc179a988934e15f018dcacfe73b",
+            "license": "CC-BY-SA-4.0",
+            "sourceLicense": "NICT-JLE CC-BY-SA-3.0",
+            "use": "syntax-training-and-held-out-evaluation",
+            "domain": "spoken second-language English; syntax training only, not written-error labels",
+            "files": {
+                "README.md": {
+                    "sha256": "21103bd245f29263108cc33807453f36227ed440e06d80aaaf46fb4e7f5e83d4"
+                },
+                "LICENSE.txt": {
+                    "sha256": "899b1804a12ebc090b96339614eede1b64b686721b650a71430b55b5235f7f79"
+                },
+                "en_eslspok-ud-train.conllu": {
+                    "sha256": "2d98d2a9520fbc9e20154ab0b51bb688d704c3c59b0e9ae09d82df0a4b1c6330"
+                },
+                "en_eslspok-ud-dev.conllu": {
+                    "sha256": "7034c651d3deec369149139a75da31a61e673b9735ae88589695ab1d2d235000"
+                },
+                "en_eslspok-ud-test.conllu": {
+                    "sha256": "7d3b37af353205dc3b2964937e7c511e7763cdca25ec9c830638a2540ffe04be"
+                }
+            },
+            "splits": {
+                "train": "en_eslspok-ud-train.conllu",
+                "dev": "en_eslspok-ud-dev.conllu",
+                "test": "en_eslspok-ud-test.conllu"
+            }
+        },
+        {
+            "id": "ud-en-littleprince-r2.18",
+            "treebank": "English-LittlePrince",
+            "repository": "https://github.com/UniversalDependencies/UD_English-LittlePrince",
+            "commit": "a1936378cd57c9cda6cb57da938b164760a42529",
+            "license": "CC-BY-SA-4.0",
+            "use": "held-out-evaluation-only",
+            "domain": "literary prose",
+            "files": {
+                "README.md": {
+                    "sha256": "c093e949262f47dae2050081ca825ddc48dd7e6e630868af859cdc55b04e7015"
+                },
+                "LICENSE.txt": {
+                    "sha256": "899b1804a12ebc090b96339614eede1b64b686721b650a71430b55b5235f7f79"
+                },
+                "en_littleprince-ud-test.conllu": {
+                    "sha256": "b1832f66187dea5b8ff27cf7bd607d4fa33962850b84435066c06c4cc1c35232"
+                }
+            },
+            "splits": {
+                "test": "en_littleprince-ud-test.conllu"
+            }
+        },
+        {
+            "id": "ud-en-pud-r2.18",
+            "treebank": "English-PUD",
+            "repository": "https://github.com/UniversalDependencies/UD_English-PUD",
+            "commit": "e173a1be1b442faf34e7d5a502189ad5d9d1e197",
+            "license": "CC-BY-SA-3.0",
+            "use": "held-out-evaluation-only",
+            "domain": "news and Wikipedia translations; the publisher labels this set test-only",
+            "files": {
+                "README.md": {
+                    "sha256": "9558eb70a6565a40e2ecf06d0f38c9f6117de0f0f8bc5021805bdce51ee0d67f"
+                },
+                "LICENSE.txt": {
+                    "sha256": "b278eb53fe50b8bb7fa0d90fb8536c35fdcaa80f9d63812cb51db539555d2a89"
+                },
+                "en_pud-ud-test.conllu": {
+                    "sha256": "c80584f2bc2b31d5bada78a1136f9feec7ac49e5e18898db02dea434b5b8f0aa"
+                }
+            },
+            "splits": {
+                "test": "en_pud-ud-test.conllu"
+            }
+        },
+        {
+            "id": "ud-en-pronouns-r2.18",
+            "treebank": "English-Pronouns",
+            "repository": "https://github.com/UniversalDependencies/UD_English-Pronouns",
+            "commit": "9c330df067c606f91d80effb249550687c8ad8c3",
+            "license": "CC-BY-SA-4.0",
+            "use": "held-out-evaluation-only",
+            "domain": "targeted pronoun syntax examples, not representative prose",
+            "files": {
+                "README.md": {
+                    "sha256": "018e152c02a162e336e214f68269515f64221471a1a48ae4ceae9cad9dd9f1b7"
+                },
+                "LICENSE.txt": {
+                    "sha256": "899b1804a12ebc090b96339614eede1b64b686721b650a71430b55b5235f7f79"
+                },
+                "en_pronouns-ud-test.conllu": {
+                    "sha256": "b4e42921354d71e44e4758892f1a78f53773705e21425a64f454022570caf5b0"
+                }
+            },
+            "splits": {
+                "test": "en_pronouns-ud-test.conllu"
+            }
+        }
+    ]
+}
