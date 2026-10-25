@@ -185,8 +185,9 @@ describe("grammar constraints and valid controls", () => {
         const text = "We can learn slowly. We can learn together. We can learn independently.";
         expect(pipeline.analyze(text).diagnostics.some((d) => d.category === "Style")).toBe(false);
         expect(
-            pipeline.analyze(text, 0, true).diagnostics.find((d) => d.category === "Style")
-                ?.evidence,
+            pipeline
+                .analyze(text, 0, true)
+                .diagnostics.find((d) => d.ruleId === "document-repetition")?.evidence,
         ).toHaveLength(3);
     });
     it("does not mark arbitrary unknown words as misspellings", () =>
