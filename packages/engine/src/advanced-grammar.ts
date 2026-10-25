@@ -8,16 +8,23 @@ import type {
 
 const hasQuotes = (s: Sentence) => /[“”"]/u.test(s.text);
 const subjectRelation = (relation: string) => ["nsubj", "nsubj:pass"].includes(relation);
-const stableEdge = (s: Sentence, edge: Dependency) =>
-    !s.ambiguous &&
-    (s.alternatives ?? []).every((alternative) =>
-        alternative.graph.some(
-            (candidate) =>
-                candidate.head === edge.head &&
-                candidate.dependent === edge.dependent &&
-                candidate.relation === edge.relation,
-        ),
-    );
+const stableEdge = (s: Sentence, edge: Dependency) => {
+    if (s.ambiguous) return false;
+    const alternatives = s.alternatives ?? [];
+    const bestScore = Math.max(...alternatives.map((alternative) => alternative.score));
+    // A low-ranked beam survivor should not veto evidence from the selected parse.
+    // Keep abstaining when a competitive alternative changes the same relationship.
+    return alternatives
+        .filter((alternative) => bestScore - alternative.score < 1)
+        .every((alternative) =>
+            alternative.graph.some(
+                (candidate) =>
+                    candidate.head === edge.head &&
+                    candidate.dependent === edge.dependent &&
+                    candidate.relation === edge.relation,
+            ),
+        );
+};
 const finite = (token: Token) =>
     ["VERB", "AUX"].includes(token.pos) &&
     token.analyses.some((analysis) => analysis.pos === token.pos && analysis.finite === true);
@@ -66,7 +73,21 @@ function isSubjunctiveWere(s: Sentence, clauseHead: number, verb: Token): boolea
     });
 }
 function grammaticalNumber(token: Token): "singular" | "plural" | undefined {
-    const numbers = [...new Set(token.analyses.map((analysis) => analysis.number).filter(Boolean))];
+    const numbers = [
+        ...new Set(
+            token.analyses
+                .map(
+                    (analysis) =>
+                        analysis.number ??
+                        (analysis.udFeatures?.Number === "Sing"
+                            ? "singular"
+                            : analysis.udFeatures?.Number === "Plur"
+                              ? "plural"
+                              : undefined),
+                )
+                .filter(Boolean),
+        ),
+    ];
     if (numbers.length === 1) return numbers[0];
     if (numbers.length > 1 || !["NOUN", "PROPN"].includes(token.pos)) return undefined;
     const analyses = token.analyses.filter((analysis) => analysis.pos === token.pos);
@@ -84,6 +105,39 @@ function grammaticalNumber(token: Token): "singular" | "plural" | undefined {
     }
     if (surface.endsWith("s")) pluralLemmas.push(surface.slice(0, -1));
     return pluralLemmas.includes(lemma) ? "plural" : undefined;
+}
+function coordinatedSubjectNumber(s: Sentence, subjectIndex: number): "plural" | undefined {
+    const members = new Set([subjectIndex]);
+    for (let changed = true; changed;) {
+        changed = false;
+        for (const edge of s.graph)
+            if (edge.relation === "conj" && stableEdge(s, edge)) {
+                if (members.has(edge.head) && !members.has(edge.dependent)) {
+                    members.add(edge.dependent);
+                    changed = true;
+                } else if (members.has(edge.dependent) && !members.has(edge.head)) {
+                    members.add(edge.head);
+                    changed = true;
+                }
+            }
+    }
+    if (
+        members.size < 2 ||
+        [...members].some((index) => !["NOUN", "PROPN", "PRON"].includes(s.tokens[index]!.pos))
+    )
+        return undefined;
+    const coordinators = s.graph
+        .filter(
+            (edge) =>
+                edge.relation === "cc" &&
+                (members.has(edge.head) || members.has(edge.dependent)) &&
+                stableEdge(s, edge),
+        )
+        .map((edge) => s.tokens[edge.dependent]!.text.toLowerCase());
+    return coordinators.includes("and") &&
+        !coordinators.some((word) => ["or", "nor"].includes(word))
+        ? "plural"
+        : undefined;
 }
 const cardinalUnits: Readonly<Record<string, number>> = {
     zero: 0,
@@ -797,13 +851,16 @@ const neuralAgreement = (inflections?: PresentVerbInflections): GrammarRule => (
             .filter((e) => ["nsubj", "nsubj:pass"].includes(e.relation))
             .flatMap((edge) => {
                 const subject = s.tokens[edge.dependent]!;
+                const hasCoordination = s.graph.some(
+                    (candidate) =>
+                        candidate.relation === "conj" &&
+                        (candidate.head === edge.dependent ||
+                            candidate.dependent === edge.dependent),
+                );
+                const coordinatedNumber = coordinatedSubjectNumber(s, edge.dependent);
                 if (
                     !stableEdge(s, edge) ||
-                    s.graph.some(
-                        (e) =>
-                            (e.head === edge.dependent || e.dependent === edge.dependent) &&
-                            e.relation === "conj",
-                    ) ||
+                    (hasCoordination && !coordinatedNumber) ||
                     /^(there|who|what|which|none|all|some|most|data|news|series|species|means|police|staff|team|family|committee|number|lot|percent|pair|part|half|majority|people|cattle|fish|sheep|deer|offspring)$/iu.test(
                         subject.text,
                     )
@@ -831,7 +888,7 @@ const neuralAgreement = (inflections?: PresentVerbInflections): GrammarRule => (
                     )
                 )
                     return [];
-                const number = grammaticalNumber(subject);
+                const number = coordinatedNumber ?? grammaticalNumber(subject);
                 if (!number) return [];
                 const auxiliaries = s.graph
                     .filter(
@@ -915,13 +972,15 @@ const neuralPerfectForm = (inflections?: PastParticipleInflections): GrammarRule
             if (!["aux", "aux:pass"].includes(edge.relation) || !stableEdge(s, edge)) return [];
             const auxiliary = s.tokens[edge.dependent]!;
             const predicate = s.tokens[edge.head]!;
-            if (
-                auxiliary.pos !== "AUX" ||
-                !auxiliary.analyses.some(
-                    (analysis) => analysis.pos === "AUX" && analysis.lemma === "have",
-                ) ||
-                predicate.pos !== "VERB"
-            )
+            const auxiliaryLemma = auxiliary.analyses
+                .filter((analysis) => analysis.pos === "AUX")
+                .map((analysis) => analysis.lemma.toLowerCase());
+            const licensedAuxiliary =
+                (edge.relation === "aux" &&
+                    (auxiliary.text.toLowerCase() === "have" || auxiliaryLemma.includes("have"))) ||
+                (edge.relation === "aux:pass" &&
+                    (auxiliary.text.toLowerCase() === "be" || auxiliaryLemma.includes("be")));
+            if (auxiliary.pos !== "AUX" || !licensedAuxiliary || predicate.pos !== "VERB")
                 return [];
             const replacement = inflections.candidate(predicate);
             if (!replacement) return [];
@@ -932,8 +991,8 @@ const neuralPerfectForm = (inflections?: PastParticipleInflections): GrammarRule
                     this.skill,
                     predicate,
                     "Grammar",
-                    "Check the verb form after the perfect auxiliary",
-                    `The parsed auxiliary “${auxiliary.text}” takes a past participle. The local training lexicon attests “${replacement}” as the unambiguous participle for this verb; review the sentence before applying it.`,
+                    "Check the verb form after the auxiliary",
+                    `The parsed perfect or passive auxiliary “${auxiliary.text}” takes a past participle. The local training lexicon attests “${replacement}” as the unambiguous participle for this verb; review the parse before applying it.`,
                     [replacement],
                     "Possible issue",
                     [
@@ -942,6 +1001,88 @@ const neuralPerfectForm = (inflections?: PastParticipleInflections): GrammarRule
                     ],
                 ),
             ];
+        });
+    },
+});
+const modalAuxiliaries = new Set([
+    "can",
+    "could",
+    "may",
+    "might",
+    "must",
+    "shall",
+    "should",
+    "will",
+    "would",
+]);
+const neuralModalForm = (inflections?: PastParticipleInflections): GrammarRule => ({
+    id: "neural-modal-form",
+    version: "1.0.0",
+    skill: "verb-forms",
+    description: "Corpus-attested infinitive forms after parsed modal auxiliaries",
+    evaluate(s) {
+        if (!inflections || s.ambiguous || s.syntaxSource !== "neural" || hasQuotes(s)) return [];
+        return s.graph.flatMap((edge) => {
+            if (edge.relation !== "aux" || !stableEdge(s, edge)) return [];
+            const predicate = s.tokens[edge.head]!;
+            const modal = s.tokens[edge.dependent]!;
+            const modalLemma = modal.analyses
+                .filter((analysis) => analysis.pos === "AUX")
+                .map((analysis) => analysis.lemma.toLowerCase());
+            if (
+                !(predicate.pos === "VERB" || predicate.pos === "AUX") ||
+                !(
+                    modalAuxiliaries.has(modal.text.toLowerCase()) ||
+                    modalLemma.some((lemma) => modalAuxiliaries.has(lemma))
+                )
+            )
+                return [];
+            const auxiliaryChildren = s.graph.filter(
+                (candidate) =>
+                    candidate.head === edge.head &&
+                    ["aux", "aux:pass", "cop"].includes(candidate.relation),
+            );
+            if (
+                auxiliaryChildren.some(
+                    (candidate) =>
+                        candidate.dependent !== edge.dependent && !stableEdge(s, candidate),
+                )
+            )
+                return [];
+            const chain = auxiliaryChildren
+                .filter((candidate) => candidate.dependent !== edge.dependent)
+                .map((candidate) => s.tokens[candidate.dependent]!);
+            const firstFollowingAuxiliary = chain
+                .filter(
+                    (candidate) => candidate.start > modal.end && candidate.end < predicate.start,
+                )
+                .sort((left, right) => left.start - right.start)[0];
+            const targets = firstFollowingAuxiliary ? [firstFollowingAuxiliary] : [predicate];
+            return targets.flatMap((target) => {
+                const replacement = inflections.baseForm(target);
+                if (!replacement) return [];
+                return [
+                    finding(
+                        s,
+                        this.id,
+                        this.skill,
+                        target,
+                        "Grammar",
+                        "Use the base verb after a modal",
+                        `The parse attaches modal “${modal.text}” to this auxiliary chain. The local training lexicon attests “${replacement}” as the unambiguous infinitive for “${target.text}”; check the parse before applying it.`,
+                        [replacement],
+                        "Possible issue",
+                        [
+                            { start: modal.start, end: modal.end, label: "Parsed modal auxiliary" },
+                            {
+                                start: target.start,
+                                end: target.end,
+                                label: "Verb in the modal chain",
+                            },
+                        ],
+                    ),
+                ];
+            });
         });
     },
 });
@@ -1287,6 +1428,7 @@ const seriesComma: GrammarRule = {
 export const advancedRules: readonly GrammarRule[] = [
     neuralAgreement(),
     neuralPerfectForm(),
+    neuralModalForm(),
     gerundComplement,
     countNounNumber(),
     subjectCase,
@@ -1307,10 +1449,16 @@ export function createAdvancedRules(
     return [
         neuralAgreement(inflections),
         neuralPerfectForm(pastParticiples),
+        neuralModalForm(pastParticiples),
         countNounNumber(countNouns),
         ...advancedRules.filter(
             (rule) =>
-                !["neural-agreement", "neural-perfect-form", "count-noun-number"].includes(rule.id),
+                ![
+                    "neural-agreement",
+                    "neural-perfect-form",
+                    "neural-modal-form",
+                    "count-noun-number",
+                ].includes(rule.id),
         ),
     ];
 }
