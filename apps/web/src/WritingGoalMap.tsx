@@ -11,10 +11,13 @@ const bands: readonly { id: ProficiencyBand; label: string }[] = [
     { id: "advanced", label: "Advanced" },
 ];
 
-const detectorStatus: Readonly<Record<(typeof writingGoals)[number]["detection"], string>> = {
-    "implemented-unvalidated": "Some rule coverage · quality gates unverified",
-    "not-yet-detectable": "Writing goal · no automated detector yet",
-};
+function detectorStatus(goal: (typeof writingGoals)[number]) {
+    if (goal.detectorMode === "combined")
+        return "Narrow diagnostic + optional cue · quality gate unmet";
+    return goal.detectorMode === "evidence-cue"
+        ? "Optional surface cue · not independently validated"
+        : "Narrow local diagnostic · independent quality gate unmet";
+}
 
 export function WritingGoalMap(props: { onPractice: (skill?: SkillId) => void }) {
     const [selectedBand, setSelectedBand] = createSignal<ProficiencyBand | "all">("all");
@@ -26,8 +29,10 @@ export function WritingGoalMap(props: { onPractice: (skill?: SkillId) => void })
         <details class="question-source writing-goal-map">
             <summary>Explore writing goals</summary>
             <p>
-                Browse general writing goals from emergent text to advanced writing. Detector labels
-                describe current coverage; they are not mastery scores or quality certifications.
+                Browse 100 general writing goals from emergent text to advanced writing. Narrow
+                diagnostics and optional text cues show what the local engine can inspect; they are
+                not mastery scores or quality certifications. Surface cues run with style
+                observations enabled.
             </p>
             <label class="goal-stage-picker">
                 Writing stage
@@ -50,9 +55,7 @@ export function WritingGoalMap(props: { onPractice: (skill?: SkillId) => void })
                             <div class="writing-goal-copy">
                                 <h3>{goal.name}</h3>
                                 <p>{goal.description}</p>
-                                <span class="writing-goal-status">
-                                    {detectorStatus[goal.detection]}
-                                </span>
+                                <span class="writing-goal-status">{detectorStatus(goal)}</span>
                                 <details class="writing-goal-details">
                                     <summary>Example and valid controls</summary>
                                     <p>
@@ -60,6 +63,12 @@ export function WritingGoalMap(props: { onPractice: (skill?: SkillId) => void })
                                     </p>
                                     <p>
                                         <strong>Progression:</strong> {goal.ageOrProficiency}
+                                    </p>
+                                    <p>
+                                        <strong>Connected local checks:</strong>{" "}
+                                        {goal.detectorIds.length
+                                            ? goal.detectorIds.join(", ")
+                                            : "None"}
                                     </p>
                                     <ul>
                                         <For each={goal.validControls}>
