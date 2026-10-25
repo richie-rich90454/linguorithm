@@ -1,0 +1,17 @@
+# Writing goal detector coverage
+
+Linguorithm catalogs 100 general writing goals. Every goal is connected to a registered, project-local detector, but a connection is not evidence that a detector is accurate or that a writer has attained the goal.
+
+| Connection | Goals | Behavior |
+| --- | --: | --- |
+| Narrow diagnostic only | 32 | Existing grammar and convention rules can emit source-linked findings for restricted constructions. Each remains unvalidated against the independent precision, recall, false-positive, and correction gates. |
+| Evidence cue only | 67 | Optional style observations notice a bounded set of surface features and invite the writer to review them. They make no correctness or quality claim and never offer edits. |
+| Both | 1 | Cohesion has a narrow pronoun-reference diagnostic and an optional surface cue. Each retains its own unvalidated status and behavior. |
+
+The catalog assigns stable detector IDs to every goal. The engine tests check that all 100 goal IDs have at least one registered association and that every evidence-cue rule can produce a finding on its own controlled fixture. They also check that those findings have valid source ranges, explicit goal IDs, no correction proposals, and metadata links. This establishes that the implementation is connected and executable in the text-analysis pipeline; it does not establish precision or recall.
+
+Evidence cues are opt-in and the application displays at most one cue per sentence and eight per draft. This keeps a draft review focused; individual cue rules still run independently in tests. Their evidence is text-only. A word such as “therefore” cannot prove a logical inference, a citation cannot establish source credibility, a number cannot establish factual truth, and a pronoun cannot establish that a reader understood the reference. Audience, purpose, ethical representation, source accuracy, causal validity, genre fit, and literary effect require information the current local pipeline does not have. Those findings therefore ask for review instead of presenting a score or automatic correction.
+
+The fixtures are authored development examples. They are not held-out data, independent learner-writing samples, or user studies. No goal detector currently has independent evidence meeting the requested held-out thresholds of 95% precision, 90% recall, under 2% false positives on valid controls, and 90% acceptable direct corrections. Correction proposals remain learner-controlled and separately source-checked; evidence-cue rules do not create proposals at all.
+
+To extend a goal, add a narrowly scoped local rule with exact evidence spans, negative and ambiguous controls, a safe correction policy, and a stable ID. Add the ID to the goal rule registry and an independently held-out evaluation slice before describing that detector as validated. Do not map a broad skill to an unrelated rule merely to increase coverage.
