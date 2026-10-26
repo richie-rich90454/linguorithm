@@ -25,3 +25,12 @@ for (const viewport of [
         { timeout: 45_000 },
     );
 }
+
+test("announces the selected workspace view to assistive technology", async ({ page }) => {
+    await page.goto("/");
+    const heading = page.getByRole("heading", { level: 1 });
+    await expect(heading).toHaveText("Essay laboratory", { timeout: 30_000 });
+    await expect(heading).toHaveAttribute("aria-live", "polite");
+    await page.getByRole("button", { name: "Practice", exact: true }).click();
+    await expect(heading).toHaveText("Practice");
+});
