@@ -28,6 +28,10 @@ const stableEdge = (s: Sentence, edge: Dependency) => {
 const finite = (token: Token) =>
     ["VERB", "AUX"].includes(token.pos) &&
     token.analyses.some((analysis) => analysis.pos === token.pos && analysis.finite === true);
+const coveringSpan = (...tokens: readonly Token[]) => ({
+    start: Math.min(...tokens.map((token) => token.start)),
+    end: Math.max(...tokens.map((token) => token.end)),
+});
 type QuoteRange = readonly [number, number];
 function quoteRanges(text: string): QuoteRange[] {
     const ranges: QuoteRange[] = [];
@@ -537,13 +541,11 @@ function parsedSubjectsAroundComma(s: Sentence): Diagnostic[] {
                         "Possible issue",
                         [
                             {
-                                start: firstSubject.start,
-                                end: firstPredicate.end,
+                                ...coveringSpan(firstSubject, firstPredicate),
                                 label: "First tensed subject–predicate relationship",
                             },
                             {
-                                start: secondSubject.start,
-                                end: secondPredicate.end,
+                                ...coveringSpan(secondSubject, secondPredicate),
                                 label: "Second tensed subject–predicate relationship",
                             },
                         ],
@@ -672,13 +674,11 @@ const boundaries: GrammarRule = {
                         "Possible issue",
                         [
                             {
-                                start: s.tokens[a.dependent]!.start,
-                                end: first.end,
+                                ...coveringSpan(s.tokens[a.dependent]!, first),
                                 label: "First subject–predicate relationship",
                             },
                             {
-                                start,
-                                end: s.tokens[edge.dependent]!.end,
+                                ...coveringSpan(s.tokens[b.dependent]!, s.tokens[edge.dependent]!),
                                 label: "Second subject–predicate relationship",
                             },
                         ],
