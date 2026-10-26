@@ -1,0 +1,931 @@
+{
+    "generatedAt": "2026-10-26T12:30:19.901Z",
+    "dataset": {
+        "name": "Russian Error-Annotated Learner English Corpus",
+        "license": "CC-BY-SA-4.0",
+        "archiveSha256": "bb3be91a6bd1673f058316f033dcaeb43421f0cda11549329f919cb24fbb342d",
+        "preparedDataSha256": "148ca46e9288782173a8fc607346868bfe502dba38938d50a26b9bf560aa7efd",
+        "attribution": "REALEC Team, Russian Error-Annotated Learner English Corpus; Higher School of Economics, Moscow. The corpus is licensed under Creative Commons Attribution-ShareAlike 4.0 International.",
+        "sourcePage": "https://rpractice.itorubarov.me/about/",
+        "testDocuments": 184,
+        "totalAvailableDocuments": 1238,
+        "splitPolicy": {
+            "seed": "linguorithm-realec-document-split-v1",
+            "method": "SHA-256 of seed, colon, and source document ID; bucket modulo 100; 70 train, 15 development, 15 test",
+            "limitation": "Author and prompt identities are unavailable in the archive; document-level separation cannot guarantee writer-level independence. The splits are for evaluation workflow only and do not imply training data is included."
+        },
+        "authorIdentityAvailable": false,
+        "annotationTypes": {
+            "Abs_comp_clause": 30,
+            "Absence_comp_colloc": 31,
+            "Absence_comp_sent": 33,
+            "Absence_explanation": 30,
+            "Adjective_inf": 1,
+            "Adjectives": 7,
+            "Adverbs": 5,
+            "Agreement_errors": 1,
+            "And_syn": 2,
+            "Art_choice": 206,
+            "Art_form": 21,
+            "Articles": 118,
+            "Attr_participial": 2,
+            "Attributes": 5,
+            "Category_confusion": 40,
+            "Causation": 3,
+            "Choice_of_ref": 25,
+            "Choice_synonyms": 75,
+            "Coherence": 12,
+            "Comparative_adj": 2,
+            "Conjunctions": 21,
+            "Conversion": 2,
+            "Coordinate": 3,
+            "Countable_uncountable": 17,
+            "Dangling_ref": 1,
+            "Dative": 1,
+            "Defining": 15,
+            "Demonstrative": 2,
+            "Derivation": 14,
+            "Det_choice": 20,
+            "Det_form": 2,
+            "Determiners": 11,
+            "Discourse": 162,
+            "Double_object": 1,
+            "Emphatic": 2,
+            "Formational_affixes": 20,
+            "Grammar": 5,
+            "Inappropriate_register": 9,
+            "Incoherent_articles": 5,
+            "Incoherent_conj": 2,
+            "Incoherent_intro_unit": 3,
+            "Incoherent_pron": 6,
+            "Incoherent_tenses": 2,
+            "Infinitive_constr": 3,
+            "Interrogative": 3,
+            "Intransitive": 1,
+            "Lack_of_connective": 6,
+            "Lack_of_ref_device": 7,
+            "Lack_par_constr": 16,
+            "lex_item_choice": 230,
+            "lex_part_choice": 44,
+            "Linking_device": 3,
+            "Modals": 1,
+            "Modals_choice": 13,
+            "Modals_form": 4,
+            "Non_defining": 10,
+            "Note_structure": 4,
+            "Noun_inf": 1,
+            "Noun_number": 20,
+            "Nouns": 10,
+            "Num_form": 6,
+            "Number": 50,
+            "Numerical": 1,
+            "Often_confused": 15,
+            "Participial_constr": 2,
+            "Person": 9,
+            "Personal": 3,
+            "Possessive": 8,
+            "Prepositional_adjective": 1,
+            "Prepositional_noun": 8,
+            "Prepositional_verb": 17,
+            "Prepositions": 122,
+            "Pronouns": 16,
+            "Punctuation": 122,
+            "Quant_choice": 4,
+            "Quantifiers": 6,
+            "Redundant": 6,
+            "Redundant_comp": 52,
+            "Redundant_ref": 4,
+            "Reflexive": 1,
+            "Reflexive_verb": 2,
+            "Relative_clause": 8,
+            "Seq_of_tenses": 1,
+            "Spelling": 122,
+            "Standard": 21,
+            "Suffix": 2,
+            "suggestion": 111,
+            "Superlative_adj": 1,
+            "Tautology": 2,
+            "Tense_choice": 103,
+            "Tense_form": 20,
+            "that_clause": 1,
+            "Trans_prep": 4,
+            "Transitive": 13,
+            "Verb_Bare_Inf": 2,
+            "Verb_Inf": 1,
+            "Verb_object_inf": 2,
+            "Verb_pattern": 15,
+            "Verbs": 7,
+            "Vocabulary": 11,
+            "Voice": 1,
+            "Voice_choice": 14,
+            "Voice_form": 4,
+            "Word_choice": 115,
+            "Word_order": 45
+        }
+    },
+    "system": {
+        "description": "Frozen production browser worker with local syntax and grammar models; optional style cues disabled; no network inference.",
+        "analyzedDocuments": 184,
+        "modelReady": true,
+        "artifacts": {
+            "registryVersion": "ewt-1",
+            "registrySha256": "738ab06c4968ca8bfdb1e404d361da01e54a97b461ca73bef59cfa3e0f031b8f",
+            "resources": {
+                "tagger": "5cbd3f873eb61f6c079e3b7b1be3841f352a9227c4417760ed4cb3d7d4c9a212",
+                "taggerWeights": "5ab892928bc522f0fb824839652ae6e269f5b600cd9d075b19527ae5b5d595f7",
+                "parser": "565ad67828553097047853003a9ad6fcb26b6cdd65b130d9f99507d217e0c7fa",
+                "parserWeights": "f1b239bb5a3a7f4d442c902e579f64783a786e8744002913d217f9da1adfeefa",
+                "lexicon": "8f378aa80e3890809c046ab55d02b6f2fafa0025fc32c5e98f7baf233e7becde",
+                "contextual": "7b23888adcce2f8c13f18455d97f08dc301c8633e0ead3ae04623b89958e2b79",
+                "classifier": "fd8bf6a12cf4d84b7aa8088c9b86cbdb0a3533e9db52b24f11d384284a4ade1a",
+                "classifierWeights": "580a0205b0018541be7d207d2bdf7cc5458c6b6b6d7d1a9d0f43af879e73f132",
+                "dictionary": "26f2b4b2b612a8107586cff814c4af77f32a08e1dd20f706a04d1d380b864da9"
+            },
+            "worker": "analysis.worker-CBGw2RKH.js",
+            "workerSha256": "e4a38680d271203e96f68a5ffc2447e655a80b474707b9fef3342905bfeae3b9"
+        }
+    },
+    "evaluation": {
+        "scope": "Document-held-out binary error-span detection on an independently sourced Russian-L1 university learner-essay corpus. This is an overall task metric, not per-pattern validation. Author-level independence is unavailable; the corpus population is narrow and does not represent preschool through advanced secondary writers.",
+        "tokenization": "Source tokens are Unicode words with internal apostrophes plus individual non-whitespace punctuation. Gold error spans and production finding offsets are projected by overlap; zero-width insertion findings map to the following token, or the preceding final token.",
+        "counts": {
+            "TP": 128,
+            "FP": 712,
+            "FN": 3889,
+            "TN": 56096
+        },
+        "tokens": 60825,
+        "goldErrorTokens": 4017,
+        "detectedErrorTokens": 840,
+        "precision": 0.1523809523809524,
+        "recall": 0.03186457555389594,
+        "f0_5": 0.08675613392978176,
+        "falsePositiveRate": 0.01253344599352204,
+        "precisionWilson95": [0.12966343718384377, 0.1782634323774529],
+        "recallWilson95": [0.026864535397146956, 0.03775911651299455],
+        "falsePositiveRateWilson95": [0.011651015726988947, 0.013481798527159918],
+        "annotationLabelRecall": {
+            "Abs_comp_clause": {
+                "annotations": 30,
+                "goldTokens": 83,
+                "detectedGoldTokens": 1,
+                "recall": 0.012048192771084338,
+                "recallWilson95": [0.0021299774281082692, 0.06513580668032404]
+            },
+            "Absence_comp_colloc": {
+                "annotations": 31,
+                "goldTokens": 50,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [6.938893903907228e-18, 0.07134759913335872]
+            },
+            "Absence_comp_sent": {
+                "annotations": 33,
+                "goldTokens": 63,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [3.469446951953614e-18, 0.05747119958885172]
+            },
+            "Absence_explanation": {
+                "annotations": 30,
+                "goldTokens": 57,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.06313883485297894]
+            },
+            "Adjective_inf": {
+                "annotations": 1,
+                "goldTokens": 2,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.6576197724933469]
+            },
+            "Adjectives": {
+                "annotations": 7,
+                "goldTokens": 12,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [2.7755575615628914e-17, 0.24249400665524085]
+            },
+            "Adverbs": {
+                "annotations": 5,
+                "goldTokens": 6,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [2.7755575615628914e-17, 0.3903342879021653]
+            },
+            "Agreement_errors": {
+                "annotations": 1,
+                "goldTokens": 1,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.7934506856227626]
+            },
+            "And_syn": {
+                "annotations": 2,
+                "goldTokens": 2,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.6576197724933469]
+            },
+            "Art_choice": {
+                "annotations": 206,
+                "goldTokens": 285,
+                "detectedGoldTokens": 3,
+                "recall": 0.010526315789473684,
+                "recallWilson95": [0.003586232017910968, 0.03048595021269973]
+            },
+            "Art_form": {
+                "annotations": 21,
+                "goldTokens": 31,
+                "detectedGoldTokens": 1,
+                "recall": 0.03225806451612903,
+                "recallWilson95": [0.005717221525416816, 0.16194105164724906]
+            },
+            "Articles": {
+                "annotations": 118,
+                "goldTokens": 138,
+                "detectedGoldTokens": 2,
+                "recall": 0.014492753623188406,
+                "recallWilson95": [0.003983475402945181, 0.051299788643335814]
+            },
+            "Attr_participial": {
+                "annotations": 2,
+                "goldTokens": 4,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.4898908364545973]
+            },
+            "Attributes": {
+                "annotations": 5,
+                "goldTokens": 12,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [2.7755575615628914e-17, 0.24249400665524085]
+            },
+            "Category_confusion": {
+                "annotations": 40,
+                "goldTokens": 78,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.04693780971219429]
+            },
+            "Causation": {
+                "annotations": 3,
+                "goldTokens": 6,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [2.7755575615628914e-17, 0.3903342879021653]
+            },
+            "Choice_of_ref": {
+                "annotations": 25,
+                "goldTokens": 42,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.08379879086570391]
+            },
+            "Choice_synonyms": {
+                "annotations": 75,
+                "goldTokens": 108,
+                "detectedGoldTokens": 6,
+                "recall": 0.05555555555555555,
+                "recallWilson95": [0.02570772960918387, 0.11593436794331126]
+            },
+            "Coherence": {
+                "annotations": 12,
+                "goldTokens": 62,
+                "detectedGoldTokens": 1,
+                "recall": 0.016129032258064516,
+                "recallWilson95": [0.002852867168621827, 0.08586720260689992]
+            },
+            "Comparative_adj": {
+                "annotations": 2,
+                "goldTokens": 2,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.6576197724933469]
+            },
+            "Conjunctions": {
+                "annotations": 21,
+                "goldTokens": 23,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.14311661845042686]
+            },
+            "Conversion": {
+                "annotations": 2,
+                "goldTokens": 2,
+                "detectedGoldTokens": 1,
+                "recall": 0.5,
+                "recallWilson95": [0.09453120573423074, 0.9054687942657693]
+            },
+            "Coordinate": {
+                "annotations": 3,
+                "goldTokens": 3,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [5.551115123125783e-17, 0.5614970317550454]
+            },
+            "Countable_uncountable": {
+                "annotations": 17,
+                "goldTokens": 26,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.1287289218592153]
+            },
+            "Dangling_ref": {
+                "annotations": 1,
+                "goldTokens": 2,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.6576197724933469]
+            },
+            "Dative": {
+                "annotations": 1,
+                "goldTokens": 5,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.43448246478317476]
+            },
+            "Defining": {
+                "annotations": 15,
+                "goldTokens": 37,
+                "detectedGoldTokens": 1,
+                "recall": 0.02702702702702703,
+                "recallWilson95": [0.004786974451940429, 0.13824069863730518]
+            },
+            "Demonstrative": {
+                "annotations": 2,
+                "goldTokens": 2,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.6576197724933469]
+            },
+            "Derivation": {
+                "annotations": 14,
+                "goldTokens": 20,
+                "detectedGoldTokens": 1,
+                "recall": 0.05,
+                "recallWilson95": [0.008881448800795402, 0.23613119344674205]
+            },
+            "Det_choice": {
+                "annotations": 20,
+                "goldTokens": 28,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [1.3877787807814457e-17, 0.12064330476584563]
+            },
+            "Det_form": {
+                "annotations": 2,
+                "goldTokens": 3,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [5.551115123125783e-17, 0.5614970317550454]
+            },
+            "Determiners": {
+                "annotations": 11,
+                "goldTokens": 15,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.20388330103584862]
+            },
+            "Discourse": {
+                "annotations": 162,
+                "goldTokens": 356,
+                "detectedGoldTokens": 8,
+                "recall": 0.02247191011235955,
+                "recallWilson95": [0.011429901681687431, 0.043709544689279387]
+            },
+            "Double_object": {
+                "annotations": 1,
+                "goldTokens": 9,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.2991450484195441]
+            },
+            "Emphatic": {
+                "annotations": 2,
+                "goldTokens": 9,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.2991450484195441]
+            },
+            "Formational_affixes": {
+                "annotations": 20,
+                "goldTokens": 21,
+                "detectedGoldTokens": 2,
+                "recall": 0.09523809523809523,
+                "recallWilson95": [0.02651876743807452, 0.2891413907391826]
+            },
+            "Grammar": {
+                "annotations": 5,
+                "goldTokens": 9,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.2991450484195441]
+            },
+            "Inappropriate_register": {
+                "annotations": 9,
+                "goldTokens": 50,
+                "detectedGoldTokens": 2,
+                "recall": 0.04,
+                "recallWilson95": [0.011038884327619805, 0.1346009068750702]
+            },
+            "Incoherent_articles": {
+                "annotations": 5,
+                "goldTokens": 13,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.22809537235419838]
+            },
+            "Incoherent_conj": {
+                "annotations": 2,
+                "goldTokens": 2,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.6576197724933469]
+            },
+            "Incoherent_intro_unit": {
+                "annotations": 3,
+                "goldTokens": 7,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [5.551115123125783e-17, 0.35433043506668743]
+            },
+            "Incoherent_pron": {
+                "annotations": 6,
+                "goldTokens": 6,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [2.7755575615628914e-17, 0.3903342879021653]
+            },
+            "Incoherent_tenses": {
+                "annotations": 2,
+                "goldTokens": 2,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.6576197724933469]
+            },
+            "Infinitive_constr": {
+                "annotations": 3,
+                "goldTokens": 4,
+                "detectedGoldTokens": 1,
+                "recall": 0.25,
+                "recallWilson95": [0.04558726080970055, 0.6993581574175981]
+            },
+            "Interrogative": {
+                "annotations": 3,
+                "goldTokens": 20,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.16112515805281938]
+            },
+            "Intransitive": {
+                "annotations": 1,
+                "goldTokens": 2,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.6576197724933469]
+            },
+            "Lack_of_connective": {
+                "annotations": 6,
+                "goldTokens": 9,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.2991450484195441]
+            },
+            "Lack_of_ref_device": {
+                "annotations": 7,
+                "goldTokens": 8,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.32440756488388023]
+            },
+            "Lack_par_constr": {
+                "annotations": 16,
+                "goldTokens": 28,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [1.3877787807814457e-17, 0.12064330476584563]
+            },
+            "lex_item_choice": {
+                "annotations": 230,
+                "goldTokens": 309,
+                "detectedGoldTokens": 11,
+                "recall": 0.03559870550161812,
+                "recallWilson95": [0.01999198575377556, 0.06261042544232241]
+            },
+            "lex_part_choice": {
+                "annotations": 44,
+                "goldTokens": 103,
+                "detectedGoldTokens": 2,
+                "recall": 0.019417475728155338,
+                "recallWilson95": [0.0053412252741783794, 0.06805218312034753]
+            },
+            "Linking_device": {
+                "annotations": 3,
+                "goldTokens": 13,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.22809537235419838]
+            },
+            "Modals": {
+                "annotations": 1,
+                "goldTokens": 1,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.7934506856227626]
+            },
+            "Modals_choice": {
+                "annotations": 13,
+                "goldTokens": 25,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [1.3877787807814457e-17, 0.13319225093904846]
+            },
+            "Modals_form": {
+                "annotations": 4,
+                "goldTokens": 8,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.32440756488388023]
+            },
+            "Non_defining": {
+                "annotations": 10,
+                "goldTokens": 17,
+                "detectedGoldTokens": 2,
+                "recall": 0.11764705882352941,
+                "recallWilson95": [0.03287977376379267, 0.3433635059488588]
+            },
+            "Note_structure": {
+                "annotations": 4,
+                "goldTokens": 4,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.4898908364545973]
+            },
+            "Noun_inf": {
+                "annotations": 1,
+                "goldTokens": 4,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.4898908364545973]
+            },
+            "Noun_number": {
+                "annotations": 20,
+                "goldTokens": 23,
+                "detectedGoldTokens": 1,
+                "recall": 0.043478260869565216,
+                "recallWilson95": [0.007716666143453149, 0.20991155070258877]
+            },
+            "Nouns": {
+                "annotations": 10,
+                "goldTokens": 11,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.2588329669680317]
+            },
+            "Num_form": {
+                "annotations": 6,
+                "goldTokens": 8,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.32440756488388023]
+            },
+            "Number": {
+                "annotations": 50,
+                "goldTokens": 54,
+                "detectedGoldTokens": 6,
+                "recall": 0.1111111111111111,
+                "recallWilson95": [0.051930224969995484, 0.2219470102118128]
+            },
+            "Numerical": {
+                "annotations": 1,
+                "goldTokens": 1,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.7934506856227626]
+            },
+            "Often_confused": {
+                "annotations": 15,
+                "goldTokens": 16,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.1936076805344365]
+            },
+            "Participial_constr": {
+                "annotations": 2,
+                "goldTokens": 4,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.4898908364545973]
+            },
+            "Person": {
+                "annotations": 9,
+                "goldTokens": 10,
+                "detectedGoldTokens": 3,
+                "recall": 0.3,
+                "recallWilson95": [0.10779126740630099, 0.6032218525388546]
+            },
+            "Personal": {
+                "annotations": 3,
+                "goldTokens": 3,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [5.551115123125783e-17, 0.5614970317550454]
+            },
+            "Possessive": {
+                "annotations": 8,
+                "goldTokens": 8,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.32440756488388023]
+            },
+            "Prepositional_adjective": {
+                "annotations": 1,
+                "goldTokens": 2,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.6576197724933469]
+            },
+            "Prepositional_noun": {
+                "annotations": 8,
+                "goldTokens": 11,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.2588329669680317]
+            },
+            "Prepositional_verb": {
+                "annotations": 17,
+                "goldTokens": 21,
+                "detectedGoldTokens": 2,
+                "recall": 0.09523809523809523,
+                "recallWilson95": [0.02651876743807452, 0.2891413907391826]
+            },
+            "Prepositions": {
+                "annotations": 122,
+                "goldTokens": 143,
+                "detectedGoldTokens": 1,
+                "recall": 0.006993006993006993,
+                "recallWilson95": [0.0012355058901738283, 0.03854521317655134]
+            },
+            "Pronouns": {
+                "annotations": 16,
+                "goldTokens": 18,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.17587922364665765]
+            },
+            "Punctuation": {
+                "annotations": 122,
+                "goldTokens": 161,
+                "detectedGoldTokens": 5,
+                "recall": 0.031055900621118012,
+                "recallWilson95": [0.013336707248041375, 0.0706316033924883]
+            },
+            "Quant_choice": {
+                "annotations": 4,
+                "goldTokens": 7,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [5.551115123125783e-17, 0.35433043506668743]
+            },
+            "Quantifiers": {
+                "annotations": 6,
+                "goldTokens": 10,
+                "detectedGoldTokens": 2,
+                "recall": 0.2,
+                "recallWilson95": [0.05668215145437519, 0.5098375284633583]
+            },
+            "Redundant": {
+                "annotations": 6,
+                "goldTokens": 13,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.22809537235419838]
+            },
+            "Redundant_comp": {
+                "annotations": 52,
+                "goldTokens": 146,
+                "detectedGoldTokens": 1,
+                "recall": 0.00684931506849315,
+                "recallWilson95": [0.0012100972425709428, 0.03777416563546358]
+            },
+            "Redundant_ref": {
+                "annotations": 4,
+                "goldTokens": 4,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.4898908364545973]
+            },
+            "Reflexive": {
+                "annotations": 1,
+                "goldTokens": 1,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.7934506856227626]
+            },
+            "Reflexive_verb": {
+                "annotations": 2,
+                "goldTokens": 2,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.6576197724933469]
+            },
+            "Relative_clause": {
+                "annotations": 8,
+                "goldTokens": 9,
+                "detectedGoldTokens": 1,
+                "recall": 0.1111111111111111,
+                "recallWilson95": [0.019890887638544907, 0.434999705576656]
+            },
+            "Seq_of_tenses": {
+                "annotations": 1,
+                "goldTokens": 1,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.7934506856227626]
+            },
+            "Spelling": {
+                "annotations": 122,
+                "goldTokens": 148,
+                "detectedGoldTokens": 42,
+                "recall": 0.28378378378378377,
+                "recallWilson95": [0.21733734387473075, 0.3611703937545813]
+            },
+            "Standard": {
+                "annotations": 21,
+                "goldTokens": 92,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.04008138928562172]
+            },
+            "Suffix": {
+                "annotations": 2,
+                "goldTokens": 2,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.6576197724933469]
+            },
+            "suggestion": {
+                "annotations": 111,
+                "goldTokens": 274,
+                "detectedGoldTokens": 12,
+                "recall": 0.043795620437956206,
+                "recallWilson95": [0.0252277012054633, 0.07497857808369672]
+            },
+            "Superlative_adj": {
+                "annotations": 1,
+                "goldTokens": 1,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.7934506856227626]
+            },
+            "Tautology": {
+                "annotations": 2,
+                "goldTokens": 3,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [5.551115123125783e-17, 0.5614970317550454]
+            },
+            "Tense_choice": {
+                "annotations": 103,
+                "goldTokens": 164,
+                "detectedGoldTokens": 5,
+                "recall": 0.03048780487804878,
+                "recallWilson95": [0.01309144419541141, 0.06937601597770959]
+            },
+            "Tense_form": {
+                "annotations": 20,
+                "goldTokens": 23,
+                "detectedGoldTokens": 3,
+                "recall": 0.13043478260869565,
+                "recallWilson95": [0.04537659093631238, 0.32127482270095964]
+            },
+            "that_clause": {
+                "annotations": 1,
+                "goldTokens": 1,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.7934506856227626]
+            },
+            "Trans_prep": {
+                "annotations": 4,
+                "goldTokens": 11,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.2588329669680317]
+            },
+            "Transitive": {
+                "annotations": 13,
+                "goldTokens": 28,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [1.3877787807814457e-17, 0.12064330476584563]
+            },
+            "Verb_Bare_Inf": {
+                "annotations": 2,
+                "goldTokens": 4,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.4898908364545973]
+            },
+            "Verb_Inf": {
+                "annotations": 1,
+                "goldTokens": 2,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.6576197724933469]
+            },
+            "Verb_object_inf": {
+                "annotations": 2,
+                "goldTokens": 6,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [2.7755575615628914e-17, 0.3903342879021653]
+            },
+            "Verb_pattern": {
+                "annotations": 15,
+                "goldTokens": 26,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.1287289218592153]
+            },
+            "Verbs": {
+                "annotations": 7,
+                "goldTokens": 9,
+                "detectedGoldTokens": 1,
+                "recall": 0.1111111111111111,
+                "recallWilson95": [0.019890887638544907, 0.434999705576656]
+            },
+            "Vocabulary": {
+                "annotations": 11,
+                "goldTokens": 22,
+                "detectedGoldTokens": 2,
+                "recall": 0.09090909090909091,
+                "recallWilson95": [0.025295428990995267, 0.27814946841605814]
+            },
+            "Voice": {
+                "annotations": 1,
+                "goldTokens": 2,
+                "detectedGoldTokens": 1,
+                "recall": 0.5,
+                "recallWilson95": [0.09453120573423074, 0.9054687942657693]
+            },
+            "Voice_choice": {
+                "annotations": 14,
+                "goldTokens": 27,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [0, 0.12455502974186705]
+            },
+            "Voice_form": {
+                "annotations": 4,
+                "goldTokens": 7,
+                "detectedGoldTokens": 0,
+                "recall": 0,
+                "recallWilson95": [5.551115123125783e-17, 0.35433043506668743]
+            },
+            "Word_choice": {
+                "annotations": 115,
+                "goldTokens": 251,
+                "detectedGoldTokens": 6,
+                "recall": 0.02390438247011952,
+                "recallWilson95": [0.01100059251894681, 0.051161423402646775]
+            },
+            "Word_order": {
+                "annotations": 45,
+                "goldTokens": 219,
+                "detectedGoldTokens": 1,
+                "recall": 0.0045662100456621,
+                "recallWilson95": [0.0008065034670904185, 0.025407015559431315]
+            }
+        },
+        "documentClusterBootstrap95": {
+            "precision": {
+                "lower": 0.1162280701754386,
+                "upper": 0.1953551912568306
+            },
+            "recall": {
+                "lower": 0.02473410833539451,
+                "upper": 0.03889747552807831
+            },
+            "f0_5": {
+                "lower": 0.06946413382478027,
+                "upper": 0.10503213669854208
+            },
+            "falsePositiveRate": {
+                "lower": 0.01019108280254777,
+                "upper": 0.015175587574645264
+            }
+        },
+        "bootstrap": {
+            "method": "1,000 deterministic document-cluster bootstrap replicates",
+            "seed": "linguorithm-realec-bootstrap-v1",
+            "caveat": "Documents may share authors; writer-cluster intervals cannot be computed."
+        },
+        "sourceSpanIntegrity": true,
+        "patternQualityGates": "Not evaluated: the released evaluation labels errors as binary spans and does not provide pattern-specific valid controls or correction judgments.",
+        "correctionAcceptability": "Not evaluated: annotation surfaces are not adjudicated acceptable corrections and findings are scored as binary detection only."
+    }
+}
