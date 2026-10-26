@@ -4,6 +4,7 @@
     "source": "https://rpractice.itorubarov.me/realec_download.tar.gz",
     "sourcePage": "https://rpractice.itorubarov.me/about/",
     "archiveSha256": "bb3be91a6bd1673f058316f033dcaeb43421f0cda11549329f919cb24fbb342d",
+    "preparedDataSha256": "b49a5a9b0eebb5a47ed2ed104aaee4cd602c2b9af2f7ef2e238e28406656223f",
     "license": "CC-BY-SA-4.0",
     "attribution": "REALEC Team, Russian Error-Annotated Learner English Corpus; Higher School of Economics, Moscow. The corpus is licensed under Creative Commons Attribution-ShareAlike 4.0 International.",
     "purpose": "Independent learner-writing evaluation only. Do not train on or tune against the fixed test split.",
