@@ -58,7 +58,7 @@ The `ewt-1` release includes a character-CNN/BiLSTM/CRF tagger, beam dependency 
 
 The shipped component models measure **94.47% POS accuracy**, **81.66% UAS**, and **77.27% LAS** on 1,962 held-out UD English EWT test sentences. The current production-browser path measures **93.50% POS**, **81.91% UAS**, and **77.81% LAS** on the fixed 300-sentence, 3,659-token EWT sample across answers, email, newsgroup, reviews, and weblog; tokenization mismatches count as incorrect. The browser figures are higher than the original 92.18%/80.16%/76.09% baseline, but still miss the requested five-point improvement floor. The sample was inspected during tokenizer development, so it is a reproducible regression measure rather than untouched confirmation. Both evaluations are within-corpus evidence, not independent learner-essay validation.
 
-No error-classifier category currently passes the release emission gate, so statistical findings remain review-only. The current synthetic and authored probes are development checks; they do not establish natural-error precision, recall, or correction acceptability. See the [measured browser evidence](reports/generalization.json) and [evaluation details](docs/model-card.md#production-browser-generalization-check).
+No error-classifier category currently passes the release emission gate, so statistical findings remain review-only. An additional document-held-out evaluation on 184 Russian-L1 university essays measures 15.24% token precision and 3.19% recall; this is a clear limitation in broad learner-writing detection, and the corpus lacks author identities and does not validate individual goal detectors or correction quality. See the [REALEC evaluation](reports/realec-independent-evaluation.json), [measured browser evidence](reports/generalization.json), and [model card](docs/model-card.md#independent-learner-writing-benchmark).
 
 Read the [model card](docs/model-card.md) for provenance, evaluation methods, domain limits, quantization results, and licensing. Initial successful model loading enables offline reuse through the service worker; browser storage eviction can require loading assets again.
 
@@ -78,6 +78,8 @@ Read the [model card](docs/model-card.md) for provenance, evaluation methods, do
 | `make bundle` | Check built bundle budgets |
 | `make benchmark` | Run the engine benchmark |
 | `make evaluate-parser-beam` | Select a parser beam width on the pinned EWT development split and bind the report to model hashes |
+| `make ingest-realec` | Prepare a fixed learner-essay evaluation split in the project-local cache |
+| `make evaluate-realec` | Run the production browser worker on that held-out split and report aggregate detection evidence |
 | `make evaluate-parser-beam-test` | Score only the development-selected width on the fixed EWT test split and write the no-regression report |
 | `make inspect` | Inspect the running production preview |
 | `make social-preview` | Render the editable social preview to its GitHub-ready PNG |
