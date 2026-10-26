@@ -20,9 +20,41 @@ def read_manifest(path=MANIFEST_PATH):
         raise ValueError("Unexpected REALEC license; review the manifest first")
     if not re.fullmatch(r"[0-9a-f]{64}", manifest.get("archiveSha256", "")):
         raise ValueError("Invalid REALEC archive SHA-256")
+    if not re.fullmatch(r"[0-9a-f]{64}", manifest.get("preparedDataSha256", "")):
+        raise ValueError("Invalid prepared REALEC data SHA-256")
     if manifest.get("source") != "https://rpractice.itorubarov.me/realec_download.tar.gz":
         raise ValueError("Unexpected REALEC source URL")
     return manifest
+
+
+def count_annotation_records_and_spans(documents):
+    """Count BRAT annotation records and their individual source ranges by split."""
+    records = {name: 0 for name in ("train", "development", "test")}
+    spans = {name: 0 for name in records}
+    for document in documents:
+        split = document["split"]
+        for annotation in document["annotations"]:
+            records[split] += 1
+            spans[split] += len(annotation["spans"])
+    return records, spans
+
+
+def serialize_benchmark(benchmark):
+    """Serialize with stable UTF-8 and LF bytes on every supported platform."""
+    return (json.dumps(benchmark, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+
+
+def write_verified_benchmark(path, benchmark, expected_digest):
+    """Atomically replace a prepared cache only after its pinned digest matches."""
+    benchmark_bytes = serialize_benchmark(benchmark)
+    prepared_digest = sha256(benchmark_bytes)
+    if prepared_digest != expected_digest:
+        raise ValueError("Prepared REALEC data does not match its pinned SHA-256")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(".json.tmp")
+    temporary.write_bytes(benchmark_bytes)
+    temporary.replace(path)
+    return prepared_digest
 
 
 def sha256(data):
@@ -209,7 +241,6 @@ def ingest(root=ROOT, *, opener=None):
         raise ValueError("Cached REALEC archive does not match its pinned SHA-256")
     documents = read_archive(archive_path)
     counts = {name: 0 for name in ("train", "development", "test")}
-    errors = {name: 0 for name in counts}
     annotations = [annotation for document in documents for annotation in document["annotations"]]
     annotation_audit = {
         "totalErrorAnnotations": len(annotations),
@@ -219,7 +250,6 @@ def ingest(root=ROOT, *, opener=None):
     }
     for document in documents:
         counts[document["split"]] += 1
-        errors[document["split"]] += len(document["annotations"])
     benchmark = {
         "format": "linguorithm-realec-local-benchmark-v1",
         "source": manifest["source"],
@@ -233,17 +263,19 @@ def ingest(root=ROOT, *, opener=None):
         "annotationAudit": annotation_audit,
         "documents": documents,
     }
-    benchmark_path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = benchmark_path.with_suffix(".json.tmp")
-    temporary.write_text(json.dumps(benchmark, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    temporary.replace(benchmark_path)
+    annotation_records, error_spans = count_annotation_records_and_spans(documents)
+    prepared_digest = write_verified_benchmark(
+        benchmark_path, benchmark, manifest["preparedDataSha256"]
+    )
     return {
         "archiveBytes": len(archive),
         "archiveSha256": manifest["archiveSha256"],
         "downloadedBytes": download,
         "documents": len(documents),
         "documentsBySplit": counts,
-        "errorSpansBySplit": errors,
+        "errorAnnotationsBySplit": annotation_records,
+        "errorSpansBySplit": error_spans,
+        "preparedDataSha256": prepared_digest,
         "annotationAudit": annotation_audit,
         "benchmarkPath": str(benchmark_path),
     }
