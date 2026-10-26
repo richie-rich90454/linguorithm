@@ -33,6 +33,7 @@ const grammarGoalByRule: Readonly<Record<string, readonly string[]>> = {
     "sentence-capitalization": ["writing.capitals", "writing.editing"],
     "missing-terminal-mark": ["writing.endmarks", "writing.editing"],
     "repeated-spacing": ["writing.spacing"],
+    "missing-word-space": ["writing.spacing", "writing.spelling"],
     "colon-complement": ["writing.colons"],
     "semicolon-shared-subject": ["writing.semicolons"],
     "document-tense": ["writing.tense"],
