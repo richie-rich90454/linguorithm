@@ -135,9 +135,12 @@ def main():
         "schemaVersion": 1,
         "scope": (
             "Pinned official test splits from English UD treebanks excluded from model fitting. "
-            "Evaluation uses gold tokens and reports tagger/parser component scores, not browser "
-            "tokenization or grammar-error detection. Source domains include spoken transcripts and "
-            "targeted examples; results are not learner-writing validation."
+            "Three corresponding training splits (Atis, CHILDES, ESLSpok) contribute to the expanded "
+            "candidate, so the aggregate is split-held-out, not source-held-out; only CTeTex, "
+            "LittlePrince, PUD, and Pronouns are fully source-held-out. The aggregate is dominated "
+            "by CHILDES. Evaluation uses gold tokens and reports tagger/parser component scores, not "
+            "browser tokenization or grammar-error detection. Source domains include spoken transcripts "
+            "and targeted examples; results are not learner-writing validation."
         ),
         "selection": "Candidate checkpoints were selected on EWT validation only; these source tests were not used for tuning.",
         "trainingSentenceOverlapExcluded": True,
