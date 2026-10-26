@@ -1,7 +1,7 @@
 {
     "schemaVersion": 1,
     "release": "Universal Dependencies r2.18",
-    "scope": "English-only supplementary syntax training and source-held-out evaluation",
+    "scope": "English-only supplementary syntax training and held-out test splits; three sources have train and test partitions in the candidate, while four sources are held out entirely",
     "licensePolicy": "Each treebank is licensed separately. Only files with a redistribution-compatible license are included; preserve each repository README and LICENSE.txt.",
     "sources": [
         {
