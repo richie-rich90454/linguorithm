@@ -77,6 +77,8 @@ Read the [model card](docs/model-card.md) for provenance, evaluation methods, do
 | `make content` | Validate questions and formatter configuration consistency |
 | `make bundle` | Check built bundle budgets |
 | `make benchmark` | Run the engine benchmark |
+| `make evaluate-parser-beam` | Select a parser beam width on the pinned EWT development split and bind the report to model hashes |
+| `make evaluate-parser-beam-test` | Score only the development-selected width on the fixed EWT test split and write the no-regression report |
 | `make inspect` | Inspect the running production preview |
 | `make social-preview` | Render the editable social preview to its GitHub-ready PNG |
 | `make train` | Retrain, evaluate, and package local models using `.venv` |
