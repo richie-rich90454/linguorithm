@@ -2,7 +2,7 @@
 
 Latest completed release run: 2026-10-26, Windows x64. GNU Make invokes the project-contained Node runtime; Python, dependencies, model assets, caches, and browser binaries remain inside the project.
 
-- `make release` passed formatting, lint, strict TypeScript checks, and 325 engine tests across 21 files. `make test-training` passed 55 Python tests.
+- `make release` passed formatting, lint, strict TypeScript checks, and 325 engine tests across 21 files. The final `make test-training` run passed 58 Python tests, including the checksum-rejection regression.
 - The serial Playwright suite passed all 196 checks across Chromium, Firefox, WebKit, and mobile Chromium emulation. This includes local-model parity, offline reload, import security, persistence and restore, keyboard access, responsive layouts, and grammar review flows.
 - Content validation passed for 106 authored and verified-mutation exercises. Model release checks verified all 18 resources, repaired a damaged asset, and rejected a corrupt archive.
 - The production build passed. Initial JavaScript measured 84.5 KiB gzip against the 104.7 KiB budget; secondary views and the analysis worker are lazy-loaded. Runtime inference and document analysis remain local.
