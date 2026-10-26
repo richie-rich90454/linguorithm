@@ -21,6 +21,7 @@ const forms: Record<string, Morphology> = {
     writing: { lemma: "write", pos: "VERB", finite: false, verbForm: "Part" },
     arrived: verb("arrive"),
     departed: verb("depart"),
+    shouted: verb("shout"),
     stopped: verb("stop"),
     left: verb("leave"),
     ready: { lemma: "ready", pos: "ADJ" },
@@ -489,6 +490,24 @@ describe("finite independent clause boundary coverage", () => {
             ["arrived", "he", "nsubj"],
         ]);
         expect(issues(sentence).map((issue) => issue.ruleId)).toEqual(["comma-splice"]);
+    });
+
+    it("keeps comma-splice evidence ordered when the second clause is inverted", () => {
+        const text = "We arrived, shouted the neighbors.";
+        const sentence = parsed(text, [
+            ["arrived", "We", "nsubj"],
+            ["arrived", "shouted", "conj"],
+            ["shouted", "neighbors", "nsubj"],
+            ["neighbors", "the", "det"],
+        ]);
+        const finding = issues(sentence).find((issue) => issue.ruleId === "comma-splice");
+        expect(finding).toBeDefined();
+        for (const evidence of finding!.evidence) {
+            expect(evidence.start).toBeGreaterThanOrEqual(0);
+            expect(evidence.start).toBeLessThanOrEqual(evidence.end);
+            expect(evidence.end).toBeLessThanOrEqual(text.length);
+            expect(text.slice(evidence.start, evidence.end).length).toBeGreaterThan(0);
+        }
     });
 
     it("handles finite auxiliaries on nonfinite clause heads", () => {
