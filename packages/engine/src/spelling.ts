@@ -3,6 +3,11 @@ const vocabulary =
     "the their there they're receive believe separate necessary definitely environment government grammar writing sentence paragraph student students because although beginning occurred accommodate achieve argument beautiful business calendar category colleague committee conscious decision describe development difference different education effect example exercise experience explanation familiar February foreign forty friend further independent knowledge language library maintenance meaning opportunity parallel particular people performance practice privilege probably pronunciation public punctuation question really recommend reference relevant rhythm science similar sincerely strength successful surprise temperature tomorrow truly understanding until usually whether which without woman women written".split(
         " ",
     );
+const spacingBoundaries = new Set(
+    "a an the this that these those my your his her its our their i me we us you he him she it they them who whom whose which what when where why how all some any each every no not do does did is am are was were be been being have has had can could will would should may might must shall and or but so yet nor in on at by for from of to with into onto upon over under after before during until since as if while because than".split(
+        " ",
+    ),
+);
 function deletions(word: string, depth = 1): Set<string> {
     const keys = new Set([word]);
     let frontier = [word];
@@ -194,6 +199,28 @@ export class SpellingIndex {
     }
     has(word: string): boolean {
         return this.known.has(word.toLowerCase());
+    }
+    splitConcatenated(input: string): string | undefined {
+        const word = input.toLowerCase();
+        if (!/^[a-z]{4,32}$/u.test(word) || this.known.has(word)) return undefined;
+        const candidates: string[] = [];
+        for (let boundary = 1; boundary <= word.length - 2; boundary++) {
+            const left = word.slice(0, boundary),
+                right = word.slice(boundary),
+                leftFrequency = this.frequency[left] ?? 0,
+                rightFrequency = this.frequency[right] ?? 0,
+                leftSupported = this.known.has(left) || leftFrequency >= 3,
+                rightSupported = this.known.has(right) || rightFrequency >= 3,
+                commonBoundary =
+                    (spacingBoundaries.has(left) && leftFrequency >= 25) ||
+                    (spacingBoundaries.has(right) && rightFrequency >= 25),
+                componentsHaveWordShape =
+                    (left.length >= 3 || spacingBoundaries.has(left)) &&
+                    (right.length >= 3 || spacingBoundaries.has(right));
+            if (leftSupported && rightSupported && commonBoundary && componentsHaveWordShape)
+                candidates.push(`${left} ${right}`);
+        }
+        return candidates.length === 1 ? candidates[0] : undefined;
     }
     candidates(input: string): string[] {
         const word = input.toLowerCase();
