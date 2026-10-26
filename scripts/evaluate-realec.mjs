@@ -11,6 +11,19 @@ const manifestPath = "training/datasets/realec-manifest.json";
 const split = process.env.REALEC_SPLIT ?? "test";
 if (!["development", "test"].includes(split))
     throw new Error("REALEC_SPLIT must be development or test.");
+const sampleRule = process.env.REALEC_SAMPLE_RULE,
+    sampleLimit = Number(process.env.REALEC_SAMPLE_LIMIT ?? 0);
+if (
+    (sampleRule || sampleLimit) &&
+    (split !== "development" ||
+        !sampleRule ||
+        !Number.isInteger(sampleLimit) ||
+        sampleLimit < 1 ||
+        sampleLimit > 100)
+)
+    throw new Error(
+        "Rule samples require REALEC_SPLIT=development, REALEC_SAMPLE_RULE, and REALEC_SAMPLE_LIMIT from 1 to 100.",
+    );
 const reportPath =
     split === "test"
         ? "reports/realec-independent-evaluation.json"
@@ -75,6 +88,14 @@ function markSpan(tokens, flags, start, end) {
         return true;
     }
     return found;
+}
+
+function spansShareEvaluationToken(tokens, first, second) {
+    const firstFlags = tokens.map(() => false),
+        secondFlags = tokens.map(() => false);
+    markSpan(tokens, firstFlags, first[0], first[1]);
+    markSpan(tokens, secondFlags, second[0], second[1]);
+    return firstFlags.some((marked, index) => marked && secondFlags[index]);
 }
 
 function scoreDocument(document, report, includeRuleTriage) {
@@ -358,6 +379,40 @@ const scoredDocuments = documents.map((document, index) => ({
             integrityErrors: [],
         },
     );
+if (sampleRule && sampleLimit) {
+    const samples = [];
+    for (const [index, report] of reports.entries()) {
+        const document = documents[index];
+        const tokens = sourceTokens(document.text);
+        for (const diagnostic of report.diagnostics ?? []) {
+            if (diagnostic.ruleId !== sampleRule) continue;
+            const overlapsAnnotation = document.annotations.some((annotation) =>
+                annotation.spans.some((span) =>
+                    spansShareEvaluationToken(tokens, [diagnostic.start, diagnostic.end], span),
+                ),
+            );
+            if (overlapsAnnotation) continue;
+            const start = Math.max(0, diagnostic.start - 90),
+                end = Math.min(document.text.length, diagnostic.end + 90);
+            samples.push({
+                documentId: document.id,
+                ruleId: diagnostic.ruleId,
+                finding: document.text.slice(diagnostic.start, diagnostic.end),
+                context: document.text.slice(start, end),
+                message: diagnostic.title,
+                certainty: diagnostic.certainty,
+            });
+            if (samples.length >= sampleLimit) break;
+        }
+        if (samples.length >= sampleLimit) break;
+    }
+    const samplePath = ".cache/datasets/realec/development-rule-samples.json";
+    writeFileSync(
+        resolve(samplePath),
+        `${JSON.stringify({ split, ruleId: sampleRule, samples }, null, 2)}\n`,
+    );
+    console.log(JSON.stringify({ ruleSamplesPath: samplePath, sampleCount: samples.length }));
+}
 if (total.integrityErrors.length) {
     const failures = scoredDocuments
         .filter((document) => document.integrityErrors.length)
