@@ -6,7 +6,15 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from ingest_realec import parse_annotations, read_archive, read_manifest, split_for_document
+from ingest_realec import (
+    count_annotation_records_and_spans,
+    parse_annotations,
+    read_archive,
+    read_manifest,
+    serialize_benchmark,
+    split_for_document,
+    write_verified_benchmark,
+)
 
 
 class RealecIngestionTests(unittest.TestCase):
@@ -15,6 +23,34 @@ class RealecIngestionTests(unittest.TestCase):
         self.assertEqual(manifest["license"], "CC-BY-SA-4.0")
         self.assertIn("evaluation only", manifest["purpose"])
         self.assertEqual(len(manifest["archiveSha256"]), 64)
+        self.assertEqual(len(manifest["preparedDataSha256"]), 64)
+
+    def test_prepared_benchmark_serialization_uses_stable_lf_bytes(self):
+        serialized = serialize_benchmark({"text": "line one\nline two", "count": 2})
+        self.assertTrue(serialized.endswith(b"\n"))
+        self.assertNotIn(b"\r\n", serialized)
+
+    def test_checksum_mismatch_preserves_the_existing_cache(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "benchmark.json"
+            path.write_bytes(b"previous verified cache")
+            with self.assertRaisesRegex(ValueError, "pinned SHA-256"):
+                write_verified_benchmark(path, {"text": "tampered"}, "0" * 64)
+            self.assertEqual(path.read_bytes(), b"previous verified cache")
+            self.assertFalse(path.with_suffix(".json.tmp").exists())
+
+    def test_split_summary_counts_annotation_records_and_discontinuous_spans(self):
+        records, spans = count_annotation_records_and_spans(
+            [
+                {
+                    "split": "train",
+                    "annotations": [{"spans": [(1, 2), (5, 6)]}, {"spans": [(9, 10)]}],
+                },
+                {"split": "test", "annotations": [{"spans": [(3, 4)]}]},
+            ]
+        )
+        self.assertEqual(records, {"train": 2, "development": 0, "test": 1})
+        self.assertEqual(spans, {"train": 3, "development": 0, "test": 1})
 
     def test_annotations_convert_codepoint_offsets_to_javascript_utf16(self):
         text = "😀 They is ready."
