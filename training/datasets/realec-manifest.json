@@ -1,0 +1,27 @@
+{
+    "id": "realec-manual-annotations-v1",
+    "name": "Russian Error-Annotated Learner English Corpus",
+    "source": "https://rpractice.itorubarov.me/realec_download.tar.gz",
+    "sourcePage": "https://rpractice.itorubarov.me/about/",
+    "archiveSha256": "bb3be91a6bd1673f058316f033dcaeb43421f0cda11549329f919cb24fbb342d",
+    "license": "CC-BY-SA-4.0",
+    "attribution": "REALEC Team, Russian Error-Annotated Learner English Corpus; Higher School of Economics, Moscow. The corpus is licensed under Creative Commons Attribution-ShareAlike 4.0 International.",
+    "purpose": "Independent learner-writing evaluation only. Do not train on or tune against the fixed test split.",
+    "population": "English essays written by Russian L1 university students for examination questions; the full corpus includes multiple cohorts and annotation versions.",
+    "annotations": "Manually annotated span-level errors from the corpus archive. The source page describes a four-level scheme; span labels identify the local linguistic category.",
+    "publishedCounts": {
+        "earlySubsetDocuments": 800,
+        "earlySubsetTokensApproximate": 200000,
+        "firstVersionDocuments": 6054,
+        "firstVersionTokens": 1550653,
+        "firstVersionErrorTypes": 47,
+        "archiveSha256": "bb3be91a6bd1673f058316f033dcaeb43421f0cda11549329f919cb24fbb342d"
+    },
+    "cachePath": ".cache/datasets/realec/realec_download.tar.gz",
+    "benchmarkPath": ".cache/datasets/realec/benchmark.json",
+    "documentSplit": {
+        "seed": "linguorithm-realec-document-split-v1",
+        "method": "SHA-256 of seed, colon, and source document ID; bucket modulo 100; 70 train, 15 development, 15 test",
+        "limitation": "Author and prompt identities are unavailable in the archive; document-level separation cannot guarantee writer-level independence. The splits are for evaluation workflow only and do not imply training data is included."
+    }
+}
