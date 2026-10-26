@@ -1,0 +1,100 @@
+{
+    "scope": "One fixed EWT test evaluation at the beam width selected on EWT development; test scores did not select the width.",
+    "split": "official EWT test, document-disjoint and exact-deduplicated",
+    "provenance": {
+        "corpusHashes": {
+            "en_ewt-ud-train.conllu": "3fb78e2b55482c8ee00caa653af436c88c9e5bc9a73ce26e4ae3ddc79d2b7e7b",
+            "en_ewt-ud-dev.conllu": "531a54ff90d6ab12201c5a50c3e78e6ddac4de69abc4bce5d275d3cd29efe2b6",
+            "en_ewt-ud-test.conllu": "e266e515a0a7547657ed3d90d9ba46487d6bd251f27ad4269d4e8a427c8555cd"
+        },
+        "splitExclusions": {
+            "train": 0,
+            "dev": 68,
+            "test": 115
+        }
+    },
+    "modelArtifacts": {
+        "tagger": {
+            "manifestSha256": "5cbd3f873eb61f6c079e3b7b1be3841f352a9227c4417760ed4cb3d7d4c9a212",
+            "weightsSha256": "5ab892928bc522f0fb824839652ae6e269f5b600cd9d075b19527ae5b5d595f7"
+        },
+        "parser": {
+            "manifestSha256": "565ad67828553097047853003a9ad6fcb26b6cdd65b130d9f99507d217e0c7fa",
+            "weightsSha256": "f1b239bb5a3a7f4d442c902e579f64783a786e8744002913d217f9da1adfeefa"
+        }
+    },
+    "developmentSelection": {
+        "selectedWidth": 16,
+        "selectionMetric": "highest development LAS; ties prefer the narrowest beam",
+        "developmentReport": ".cache/parser-beam-development.json",
+        "results": [
+            {
+                "beamWidth": 1,
+                "uas": 0.800359856057577,
+                "las": 0.7536185525789684,
+                "tokens": 25010,
+                "sentences": 1933
+            },
+            {
+                "beamWidth": 2,
+                "uas": 0.8057177129148341,
+                "las": 0.7591363454618153,
+                "tokens": 25010,
+                "sentences": 1933
+            },
+            {
+                "beamWidth": 4,
+                "uas": 0.8074770091963215,
+                "las": 0.7610955617752899,
+                "tokens": 25010,
+                "sentences": 1933
+            },
+            {
+                "beamWidth": 8,
+                "uas": 0.8071971211515394,
+                "las": 0.7608156737305078,
+                "tokens": 25010,
+                "sentences": 1933
+            },
+            {
+                "beamWidth": 16,
+                "uas": 0.8075569772091163,
+                "las": 0.7618152738904438,
+                "tokens": 25010,
+                "sentences": 1933
+            }
+        ]
+    },
+    "beamWidth": 16,
+    "sentences": 1962,
+    "tokens": 24859,
+    "confidenceIntervalNote": "Wilson intervals are token-level descriptive intervals and do not adjust for within-document clustering.",
+    "metrics": {
+        "pos": {
+            "accuracy": 0.9447282674282956,
+            "correct": 23485,
+            "tokens": 24859,
+            "wilson95TokenLevel": [0.94181833498169, 0.9475007734806935],
+            "baseline": 0.9447282674282956,
+            "deltaPercentagePoints": 0.0
+        },
+        "uas": {
+            "accuracy": 0.8162033871032623,
+            "correct": 20290,
+            "tokens": 24859,
+            "wilson95TokenLevel": [0.811339900650086, 0.8209691628991486],
+            "baseline": 0.816565429019671,
+            "deltaPercentagePoints": -0.03620419164086508
+        },
+        "las": {
+            "accuracy": 0.7725169958566314,
+            "correct": 19204,
+            "tokens": 24859,
+            "wilson95TokenLevel": [0.7672639585573487, 0.7776858221199988],
+            "baseline": 0.7727181302546361,
+            "deltaPercentagePoints": -0.0201134398004732
+        }
+    },
+    "regressionGate": "POS, UAS, and LAS must each be no lower than the frozen manifest baseline before changing production decoding.",
+    "passedNoRegression": false
+}
