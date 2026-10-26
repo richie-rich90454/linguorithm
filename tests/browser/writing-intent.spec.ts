@@ -49,6 +49,19 @@ test("writing evidence cues stay optional and never offer automatic corrections"
     );
 });
 
+test("the production analyzer offers a supported correction for a merged word", async ({
+    page,
+}) => {
+    await page.getByRole("button", { name: "Edit text" }).click();
+    await page.getByLabel("Essay text").fill("weshould finish today.");
+    await page.getByLabel("Include possible issues").check();
+    await page.getByRole("button", { name: "Analyze essay" }).click();
+    const finding = page.locator(".finding-item").filter({ hasText: "Separate the words" });
+    await expect(finding).toBeVisible({ timeout: 30_000 });
+    await expect(finding.locator(".correction-preview")).toContainText("We should finish today.");
+    await expect(finding.getByRole("button", { name: "Apply correction" })).toBeVisible();
+});
+
 test("previously imported materials show source structure on the first visit", async ({ page }) => {
     await page.goto("/");
     await page.evaluate(async () => {
