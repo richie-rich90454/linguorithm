@@ -748,7 +748,9 @@ export default function App() {
                     </Show>
                     <div class="page-heading">
                         <div>
-                            <h1>{page()}</h1>
+                            <h1 aria-live="polite" aria-atomic="true">
+                                {page()}
+                            </h1>
                             <p>
                                 {page() === "Essay laboratory"
                                     ? "Review your writing, one finding at a time."
