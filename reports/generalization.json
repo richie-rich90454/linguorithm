@@ -1,5 +1,5 @@
 {
-    "generatedAt": "2026-10-26T12:35:03.239Z",
+    "generatedAt": "2026-10-26T15:02:42.909Z",
     "scope": "Production browser worker inference on a fixed EWT syntax regression fixture consulted during tokenizer development, plus newly authored development challenges and controlled gold-guided agreement mutations. The syntax fixture remains held out from model fitting but is not an untouched confirmatory test. This is not an independent learner-essay accuracy or learning-effectiveness study. Model weights are not changed by this evaluation.",
     "production": {
         "baseUrl": "http://127.0.0.1:4317",
@@ -27,8 +27,8 @@
                 "classifierWeights": "580a0205b0018541be7d207d2bdf7cc5458c6b6b6d7d1a9d0f43af879e73f132",
                 "dictionary": "26f2b4b2b612a8107586cff814c4af77f32a08e1dd20f706a04d1d380b864da9"
             },
-            "worker": "analysis.worker-CBGw2RKH.js",
-            "workerSha256": "e4a38680d271203e96f68a5ffc2447e655a80b474707b9fef3342905bfeae3b9"
+            "worker": "analysis.worker-NG2-1rb8.js",
+            "workerSha256": "1da08f3b402c5c399dd60d6fe6b8c12396492c7e3339293b4de5e692238fc735"
         },
         "classifierConfidence": {
             "calibratedReviewWarnings": 0,
@@ -19005,8 +19005,8 @@
                 "hybridFalsePositiveOnControl": false,
                 "diagnostics": [
                     {
-                        "rule": "dictionary-spelling",
-                        "skill": "usage",
+                        "rule": "missing-word-space",
+                        "skill": "punctuation",
                         "certainty": "Possible issue",
                         "start": 33,
                         "end": 40,
@@ -19015,19 +19015,7 @@
                             [
                                 {
                                     "expected": "thetime",
-                                    "replacement": "theme"
-                                }
-                            ],
-                            [
-                                {
-                                    "expected": "thetime",
-                                    "replacement": "onetime"
-                                }
-                            ],
-                            [
-                                {
-                                    "expected": "thetime",
-                                    "replacement": "teatime"
+                                    "replacement": "the time"
                                 }
                             ]
                         ]
@@ -19052,7 +19040,7 @@
                 "integrity": {
                     "passed": true,
                     "issues": [],
-                    "proposalsChecked": 4
+                    "proposalsChecked": 2
                 }
             },
             {
@@ -21057,7 +21045,7 @@
     "sourceAndEditIntegrity": {
         "passed": true,
         "cases": 411,
-        "proposalsChecked": 229,
+        "proposalsChecked": 223,
         "failures": []
     },
     "failuresAreReportedWithoutSuppressingReport": true
