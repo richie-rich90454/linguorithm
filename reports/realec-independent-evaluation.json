@@ -1,5 +1,5 @@
 {
-    "generatedAt": "2026-10-26T13:36:18.720Z",
+    "generatedAt": "2026-10-26T15:07:50.613Z",
     "dataset": {
         "name": "Russian Error-Annotated Learner English Corpus",
         "license": "CC-BY-SA-4.0",
@@ -142,8 +142,8 @@
                 "classifierWeights": "580a0205b0018541be7d207d2bdf7cc5458c6b6b6d7d1a9d0f43af879e73f132",
                 "dictionary": "26f2b4b2b612a8107586cff814c4af77f32a08e1dd20f706a04d1d380b864da9"
             },
-            "worker": "analysis.worker-CBGw2RKH.js",
-            "workerSha256": "e4a38680d271203e96f68a5ffc2447e655a80b474707b9fef3342905bfeae3b9"
+            "worker": "analysis.worker-Bp8XHFHO.js",
+            "workerSha256": "7f49648cb37cae67abc50f7b095b0e935050020b37ed20c54dd3b57211b037bd"
         }
     },
     "evaluation": {
