@@ -8,7 +8,13 @@ import { preview } from "vite";
 process.env.PLAYWRIGHT_BROWSERS_PATH ??= resolve(".cache/ms-playwright");
 const inputPath = ".cache/datasets/realec/benchmark.json";
 const manifestPath = "training/datasets/realec-manifest.json";
-const reportPath = "reports/realec-independent-evaluation.json";
+const split = process.env.REALEC_SPLIT ?? "test";
+if (!["development", "test"].includes(split))
+    throw new Error("REALEC_SPLIT must be development or test.");
+const reportPath =
+    split === "test"
+        ? "reports/realec-independent-evaluation.json"
+        : ".cache/datasets/realec/development-evaluation.json";
 const hash = (value) => createHash("sha256").update(value).digest("hex");
 const json = (path) => JSON.parse(readFileSync(path, "utf8"));
 const wilson = (successes, total) => {
@@ -23,10 +29,15 @@ const wilson = (successes, total) => {
 const ratios = ({ TP, FP, FN, TN }) => {
     const precision = TP + FP ? TP / (TP + FP) : null,
         recall = TP + FN ? TP / (TP + FN) : null,
-        falsePositiveRate = FP + TN ? FP / (FP + TN) : null;
+        falsePositiveRate = FP + TN ? FP / (FP + TN) : null,
+        tokens = TP + FP + FN + TN,
+        errorRate = tokens ? (FP + FN) / tokens : null;
     return {
         precision,
         recall,
+        accuracy: errorRate === null ? null : 1 - errorRate,
+        errorRate,
+        missedErrorRate: TP + FN ? FN / (TP + FN) : null,
         f0_5:
             precision !== null && recall !== null && precision + recall > 0
                 ? (1.25 * precision * recall) / (0.25 * precision + recall)
@@ -66,11 +77,12 @@ function markSpan(tokens, flags, start, end) {
     return found;
 }
 
-function scoreDocument(document, report) {
+function scoreDocument(document, report, includeRuleTriage) {
     const tokens = sourceTokens(document.text),
         gold = tokens.map(() => false),
         predicted = tokens.map(() => false),
         goldByType = new Map(),
+        predictedByRule = new Map(),
         integrityErrors = [];
     if (report.text !== document.text) integrityErrors.push("analysis-source-changed");
     for (const annotation of document.annotations) {
@@ -114,6 +126,15 @@ function scoreDocument(document, report) {
                 evidence.end > document.text.length
             )
                 integrityErrors.push(`evidence-range:${diagnostic.ruleId}`);
+        if (includeRuleTriage) {
+            const rulePredictions = predictedByRule.get(diagnostic.ruleId) ?? {
+                diagnostics: 0,
+                flags: tokens.map(() => false),
+            };
+            rulePredictions.diagnostics++;
+            markSpan(tokens, rulePredictions.flags, diagnostic.start, diagnostic.end);
+            predictedByRule.set(diagnostic.ruleId, rulePredictions);
+        }
         markSpan(tokens, predicted, diagnostic.start, diagnostic.end);
     }
     const counts = { TP: 0, FP: 0, FN: 0, TN: 0 };
@@ -130,11 +151,32 @@ function scoreDocument(document, report) {
             return [type, { annotations: value.annotations, goldTokens, detectedGoldTokens }];
         }),
     );
+    const ruleCounts = Object.fromEntries(
+        [...predictedByRule].map(([ruleId, value]) => {
+            let overlappingGoldTokens = 0,
+                unannotatedPredictedTokens = 0;
+            value.flags.forEach((marked, index) => {
+                if (!marked) return;
+                if (gold[index]) overlappingGoldTokens++;
+                else unannotatedPredictedTokens++;
+            });
+            return [
+                ruleId,
+                {
+                    diagnostics: value.diagnostics,
+                    predictedTokens: overlappingGoldTokens + unannotatedPredictedTokens,
+                    overlappingGoldTokens,
+                    unannotatedPredictedTokens,
+                },
+            ];
+        }),
+    );
     return {
         counts,
         tokenCount: tokens.length,
         goldErrorTokens: gold.filter(Boolean).length,
         annotationLabelRecall,
+        ...(includeRuleTriage ? { ruleCounts } : {}),
         integrityErrors,
     };
 }
@@ -213,9 +255,9 @@ if (
     hash(dataBytes) !== manifest.preparedDataSha256
 )
     throw new Error("REALEC benchmark provenance does not match its pinned manifest.");
-const documents = dataset.documents.filter((document) => document.split === "test");
+const documents = dataset.documents.filter((document) => document.split === split);
 if (documents.length < 50 || documents.some((document) => !document.text || !document.id))
-    throw new Error("The fixed REALEC test split is incomplete.");
+    throw new Error(`The fixed REALEC ${split} split is incomplete.`);
 
 const items = documents.map((document) => ({ id: document.id, text: document.text })),
     baseUrl = process.env.REALEC_BASE_URL ?? "http://127.0.0.1:4318";
@@ -298,7 +340,7 @@ if (
     throw new Error("Every REALEC case must be analyzed by the ready production model.");
 const scoredDocuments = documents.map((document, index) => ({
         id: document.id,
-        ...scoreDocument(document, reports[index]),
+        ...scoreDocument(document, reports[index], split === "development"),
     })),
     total = scoredDocuments.reduce(
         (result, document) => {
@@ -329,7 +371,8 @@ for (const document of documents)
     for (const annotation of document.annotations)
         annotationTypes.set(annotation.type, (annotationTypes.get(annotation.type) ?? 0) + 1);
 const annotationLabelRecall = {};
-for (const document of scoredDocuments)
+const ruleTriage = {};
+for (const document of scoredDocuments) {
     for (const [type, counts] of Object.entries(document.annotationLabelRecall)) {
         const total = (annotationLabelRecall[type] ??= {
             annotations: 0,
@@ -340,6 +383,16 @@ for (const document of scoredDocuments)
         total.goldTokens += counts.goldTokens;
         total.detectedGoldTokens += counts.detectedGoldTokens;
     }
+    for (const [ruleId, counts] of Object.entries(document.ruleCounts ?? {})) {
+        const total = (ruleTriage[ruleId] ??= {
+            diagnostics: 0,
+            predictedTokens: 0,
+            overlappingGoldTokens: 0,
+            unannotatedPredictedTokens: 0,
+        });
+        for (const key of Object.keys(total)) total[key] += counts[key];
+    }
+}
 for (const counts of Object.values(annotationLabelRecall)) {
     counts.recall = counts.goldTokens ? counts.detectedGoldTokens / counts.goldTokens : null;
     counts.recallWilson95 = wilson(counts.detectedGoldTokens, counts.goldTokens);
@@ -353,7 +406,10 @@ const result = {
         preparedDataSha256: hash(dataBytes),
         attribution: manifest.attribution,
         sourcePage: manifest.sourcePage,
-        testDocuments: documents.length,
+        split,
+        ...(split === "test"
+            ? { testDocuments: documents.length }
+            : { developmentDocuments: documents.length }),
         totalAvailableDocuments: dataset.documents.length,
         splitPolicy: dataset.splitPolicy,
         authorIdentityAvailable: false,
@@ -369,7 +425,7 @@ const result = {
         artifacts: modelArtifacts(),
     },
     evaluation: {
-        scope: "Document-held-out binary error-span detection on an independently sourced Russian-L1 university learner-essay corpus. This is an overall task metric, not per-pattern validation. Author-level independence is unavailable; the corpus population is narrow and does not represent preschool through advanced secondary writers.",
+        scope: `Document-held-out binary error-span detection on an independently sourced Russian-L1 university learner-essay corpus (${split} split). This is an overall task metric, not per-pattern validation. Author-level independence is unavailable; the corpus population is narrow and does not represent preschool through advanced secondary writers.`,
         tokenization:
             "Source tokens are Unicode words with internal apostrophes plus individual non-whitespace punctuation. Gold error spans and production finding offsets are projected by overlap; zero-width insertion findings map to the following token, or the preceding final token.",
         counts: total.counts,
@@ -377,6 +433,62 @@ const result = {
         goldErrorTokens: total.goldErrorTokens,
         detectedErrorTokens: total.counts.TP + total.counts.FP,
         ...ratios(total.counts),
+        requestedQualityTargets: (() => {
+            const rates = ratios(total.counts),
+                falsePositiveLimit = 0.005,
+                totalErrorLimit = 0.005,
+                missedErrorLimit = 0.005,
+                negativeTokens = total.counts.FP + total.counts.TN,
+                maxFalsePositives = Math.ceil(negativeTokens * falsePositiveLimit) - 1,
+                maxTotalErrors = Math.ceil(total.tokens * totalErrorLimit) - 1,
+                maxMissedErrors = Math.ceil(total.goldErrorTokens * missedErrorLimit) - 1;
+            const gates = {
+                falsePositiveRate: {
+                    target: "< 0.5%",
+                    observed: rates.falsePositiveRate,
+                    passed: rates.falsePositiveRate !== null && rates.falsePositiveRate < 0.005,
+                    falsePositivesAllowedAtMost: maxFalsePositives,
+                },
+                totalTokenMisclassificationRate: {
+                    target: "< 0.5%",
+                    observed: rates.errorRate,
+                    passed: rates.errorRate !== null && rates.errorRate < 0.005,
+                    totalErrorsAllowedAtMost: maxTotalErrors,
+                },
+                missedErrorRate: {
+                    target: "< 0.5% (recall > 99.5%)",
+                    observed: rates.missedErrorRate,
+                    passed: rates.missedErrorRate !== null && rates.missedErrorRate < 0.005,
+                    missedErrorsAllowedAtMost: maxMissedErrors,
+                },
+            };
+            return {
+                definitions: {
+                    falsePositiveRate: "FP / (FP + TN), strictly below 0.5%",
+                    totalTokenMisclassificationRate:
+                        "(FP + FN) / all source tokens, strictly below 0.5%",
+                    missedErrorRate:
+                        "FN / (TP + FN), strictly below 0.5%; equivalent to recall above 99.5%",
+                },
+                referencePolicy:
+                    "Aggregate confusion counts use REALEC annotation overlap as the binary reference; unannotated tokens are treated as negative. This is not pattern-specific valid-control performance.",
+                ...gates,
+                allPassed: Object.values(gates).every((gate) => gate.passed),
+            };
+        })(),
+        ...(split === "development"
+            ? {
+                  ruleTriage: Object.fromEntries(
+                      Object.entries(ruleTriage)
+                          .sort(
+                              ([a, left], [b, right]) =>
+                                  right.unannotatedPredictedTokens -
+                                      left.unannotatedPredictedTokens || a.localeCompare(b),
+                          )
+                          .map(([ruleId, counts]) => [ruleId, counts]),
+                  ),
+              }
+            : {}),
         annotationLabelRecall: Object.fromEntries(
             Object.entries(annotationLabelRecall).sort(([a], [b]) => a.localeCompare(b)),
         ),
@@ -407,13 +519,28 @@ console.log(
     JSON.stringify(
         {
             path: reportPath,
+            split,
             documents: documents.length,
             tokens: total.tokens,
             counts: total.counts,
             precision: result.evaluation.precision,
             recall: result.evaluation.recall,
+            errorRate: result.evaluation.errorRate,
+            missedErrorRate: result.evaluation.missedErrorRate,
             f0_5: result.evaluation.f0_5,
             falsePositiveRate: result.evaluation.falsePositiveRate,
+            requestedQualityTargets: result.evaluation.requestedQualityTargets,
+            ...(split === "development"
+                ? {
+                      topRuleUnannotatedPredictions: Object.entries(result.evaluation.ruleTriage)
+                          .sort(
+                              ([, left], [, right]) =>
+                                  right.unannotatedPredictedTokens -
+                                  left.unannotatedPredictedTokens,
+                          )
+                          .slice(0, 15),
+                  }
+                : {}),
         },
         null,
         2,
