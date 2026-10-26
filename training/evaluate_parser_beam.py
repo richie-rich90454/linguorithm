@@ -1,5 +1,6 @@
 """Select a parser beam width on the pinned EWT development split only."""
 
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -55,7 +56,17 @@ def main():
     results = []
     for width in [1, 2, 4, 8, 16]:
         correct_uas = correct_las = total = 0
-        for row in rows:
+        print(
+            json.dumps(
+                {
+                    "event": "beam-evaluation-start",
+                    "beamWidth": width,
+                    "sentences": len(rows),
+                }
+            ),
+            flush=True,
+        )
+        for index, row in enumerate(rows, start=1):
             state = tr.parse(
                 parser,
                 row,
@@ -69,6 +80,18 @@ def main():
                 correct_uas += head == gold_head
                 correct_las += head == gold_head and relation == gold_relation
                 total += 1
+            if index % 250 == 0 or index == len(rows):
+                print(
+                    json.dumps(
+                        {
+                            "event": "beam-evaluation-progress",
+                            "beamWidth": width,
+                            "sentences": index,
+                            "totalSentences": len(rows),
+                        }
+                    ),
+                    flush=True,
+                )
         results.append(
             {
                 "beamWidth": width,
@@ -78,11 +101,40 @@ def main():
                 "sentences": len(rows),
             }
         )
+        print(
+            json.dumps(
+                {
+                    "event": "beam-evaluation-complete",
+                    "beamWidth": width,
+                    "uas": correct_uas / total,
+                    "las": correct_las / total,
+                }
+            ),
+            flush=True,
+        )
     selected = max(results, key=lambda item: (item["las"], -item["beamWidth"]))
     report = {
         "scope": "Development-only beam-width selection; no test data was evaluated.",
         "split": "official EWT development, document-disjoint and exact-deduplicated",
         "provenance": provenance,
+        "modelArtifacts": {
+            "tagger": {
+                "manifestSha256": hashlib.sha256(
+                    (models / "tagger-manifest.json").read_bytes()
+                ).hexdigest(),
+                "weightsSha256": hashlib.sha256(
+                    (models / "weights/tagger.onnx").read_bytes()
+                ).hexdigest(),
+            },
+            "parser": {
+                "manifestSha256": hashlib.sha256(
+                    (models / "parser-manifest.json").read_bytes()
+                ).hexdigest(),
+                "weightsSha256": hashlib.sha256(
+                    (models / "weights/parser.onnx").read_bytes()
+                ).hexdigest(),
+            },
+        },
         "baselineWidth": 4,
         "results": results,
         "selectedWidth": selected["beamWidth"],
