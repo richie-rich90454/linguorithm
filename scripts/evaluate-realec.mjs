@@ -207,7 +207,11 @@ const manifest = json(manifestPath),
     dataset = JSON.parse(dataBytes.toString("utf8"));
 if (dataset.format !== "linguorithm-realec-local-benchmark-v1")
     throw new Error("Unexpected REALEC benchmark format.");
-if (dataset.archiveSha256 !== manifest.archiveSha256 || dataset.license !== "CC-BY-SA-4.0")
+if (
+    dataset.archiveSha256 !== manifest.archiveSha256 ||
+    dataset.license !== "CC-BY-SA-4.0" ||
+    hash(dataBytes) !== manifest.preparedDataSha256
+)
     throw new Error("REALEC benchmark provenance does not match its pinned manifest.");
 const documents = dataset.documents.filter((document) => document.split === "test");
 if (documents.length < 50 || documents.some((document) => !document.text || !document.id))
