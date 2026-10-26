@@ -238,6 +238,8 @@ No command installs prerequisites implicitly. See docs/quickstart.md.`),
         run(python(), [join(root, "training/evaluate_baseline.py"), ...extra]),
     "evaluate-parser-beam": () =>
         run(python(), [join(root, "training/evaluate_parser_beam.py"), ...extra]),
+    "evaluate-parser-beam-test": () =>
+        run(python(), [join(root, "training/evaluate_parser_beam_test.py"), ...extra]),
     "package-models": () => run(python(), [join(root, "training/package_models.py"), ...extra]),
     "package-release-models": () => script("package-model-release.mjs", extra),
     "evaluate-quantization": () =>
