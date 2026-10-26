@@ -1,4 +1,4 @@
-import type { Category, Certainty, Diagnostic, Sentence, SkillId, Span } from "./domain";
+import type { Category, Certainty, Diagnostic, Sentence, SkillId, Span, Token } from "./domain";
 import { SpellingIndex } from "./spelling";
 
 export interface GrammarRule {
@@ -13,6 +13,23 @@ function preserveCase(original: string, replacement: string): string {
         ? replacement[0]!.toUpperCase() + replacement.slice(1)
         : replacement;
 }
+
+function hasUnambiguousParticipleAnalysis(token: Token): boolean {
+    if (token.pos !== "VERB" || token.analyses.length === 0) return false;
+    const lemmas = new Set(token.analyses.map((analysis) => analysis.lemma.toLowerCase()));
+    return (
+        token.analyses.every(
+            (analysis) => analysis.pos === "VERB" && analysis.verbForm === "Part",
+        ) &&
+        lemmas.size === 1 &&
+        [...lemmas].every((lemma) => lemma.trim().length > 0 && lemma !== "_")
+    );
+}
+
+function isParsedModalAuxiliary(token: Token): boolean {
+    return token.pos === "AUX" && /^(could|would|should|must|might)$/iu.test(token.text);
+}
+
 export function finding(
     sentence: Sentence,
     ruleId: string,
@@ -550,10 +567,10 @@ const possessiveApostrophes: GrammarRule = {
 
 const contextualUsage: GrammarRule = {
     id: "contextual-usage",
-    version: "1.0.0",
+    version: "1.1.0",
     skill: "usage",
     description:
-        "Finite contexts distinguishing its/it's, modal of/have, and comparative than/then.",
+        "Finite contexts distinguishing its/it's, modal of/have, and comparative than/then, including unambiguous locally analyzed participles.",
     evaluate(s) {
         if (/[“”"]/u.test(s.text)) return [];
         return s.tokens.flatMap((token, i) => {
@@ -613,8 +630,9 @@ const contextualUsage: GrammarRule = {
             let explanation = "";
             if (
                 token.text.toLowerCase() === "of" &&
-                /^(could|would|should|must|might)$/iu.test(previous.text) &&
-                /^(been|gone|done|seen|written|taken|given|eaten|known)$/iu.test(next.text)
+                isParsedModalAuxiliary(previous) &&
+                (/^(been|gone|done|seen|written|taken|given|eaten|known)$/iu.test(next.text) ||
+                    hasUnambiguousParticipleAnalysis(next))
             ) {
                 replacement = "have";
                 explanation =
