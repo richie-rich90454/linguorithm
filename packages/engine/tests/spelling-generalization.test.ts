@@ -2,6 +2,53 @@ import { describe, expect, it } from "vitest";
 import { editDistance, SpellingIndex } from "../src/spelling";
 
 describe("full dictionary spelling retrieval", () => {
+    it("splits a merged token only at one corpus-supported word boundary", () => {
+        const index = new SpellingIndex(
+            [
+                "a",
+                "lot",
+                "we",
+                "should",
+                "of",
+                "the",
+                "account",
+                "all",
+                "life",
+                "world",
+                "therapist",
+                "rapist",
+                "for",
+                "ex",
+            ],
+            {
+                a: 3776,
+                lot: 93,
+                we: 919,
+                should: 244,
+                of: 3616,
+                the: 9066,
+                account: 14,
+                all: 519,
+                life: 80,
+                world: 137,
+                therapist: 47,
+                rapist: 3,
+                for: 755,
+                ex: 11,
+            },
+            2,
+        );
+        expect(index.splitConcatenated("alot")).toBe("a lot");
+        expect(index.splitConcatenated("weshould")).toBe("we should");
+        expect(index.splitConcatenated("ofthe")).toBe("of the");
+        expect(index.splitConcatenated("accountall")).toBe("account all");
+        expect(index.splitConcatenated("lifeworld")).toBeUndefined();
+        expect(index.splitConcatenated("therapist")).toBeUndefined();
+        expect(index.splitConcatenated("forex")).toBeUndefined();
+        expect(index.splitConcatenated("the")).toBeUndefined();
+        expect(index.splitConcatenated("weshouldnow")).toBeUndefined();
+    });
+
     it("retrieves approved terms missing from the training-frequency shortlist", () => {
         const index = new SpellingIndex(
             ["the", "quaternion", "spectrophotometer", "oxidization"],
