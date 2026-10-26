@@ -145,6 +145,8 @@ preview         Serve production site at 127.0.0.1:4317
 test            Run engine unit tests
 browser         Run Playwright suite (build first)
 evaluate        Run deterministic engine evaluation
+ingest-realec   Download and prepare the pinned local learner-essay benchmark
+evaluate-realec Score the untouched REALEC test split with the production browser worker
 validate-models Verify packaged model resources
 models          Restore bundled model release for development
 content         Validate question bank and formatting configuration
@@ -154,6 +156,7 @@ inspect         Inspect UI (start make preview separately)
 train           Retrain, evaluate and package models using .venv
 lint format typecheck benchmark-browser ablation compare
 Explicit network/setup commands: install-pnpm install install-browsers install-python
+The REALEC ingest target also downloads one hash-pinned, CC BY-SA corpus into .cache.
 release         Run source, content, model-bundle, build, budget, and browser release checks
 check-model-release  Verify a fresh model restore and corruption handling
 generalization  Evaluate held-out natural syntax and diverse development probes
@@ -209,6 +212,15 @@ No command installs prerequisites implicitly. See docs/quickstart.md.`),
     "validate-models": () => script("validate-models.mjs", extra),
     "check-model-release": () => script("check-model-release.mjs"),
     generalization: () => script("evaluate-generalization.mjs", extra),
+    "ingest-realec": () => run(python(), [join(root, "training/ingest_realec.py"), ...extra]),
+    "evaluate-realec": async () => {
+        if (!existsSync(join(root, ".cache/datasets/realec/benchmark.json")))
+            throw new Error(
+                "Run make ingest-realec once to prepare the project-local REALEC benchmark.",
+            );
+        await tasks.build();
+        await script("evaluate-realec.mjs", extra);
+    },
     "prepare-errors": () =>
         run(python(), [join(root, "training/train_errors.py"), "--prepare-features", ...extra]),
     "seal-syntax-model": () =>
