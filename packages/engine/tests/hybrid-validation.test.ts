@@ -38,6 +38,139 @@ function pipeline(options: Partial<AsyncSyntax> = {}) {
 }
 
 describe("hybrid proposal safety across analysis stages", () => {
+    it("suggests an evidence-backed space for a uniquely segmented merged word", async () => {
+        const report = await pipeline({
+            dictionary: ["we", "should", "finish", "today"],
+            lexicon: { frequency: { we: 919, should: 244, finish: 30, today: 100 } },
+        }).analyze("weshould finish today.");
+        const issue = report.diagnostics.find(
+            (diagnostic) => diagnostic.ruleId === "missing-word-space",
+        );
+        expect(
+            issue,
+            JSON.stringify(
+                report.diagnostics.map((diagnostic) => ({
+                    ruleId: diagnostic.ruleId,
+                    start: diagnostic.start,
+                    end: diagnostic.end,
+                    title: diagnostic.title,
+                    replacements: diagnostic.proposals.flatMap((proposal) =>
+                        proposal.edits.map((edit) => edit.replacement),
+                    ),
+                })),
+            ),
+        ).toBeDefined();
+        expect(issue?.goalId).toBe("writing.spacing");
+        expect(
+            issue?.proposals.flatMap((proposal) => proposal.edits.map((edit) => edit.replacement)),
+        ).toContain("We should");
+        expect(issue?.start).toBe(0);
+        expect(issue?.end).toBe("Weshould".length);
+    });
+
+    it("keeps the established four-letter merged-word correction", async () => {
+        const report = await pipeline({
+            dictionary: ["we", "wrote", "a", "lot", "today"],
+            lexicon: { frequency: { we: 919, wrote: 70, a: 3776, lot: 93, today: 100 } },
+        }).analyze("We wrote alot today.");
+        const issue = report.diagnostics.find((diagnostic) => diagnostic.category === "Spelling");
+        expect(issue).toBeDefined();
+        expect(
+            issue?.proposals.flatMap((proposal) => proposal.edits.map((edit) => edit.replacement)),
+        ).toContain("a lot");
+    });
+
+    it("does not turn the valid word forex into an unsupported split", async () => {
+        const report = await pipeline({
+            dictionary: ["we", "trade", "for", "ex", "markets", "move", "today"],
+            lexicon: {
+                frequency: {
+                    we: 919,
+                    trade: 180,
+                    for: 755,
+                    ex: 11,
+                    markets: 34,
+                    move: 60,
+                    today: 100,
+                },
+            },
+        }).analyze("We trade forex markets today.");
+        expect(
+            report.diagnostics
+                .filter((diagnostic) => diagnostic.ruleId === "missing-word-space")
+                .map((diagnostic) => [
+                    diagnostic.start,
+                    diagnostic.end,
+                    diagnostic.proposals.flatMap((proposal) =>
+                        proposal.edits.map((edit) => edit.replacement),
+                    ),
+                ]),
+        ).toEqual([]);
+        expect(
+            report.diagnostics
+                .filter((diagnostic) => diagnostic.ruleId === "dictionary-spelling")
+                .flatMap((diagnostic) =>
+                    diagnostic.proposals.flatMap((proposal) =>
+                        proposal.edits.map((edit) => edit.replacement),
+                    ),
+                ),
+        ).not.toContain("for ex");
+    });
+
+    it("does not split proper names or valid unfamiliar compounds", async () => {
+        const report = await pipeline({
+            dictionary: [
+                "reg",
+                "an",
+                "life",
+                "world",
+                "discusses",
+                "the",
+                "today",
+                "at",
+                "hens",
+                "athena",
+                "welcomes",
+                "guests",
+            ],
+            lexicon: {
+                frequency: {
+                    an: 499,
+                    life: 80,
+                    world: 137,
+                    discusses: 25,
+                    the: 9066,
+                    today: 69,
+                    at: 850,
+                    hens: 7,
+                    athena: 9,
+                    welcomes: 24,
+                    guests: 56,
+                },
+            },
+            sentence: async (s) => {
+                const result = parsed(s.text);
+                return {
+                    ...result,
+                    tokens: result.tokens.map((token) =>
+                        token.text === "Athens" ? { ...token, pos: "PROPN" } : token,
+                    ),
+                };
+            },
+        }).analyze("Regan discusses the lifeworld today. Athens welcomes guests today.");
+        expect(
+            report.diagnostics
+                .filter((diagnostic) => diagnostic.ruleId === "missing-word-space")
+                .map((diagnostic) => [
+                    diagnostic.start,
+                    diagnostic.end,
+                    diagnostic.proposals.flatMap((proposal) =>
+                        proposal.edits.map((edit) => edit.replacement),
+                    ),
+                ]),
+        ).toEqual([]);
+    });
+
     it("withholds a fallback repair when its neural reparse reveals a new constraint", async () => {
         const report = await pipeline({
             sentence: async (s) => parsed(s.text, s.text.includes(" are ") ? 1 : 0),
