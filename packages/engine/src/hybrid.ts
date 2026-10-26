@@ -170,18 +170,55 @@ export class HybridAnalysisPipeline {
             const baseline = report.diagnostics.filter(
                 (d) => d.start >= sentence.start && d.end <= sentence.end,
             );
-            const extra = this.constraints.evaluate(sentence);
+            const extra = this.constraints.evaluate(sentence),
+                replacedSpellings = new Set<Diagnostic>();
             for (const token of sentence.tokens) {
+                const lower = token.text.toLowerCase(),
+                    sentenceInitial = token.start === sentence.start,
+                    acceptableCase = /^[a-z]{5,24}$/u.test(token.text),
+                    baselineSpelling = baseline.find(
+                        (d) =>
+                            d.category === "Spelling" &&
+                            d.start <= token.start &&
+                            d.end >= token.end,
+                    );
                 if (
                     !this.spelling ||
-                    this.spelling.has(token.text) ||
-                    personal.has(token.text.toLowerCase()) ||
-                    token.pos === "PROPN" ||
-                    !/^[a-z]{5,24}$/u.test(token.text) ||
-                    baseline.some((d) => d.start <= token.start && d.end >= token.end)
+                    this.spelling.has(lower) ||
+                    personal.has(lower) ||
+                    !acceptableCase ||
+                    baseline.some(
+                        (d) =>
+                            d.category !== "Spelling" &&
+                            d.start <= token.start &&
+                            d.end >= token.end,
+                    )
                 )
                     continue;
-                const candidates = this.spelling.candidates(token.text);
+                const split = this.spelling.splitConcatenated(lower),
+                    candidates = this.spelling.candidates(lower),
+                    properNameSafeSplit = token.pos !== "PROPN";
+                if (split && candidates.length && properNameSafeSplit) {
+                    if (baselineSpelling) replacedSpellings.add(baselineSpelling);
+                    const replacement = sentenceInitial
+                        ? `${split[0]?.toUpperCase()}${split.slice(1)}`
+                        : split;
+                    extra.push(
+                        finding(
+                            sentence,
+                            "missing-word-space",
+                            "punctuation",
+                            token,
+                            "Punctuation",
+                            "Separate the words",
+                            `This unfamiliar token has one well-supported word boundary: “${replacement}”.`,
+                            [replacement],
+                            "Possible issue",
+                        ),
+                    );
+                    continue;
+                }
+                if (baselineSpelling || token.pos === "PROPN") continue;
                 if (candidates.length)
                     extra.push(
                         finding(
@@ -253,7 +290,10 @@ export class HybridAnalysisPipeline {
                 string,
                 Promise<{ rules: Diagnostic[]; classifier: readonly Diagnostic[] }>
             >();
-            for (const d of [...baseline, ...extra]) {
+            for (const d of [
+                ...baseline.filter((item) => !replacedSpellings.has(item)),
+                ...extra,
+            ]) {
                 const safe: CorrectionProposal[] = [];
                 for (const p of (this.ranker?.rank(sentence, d.proposals) ?? d.proposals).slice(
                     0,
