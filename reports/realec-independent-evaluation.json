@@ -1,5 +1,5 @@
 {
-    "generatedAt": "2026-10-26T12:51:34.754Z",
+    "generatedAt": "2026-10-26T13:36:18.720Z",
     "dataset": {
         "name": "Russian Error-Annotated Learner English Corpus",
         "license": "CC-BY-SA-4.0",
@@ -7,6 +7,7 @@
         "preparedDataSha256": "b49a5a9b0eebb5a47ed2ed104aaee4cd602c2b9af2f7ef2e238e28406656223f",
         "attribution": "REALEC Team, Russian Error-Annotated Learner English Corpus; Higher School of Economics, Moscow. The corpus is licensed under Creative Commons Attribution-ShareAlike 4.0 International.",
         "sourcePage": "https://rpractice.itorubarov.me/about/",
+        "split": "test",
         "testDocuments": 184,
         "totalAvailableDocuments": 1238,
         "splitPolicy": {
@@ -146,7 +147,7 @@
         }
     },
     "evaluation": {
-        "scope": "Document-held-out binary error-span detection on an independently sourced Russian-L1 university learner-essay corpus. This is an overall task metric, not per-pattern validation. Author-level independence is unavailable; the corpus population is narrow and does not represent preschool through advanced secondary writers.",
+        "scope": "Document-held-out binary error-span detection on an independently sourced Russian-L1 university learner-essay corpus (test split). This is an overall task metric, not per-pattern validation. Author-level independence is unavailable; the corpus population is narrow and does not represent preschool through advanced secondary writers.",
         "tokenization": "Source tokens are Unicode words with internal apostrophes plus individual non-whitespace punctuation. Gold error spans and production finding offsets are projected by overlap; zero-width insertion findings map to the following token, or the preceding final token.",
         "counts": {
             "TP": 128,
@@ -159,11 +160,41 @@
         "detectedErrorTokens": 840,
         "precision": 0.1523809523809524,
         "recall": 0.03186457555389594,
+        "accuracy": 0.9243567612001644,
+        "errorRate": 0.07564323879983559,
+        "missedErrorRate": 0.968135424446104,
         "f0_5": 0.08675613392978176,
         "falsePositiveRate": 0.01253344599352204,
         "precisionWilson95": [0.12966343718384377, 0.1782634323774529],
         "recallWilson95": [0.026864535397146956, 0.03775911651299455],
         "falsePositiveRateWilson95": [0.011651015726988947, 0.013481798527159918],
+        "requestedQualityTargets": {
+            "definitions": {
+                "falsePositiveRate": "FP / (FP + TN), strictly below 0.5%",
+                "totalTokenMisclassificationRate": "(FP + FN) / all source tokens, strictly below 0.5%",
+                "missedErrorRate": "FN / (TP + FN), strictly below 0.5%; equivalent to recall above 99.5%"
+            },
+            "referencePolicy": "Aggregate confusion counts use REALEC annotation overlap as the binary reference; unannotated tokens are treated as negative. This is not pattern-specific valid-control performance.",
+            "falsePositiveRate": {
+                "target": "< 0.5%",
+                "observed": 0.01253344599352204,
+                "passed": false,
+                "falsePositivesAllowedAtMost": 284
+            },
+            "totalTokenMisclassificationRate": {
+                "target": "< 0.5%",
+                "observed": 0.07564323879983559,
+                "passed": false,
+                "totalErrorsAllowedAtMost": 304
+            },
+            "missedErrorRate": {
+                "target": "< 0.5% (recall > 99.5%)",
+                "observed": 0.968135424446104,
+                "passed": false,
+                "missedErrorsAllowedAtMost": 20
+            },
+            "allPassed": false
+        },
         "annotationLabelRecall": {
             "Abs_comp_clause": {
                 "annotations": 30,
