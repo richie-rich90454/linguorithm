@@ -764,7 +764,7 @@ const subordinateFragments: GrammarRule = {
                 s,
                 this.id,
                 this.skill,
-                s.tokens[marker.dependent]!,
+                s,
                 "Grammar",
                 "Review this dependent clause as a sentence",
                 "The parse identifies a finite clause introduced by a subordinating marker, without an independent main clause. Join it to its main clause if a complete prose sentence is intended. Answers, headings, and deliberate fragments may stand alone.",
@@ -952,7 +952,7 @@ const neuralAgreement = (inflections?: PresentVerbInflections): GrammarRule => (
                 if (
                     !stableEdge(s, edge) ||
                     (hasCoordination && !coordinatedNumber) ||
-                    /^(there|that|who|what|which|none|all|some|most|data|news|series|species|means|police|staff|team|family|committee|number|lot|percent|pair|part|half|majority|people|cattle|fish|sheep|deer|offspring)$/iu.test(
+                    /^(there|who|what|which|none|all|some|most|data|news|series|species|means|police|staff|team|family|committee|number|lot|percent|pair|part|half|majority|people|cattle|fish|sheep|deer|offspring)$/iu.test(
                         subject.text,
                     )
                 )

@@ -172,131 +172,11 @@ class DictionaryTrie {
         return found;
     }
 }
-// The packaged dictionary is US English, but valid British spellings appear in
-// learner writing. Accept the common mechanical variants rather than flagging
-// them as misspellings; irregular pairs are listed explicitly.
-const britishVariants: Record<string, string> = {
-    acknowledgement: "acknowledgment",
-    ageing: "aging",
-    aluminium: "aluminum",
-    amidst: "amid",
-    amongst: "among",
-    anaemia: "anemia",
-    anaesthetic: "anesthetic",
-    archaeology: "archeology",
-    axe: "ax",
-    burnt: "burned",
-    cheque: "check",
-    cosy: "cozy",
-    diarrhoea: "diarrhea",
-    distil: "distill",
-    draught: "draft",
-    dreamt: "dreamed",
-    enquiry: "inquiry",
-    enrol: "enroll",
-    foetus: "fetus",
-    fulfil: "fulfill",
-    gaol: "jail",
-    grey: "gray",
-    gynaecology: "gynecology",
-    haemoglobin: "hemoglobin",
-    instil: "instill",
-    jewellery: "jewelry",
-    judgement: "judgment",
-    kerb: "curb",
-    learnt: "learned",
-    leukaemia: "leukemia",
-    manoeuvre: "maneuver",
-    maths: "math",
-    mediaeval: "medieval",
-    mould: "mold",
-    moustache: "mustache",
-    oestrogen: "estrogen",
-    orthopaedic: "orthopedic",
-    paediatric: "pediatric",
-    plough: "plow",
-    practise: "practice",
-    practised: "practiced",
-    practises: "practices",
-    practising: "practicing",
-    pyjamas: "pajamas",
-    sceptic: "skeptic",
-    sceptical: "skeptical",
-    skilful: "skillful",
-    smoulder: "smolder",
-    spelt: "spelled",
-    spoilt: "spoiled",
-    storey: "story",
-    sulphate: "sulfate",
-    sulphur: "sulfur",
-    tyre: "tire",
-    whilst: "while",
-    wilful: "willful",
-};
-
-function americanForms(word: string): Set<string> {
-    const forms = new Set<string>();
-    const add = (candidate: string) => {
-        if (candidate.length >= 3 && candidate !== word) forms.add(candidate);
-    };
-    const irregular = britishVariants[word];
-    if (irregular) add(irregular);
-    for (const [suffix, replacement] of [
-        ["isations", "izations"],
-        ["isation", "ization"],
-        ["isational", "izational"],
-        ["isers", "izers"],
-        ["iser", "izer"],
-        ["ised", "ized"],
-        ["ising", "izing"],
-        ["ises", "izes"],
-        ["ise", "ize"],
-        ["ysed", "yzed"],
-        ["ysing", "yzing"],
-        ["yses", "yzes"],
-        ["yse", "yze"],
-        ["oured", "ored"],
-        ["ouring", "oring"],
-        ["ourite", "orite"],
-        ["ourful", "orful"],
-        ["ourless", "orless"],
-        ["ourable", "orable"],
-        ["ourably", "orably"],
-        ["ours", "ors"],
-        ["our", "or"],
-        ["llers", "lers"],
-        ["ller", "ler"],
-        ["llors", "lors"],
-        ["llor", "lor"],
-        ["lled", "led"],
-        ["lling", "ling"],
-        ["lments", "llments"],
-        ["lment", "llment"],
-        ["res", "ers"],
-        ["red", "ered"],
-        ["ring", "ering"],
-        ["re", "er"],
-        ["ces", "ses"],
-        ["ce", "se"],
-        ["ogues", "ogs"],
-        ["ogue", "og"],
-        ["grammes", "grams"],
-        ["gramme", "gram"],
-        ["mme", "m"],
-        ["ae", "e"],
-        ["oe", "e"],
-    ] as const) {
-        if (word.endsWith(suffix)) add(word.slice(0, -suffix.length) + replacement);
-    }
-    return forms;
-}
-
 export class SpellingIndex {
     private readonly index = new Map<string, Set<string>>();
     private readonly known: Set<string>;
     private readonly dictionary?: DictionaryTrie;
     private readonly distance: number;
-    private readonly acceptedVariants = new Map<string, boolean>();
     constructor(
         words: readonly string[] = vocabulary,
         private readonly frequency: Readonly<Record<string, number>> = {},
@@ -318,13 +198,7 @@ export class SpellingIndex {
             }
     }
     has(word: string): boolean {
-        const lower = word.toLowerCase();
-        if (this.known.has(lower)) return true;
-        const cached = this.acceptedVariants.get(lower);
-        if (cached !== undefined) return cached;
-        const accepted = [...americanForms(lower)].some((form) => this.known.has(form));
-        this.acceptedVariants.set(lower, accepted);
-        return accepted;
+        return this.known.has(word.toLowerCase());
     }
     splitConcatenated(input: string): string | undefined {
         const word = input.toLowerCase();

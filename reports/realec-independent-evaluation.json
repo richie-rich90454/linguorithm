@@ -1,5 +1,5 @@
 {
-    "generatedAt": "2026-10-27T11:33:10.351Z",
+    "generatedAt": "2026-10-27T11:59:00.195Z",
     "dataset": {
         "name": "Russian Error-Annotated Learner English Corpus",
         "license": "CC-BY-SA-4.0",
@@ -142,32 +142,32 @@
                 "classifierWeights": "580a0205b0018541be7d207d2bdf7cc5458c6b6b6d7d1a9d0f43af879e73f132",
                 "dictionary": "26f2b4b2b612a8107586cff814c4af77f32a08e1dd20f706a04d1d380b864da9"
             },
-            "worker": "analysis.worker-DhL3VSHS.js",
-            "workerSha256": "840501910bb135c7c8f6c2e647ee811bb6058cd93e680648de85b48940c346ea"
+            "worker": "analysis.worker-Bg7h7afX.js",
+            "workerSha256": "fb0946d47a855b8f67d3659e342fdb9e20d580ab1223790f8f009c122f51acdb"
         }
     },
     "evaluation": {
         "scope": "Document-held-out binary error-span detection on an independently sourced Russian-L1 university learner-essay corpus (test split). This is an overall task metric, not per-pattern validation. Author-level independence is unavailable; the corpus population is narrow and does not represent preschool through advanced secondary writers.",
         "tokenization": "Source tokens are Unicode words with internal apostrophes plus individual non-whitespace punctuation. Gold error spans and production finding offsets are projected by overlap; zero-width insertion findings map to the following token, or the preceding final token.",
         "counts": {
-            "TP": 110,
-            "FP": 475,
-            "FN": 3907,
-            "TN": 56333
+            "TP": 128,
+            "FP": 688,
+            "FN": 3889,
+            "TN": 56120
         },
         "tokens": 60825,
         "goldErrorTokens": 4017,
-        "detectedErrorTokens": 585,
-        "precision": 0.18803418803418803,
-        "recall": 0.027383619616629325,
-        "accuracy": 0.9279572544184135,
-        "errorRate": 0.07204274558158652,
-        "missedErrorRate": 0.9726163803833707,
-        "f0_5": 0.08651879817523989,
-        "falsePositiveRate": 0.008361498380509787,
-        "precisionWilson95": [0.1584438833194188, 0.2216948712937397],
-        "recallWilson95": [0.022770625391283293, 0.03289967673655699],
-        "falsePositiveRateWilson95": [0.007645235799878316, 0.009144247419250802],
+        "detectedErrorTokens": 816,
+        "precision": 0.1568627450980392,
+        "recall": 0.03186457555389594,
+        "accuracy": 0.9247513357994246,
+        "errorRate": 0.07524866420057542,
+        "missedErrorRate": 0.968135424446104,
+        "f0_5": 0.08790001373437716,
+        "falsePositiveRate": 0.012110970285875228,
+        "precisionWilson95": [0.13352482830381265, 0.18341627783939782],
+        "recallWilson95": [0.026864535397146956, 0.03775911651299455],
+        "falsePositiveRateWilson95": [0.011243915168182017, 0.013044004803939531],
         "latestRequestedTargets": {
             "definitions": {
                 "precision": "TP / (TP + FP) at least 50%",
@@ -177,19 +177,19 @@
             "referencePolicy": "Aggregate confusion counts use REALEC annotation overlap as the binary reference; unannotated tokens are treated as negative.",
             "precision": {
                 "target": ">= 50%",
-                "observed": 0.18803418803418803,
+                "observed": 0.1568627450980392,
                 "passed": false
             },
             "totalTokenMisclassificationRate": {
                 "target": "<= 5%",
-                "observed": 0.07204274558158652,
+                "observed": 0.07524866420057542,
                 "passed": false,
                 "totalErrorsAllowedAtMost": 3041
             },
             "falsePositiveRate": {
                 "target": "< 1.21%",
-                "observed": 0.008361498380509787,
-                "passed": true,
+                "observed": 0.012110970285875228,
+                "passed": false,
                 "falsePositivesAllowedAtMost": 687
             },
             "allPassed": false
@@ -212,8 +212,8 @@
                 "50%": 0.6604192355117139,
                 "100%": 0.5691212411008394
             },
-            "currentNetDetections": -365,
-            "netDetectionsGap": 1341,
+            "currentNetDetections": -560,
+            "netDetectionsGap": 1536,
             "conclusion": "At exactly 50% precision the false positives equal the true positives, so total token errors equal the gold error count; the 5% limit therefore requires precision above the stated minimum at perfect recall, and more at lower recall. The 50% precision request is necessary but not sufficient."
         },
         "requestedQualityTargets": {
@@ -225,19 +225,19 @@
             "referencePolicy": "Aggregate confusion counts use REALEC annotation overlap as the binary reference; unannotated tokens are treated as negative. This is not pattern-specific valid-control performance.",
             "falsePositiveRate": {
                 "target": "< 0.5%",
-                "observed": 0.008361498380509787,
+                "observed": 0.012110970285875228,
                 "passed": false,
                 "falsePositivesAllowedAtMost": 284
             },
             "totalTokenMisclassificationRate": {
                 "target": "< 0.5%",
-                "observed": 0.07204274558158652,
+                "observed": 0.07524866420057542,
                 "passed": false,
                 "totalErrorsAllowedAtMost": 304
             },
             "missedErrorRate": {
                 "target": "< 0.5% (recall > 99.5%)",
-                "observed": 0.9726163803833707,
+                "observed": 0.968135424446104,
                 "passed": false,
                 "missedErrorsAllowedAtMost": 20
             },
@@ -317,16 +317,16 @@
             "Art_form": {
                 "annotations": 21,
                 "goldTokens": 31,
-                "detectedGoldTokens": 0,
-                "recall": 0,
-                "recallWilson95": [0, 0.11025539546043596]
+                "detectedGoldTokens": 1,
+                "recall": 0.03225806451612903,
+                "recallWilson95": [0.005717221525416816, 0.16194105164724906]
             },
             "Articles": {
                 "annotations": 118,
                 "goldTokens": 138,
-                "detectedGoldTokens": 0,
-                "recall": 0,
-                "recallWilson95": [1.734723475976807e-18, 0.027082764465572957]
+                "detectedGoldTokens": 2,
+                "recall": 0.014492753623188406,
+                "recallWilson95": [0.003983475402945181, 0.051299788643335814]
             },
             "Attr_participial": {
                 "annotations": 2,
@@ -492,9 +492,9 @@
             "Formational_affixes": {
                 "annotations": 20,
                 "goldTokens": 21,
-                "detectedGoldTokens": 1,
-                "recall": 0.047619047619047616,
-                "recallWilson95": [0.008455987809826399, 0.22669360074122563]
+                "detectedGoldTokens": 2,
+                "recall": 0.09523809523809523,
+                "recallWilson95": [0.02651876743807452, 0.2891413907391826]
             },
             "Grammar": {
                 "annotations": 5,
@@ -548,9 +548,9 @@
             "Infinitive_constr": {
                 "annotations": 3,
                 "goldTokens": 4,
-                "detectedGoldTokens": 0,
-                "recall": 0,
-                "recallWilson95": [0, 0.4898908364545973]
+                "detectedGoldTokens": 1,
+                "recall": 0.25,
+                "recallWilson95": [0.04558726080970055, 0.6993581574175981]
             },
             "Interrogative": {
                 "annotations": 3,
@@ -590,9 +590,9 @@
             "lex_item_choice": {
                 "annotations": 230,
                 "goldTokens": 309,
-                "detectedGoldTokens": 9,
-                "recall": 0.02912621359223301,
-                "recallWilson95": [0.015397619080812226, 0.05441876300303624]
+                "detectedGoldTokens": 11,
+                "recall": 0.03559870550161812,
+                "recallWilson95": [0.01999198575377556, 0.06261042544232241]
             },
             "lex_part_choice": {
                 "annotations": 44,
@@ -674,9 +674,9 @@
             "Number": {
                 "annotations": 50,
                 "goldTokens": 54,
-                "detectedGoldTokens": 4,
-                "recall": 0.07407407407407407,
-                "recallWilson95": [0.02918152776550481, 0.1755411583859995]
+                "detectedGoldTokens": 6,
+                "recall": 0.1111111111111111,
+                "recallWilson95": [0.051930224969995484, 0.2219470102118128]
             },
             "Numerical": {
                 "annotations": 1,
@@ -737,9 +737,9 @@
             "Prepositional_verb": {
                 "annotations": 17,
                 "goldTokens": 21,
-                "detectedGoldTokens": 1,
-                "recall": 0.047619047619047616,
-                "recallWilson95": [0.008455987809826399, 0.22669360074122563]
+                "detectedGoldTokens": 2,
+                "recall": 0.09523809523809523,
+                "recallWilson95": [0.02651876743807452, 0.2891413907391826]
             },
             "Prepositions": {
                 "annotations": 122,
@@ -758,9 +758,9 @@
             "Punctuation": {
                 "annotations": 122,
                 "goldTokens": 161,
-                "detectedGoldTokens": 3,
-                "recall": 0.018633540372670808,
-                "recallWilson95": [0.006356993493274208, 0.05334557703177281]
+                "detectedGoldTokens": 5,
+                "recall": 0.031055900621118012,
+                "recallWilson95": [0.013336707248041375, 0.0706316033924883]
             },
             "Quant_choice": {
                 "annotations": 4,
@@ -786,9 +786,9 @@
             "Redundant_comp": {
                 "annotations": 52,
                 "goldTokens": 146,
-                "detectedGoldTokens": 0,
-                "recall": 0,
-                "recallWilson95": [0, 0.025636822084673896]
+                "detectedGoldTokens": 1,
+                "recall": 0.00684931506849315,
+                "recallWilson95": [0.0012100972425709428, 0.03777416563546358]
             },
             "Redundant_ref": {
                 "annotations": 4,
@@ -828,9 +828,9 @@
             "Spelling": {
                 "annotations": 122,
                 "goldTokens": 148,
-                "detectedGoldTokens": 40,
-                "recall": 0.2702702702702703,
-                "recallWilson95": [0.20520640383811534, 0.34695806739302876]
+                "detectedGoldTokens": 42,
+                "recall": 0.28378378378378377,
+                "recallWilson95": [0.21733734387473075, 0.3611703937545813]
             },
             "Standard": {
                 "annotations": 21,
@@ -849,9 +849,9 @@
             "suggestion": {
                 "annotations": 111,
                 "goldTokens": 274,
-                "detectedGoldTokens": 10,
-                "recall": 0.0364963503649635,
-                "recallWilson95": [0.019942788244416674, 0.0658667915133699]
+                "detectedGoldTokens": 12,
+                "recall": 0.043795620437956206,
+                "recallWilson95": [0.0252277012054633, 0.07497857808369672]
             },
             "Superlative_adj": {
                 "annotations": 1,
@@ -877,9 +877,9 @@
             "Tense_form": {
                 "annotations": 20,
                 "goldTokens": 23,
-                "detectedGoldTokens": 2,
-                "recall": 0.08695652173913043,
-                "recallWilson95": [0.024180004484220363, 0.26795981075743663]
+                "detectedGoldTokens": 3,
+                "recall": 0.13043478260869565,
+                "recallWilson95": [0.04537659093631238, 0.32127482270095964]
             },
             "that_clause": {
                 "annotations": 1,
@@ -968,9 +968,9 @@
             "Word_choice": {
                 "annotations": 115,
                 "goldTokens": 251,
-                "detectedGoldTokens": 4,
-                "recall": 0.01593625498007968,
-                "recallWilson95": [0.006214298691276626, 0.0402516840239838]
+                "detectedGoldTokens": 6,
+                "recall": 0.02390438247011952,
+                "recallWilson95": [0.01100059251894681, 0.051161423402646775]
             },
             "Word_order": {
                 "annotations": 45,
@@ -982,20 +982,20 @@
         },
         "documentClusterBootstrap95": {
             "precision": {
-                "lower": 0.14205607476635515,
-                "upper": 0.23904382470119523
+                "lower": 0.11971830985915492,
+                "upper": 0.20160213618157544
             },
             "recall": {
-                "lower": 0.021012416427889206,
-                "upper": 0.034207240948813986
+                "lower": 0.02473410833539451,
+                "upper": 0.03889747552807831
             },
             "f0_5": {
-                "lower": 0.06713780918727916,
-                "upper": 0.1057233704292528
+                "lower": 0.07022471910112359,
+                "upper": 0.10636865490776896
             },
             "falsePositiveRate": {
-                "lower": 0.00696576772586107,
-                "upper": 0.0100665076266898
+                "lower": 0.009803383630544124,
+                "upper": 0.014722284184697747
             }
         },
         "bootstrap": {

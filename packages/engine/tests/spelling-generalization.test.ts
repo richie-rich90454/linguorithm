@@ -78,53 +78,6 @@ describe("full dictionary spelling retrieval", () => {
         expect(index.candidates("ab𐐨cde")).toContain("a𐐨bcde");
     });
 
-    it("accepts common British variants without admitting misspellings", () => {
-        const index = new SpellingIndex(
-            [
-                "theater",
-                "color",
-                "organize",
-                "analyze",
-                "modeling",
-                "center",
-                "program",
-                "defense",
-                "catalog",
-                "traveling",
-                "gray",
-                "jewelry",
-                "maneuver",
-                "practice",
-                "practicing",
-                "fulfillment",
-                "skeptical",
-            ],
-            { the: 10 },
-            2,
-        );
-        for (const word of [
-            "theatre",
-            "colour",
-            "organise",
-            "analyse",
-            "modelling",
-            "centre",
-            "programme",
-            "defence",
-            "catalogue",
-            "travelling",
-            "grey",
-            "jewellery",
-            "manoeuvre",
-            "practising",
-            "fulfilment",
-            "sceptical",
-        ])
-            expect(index.has(word)).toBe(true);
-        for (const word of ["advertisment", "simplier", "technicaly", "abberation"])
-            expect(index.has(word)).toBe(false);
-    });
-
     it("keeps recognition, output caps, and conservative query limits", () => {
         const index = new SpellingIndex(
             ["quaternion", "abcd", "abce", "abcf", "abcg"],

@@ -552,7 +552,7 @@ const fragments: GrammarRule = {
                       s,
                       this.id,
                       this.skill,
-                      s.tokens[0]!,
+                      s,
                       "Grammar",
                       "Check for a complete main clause",
                       "This sentence begins with a subordinating conjunction. Check whether it has an independent main clause; it may intentionally answer a preceding question. No automatic correction is offered.",

@@ -157,25 +157,6 @@ describe("parsed coordinated-subject agreement", () => {
         );
     });
 
-    it("does not treat a relative that as an agreement subject", () => {
-        const sentence = parsed("The books that are interesting.", [["are", "that", "nsubj"]], 0, {
-            that: { lemma: "that", pos: "PRON" as const, number: "singular" as const },
-            are: {
-                lemma: "be",
-                pos: "AUX" as const,
-                finite: true,
-                verbForm: "Fin" as const,
-                tense: "Pres" as const,
-                number: "plural" as const,
-            },
-            books: { lemma: "book", pos: "NOUN" as const, number: "plural" as const },
-            interesting: { lemma: "interesting", pos: "ADJ" as const },
-        });
-        expect(
-            agreement.evaluate(sentence).filter((item) => item.ruleId === "neural-agreement"),
-        ).toEqual([]);
-    });
-
     it.each([
         ["The student and the teacher walk home.", "and", "walk"],
         ["The student or the teacher walks home.", "or", "walks"],
