@@ -163,6 +163,7 @@ generalization  Evaluate held-out natural syntax and diverse development probes
 prepare-errors  Prepare classifier features from actual predicted syntax
 check-classifier-features  Verify Python/browser classifier feature parity
 train-errors    Train the classifier from prepared, parity-checked features
+train-realec-context  Train and evaluate the parser-feature REALEC candidate
 test-training   Run project-local training data and provenance tests
 train-ranker    Fit the train-only contextual correction ranker
 evaluate-baseline  Evaluate the separately labeled oracle-feature reference
@@ -230,6 +231,13 @@ No command installs prerequisites implicitly. See docs/quickstart.md.`),
     "check-classifier-features": () => script("check-classifier-features.mjs", extra),
     "train-errors": () =>
         run(python(), [join(root, "training/train_errors.py"), "--train", ...extra]),
+    "train-realec-context": async () => {
+        if (!existsSync(join(root, ".cache/datasets/realec/benchmark.json")))
+            throw new Error(
+                "Run make ingest-realec once to prepare the project-local REALEC benchmark.",
+            );
+        await run(python(), [join(root, "training/train_realec_context.py"), "--train", ...extra]);
+    },
     "test-training": () =>
         run(python(), [
             "-m",
