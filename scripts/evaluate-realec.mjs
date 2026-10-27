@@ -4,6 +4,7 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { format } from "oxfmt";
 import { preview } from "vite";
+import { buildRealecSpellingCalibration } from "./realec-spelling-audit.mjs";
 
 process.env.PLAYWRIGHT_BROWSERS_PATH ??= resolve(".cache/ms-playwright");
 const inputPath = ".cache/datasets/realec/benchmark.json";
@@ -452,6 +453,16 @@ for (const counts of Object.values(annotationLabelRecall)) {
     counts.recall = counts.goldTokens ? counts.detectedGoldTokens / counts.goldTokens : null;
     counts.recallWilson95 = wilson(counts.detectedGoldTokens, counts.goldTokens);
 }
+const spellingCalibration =
+    split === "development"
+        ? buildRealecSpellingCalibration(
+              split,
+              documents,
+              reports,
+              json("apps/web/public/models/lexicon.json").frequency,
+              json("apps/web/public/models/contextual.json"),
+          )
+        : undefined;
 const result = {
     generatedAt: new Date().toISOString(),
     dataset: {
@@ -542,6 +553,7 @@ const result = {
                           )
                           .map(([ruleId, counts]) => [ruleId, counts]),
                   ),
+                  ...(spellingCalibration ? { spellingCalibration } : {}),
               }
             : {}),
         annotationLabelRecall: Object.fromEntries(
