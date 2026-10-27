@@ -24,6 +24,42 @@ test("sentence repairs store typed evidence and first-attempt metadata", async (
     expect(backup.attempts[0].durationMs).toBeGreaterThan(0);
 });
 
+test("unrecognized repair rewrites are recorded for review without a mastery penalty", async ({
+    page,
+}) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Practice", exact: false }).first().click();
+    await page.getByRole("button", { name: "Sentence repairs" }).click();
+    await expect(page.locator(".question-sentence")).toHaveText(
+        "The collection of essays are ready.",
+    );
+    await page.getByLabel("Your repaired sentence").fill("The essays in the collection are ready.");
+    await page.getByRole("button", { name: "Check my reasoning" }).click();
+    await expect(
+        page.getByRole("heading", { name: "This response needs a human check." }),
+    ).toBeVisible();
+    await expect(page.locator(".repair-review")).toContainText(
+        "The collection of essays is ready.",
+    );
+    await expect(page.locator(".repair-review")).toContainText("The verb agrees with that subject");
+    await expect(page.locator(".answer-options")).toHaveCount(0);
+    await page.getByRole("button", { name: "Your progress" }).click();
+    await expect(page.getByText("Needs educator review · not scored")).toBeVisible();
+    const downloading = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Export backup" }).click();
+    const backup = JSON.parse(await readFile((await (await downloading).path())!, "utf8"));
+    expect(backup.attempts[0]).toMatchObject({
+        correct: false,
+        reviewRequired: true,
+        responseText: "The essays in the collection are ready.",
+    });
+    expect(backup.attempts[0]).not.toHaveProperty("attemptNumber");
+    expect(backup.attempts[0]).not.toHaveProperty("answer");
+    expect(backup.skills.some((state: { skill: string }) => state.skill === "agreement")).toBe(
+        false,
+    );
+});
+
 test("pretest resumes and completed assessment is isolated from mastery", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: "Your progress" }).click();
