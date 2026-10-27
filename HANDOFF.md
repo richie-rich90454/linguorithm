@@ -19,7 +19,7 @@ Keep the product general across writing levels and intents. Preserve the current
 
 Repository: `C:\Users\rjian\Desktop\grammar-practice`.
 
-The latest detector precision cleanup is committed in `DETECTOR_COMMIT_HASH`. It changed production rules, tests, the frozen REALEC report, the evaluation target schema, and the model card/verification/coverage notes. Read [reports/verification.md](reports/verification.md), the [model card](docs/model-card.md), [detector coverage](docs/detector-coverage.md), and the [training guide](training/README.md) before changing detector behavior.
+The latest detector precision cleanup is committed in `d9148be`. It changed production rules, tests, the frozen REALEC report, the evaluation target schema, and the model card/verification/coverage notes. Read [reports/verification.md](reports/verification.md), the [model card](docs/model-card.md), [detector coverage](docs/detector-coverage.md), and the [training guide](training/README.md) before changing detector behavior.
 
 ## Measured state
 
