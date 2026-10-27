@@ -69,6 +69,21 @@ describe("extended learning contracts", () => {
             ).exerciseIds,
         ).toHaveLength(5);
     });
+    it("excludes unrecognized repair responses from assessment accuracy", () => {
+        const service = new AssessmentService(),
+            repair = buildMutationBank()[0]!,
+            now = new Date("2026-01-01T00:00:00Z"),
+            session = service.start("pretest", [repair], [], [], now, 1),
+            completed = service.answer(session, repair, undefined, now, true),
+            pretest = service.summary([completed]).find((item) => item.phase === "pretest");
+        expect(pretest).toMatchObject({
+            completed: 1,
+            correct: 0,
+            total: 0,
+            reviewRequired: 1,
+            accuracy: null,
+        });
+    });
     it("does not treat repeated success as independent evidence", () => {
         const model = new MasteryModel(),
             state = model.initial("agreement"),
@@ -87,6 +102,20 @@ describe("extended learning contracts", () => {
         expect(updated.mastery).toBeLessThan(
             model.update(state, { ...attempt, attemptNumber: 1 }).mastery,
         );
+    });
+    it("does not update mastery from a response requiring human review", () => {
+        const model = new MasteryModel(),
+            state = model.initial("agreement"),
+            updated = model.update(state, {
+                id: "review",
+                exerciseId: "repair",
+                skill: "agreement",
+                correct: false,
+                hints: 0,
+                at: "2026-01-01T00:00:00Z",
+                reviewRequired: true,
+            });
+        expect(updated).toBe(state);
     });
     it("returns due reviews in order under arbitrary insertion", () => {
         fc.assert(
