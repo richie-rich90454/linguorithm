@@ -60,7 +60,7 @@ test("the local grammar model checks corpus-attested verb forms after modal auxi
         .filter({ hasText: "Use the base verb after a modal" });
     await expect(finding).toBeVisible({ timeout: 30_000 });
     await expect(finding).toContainText("go");
-    await expect(finding.getByRole("button", { name: "Apply correction" })).toBeVisible();
+    await expect(finding.getByRole("button", { name: "Show possible revision" })).toBeVisible();
 
     await page.getByRole("button", { name: "Edit text" }).click();
     await editor.fill("She could go home.");
