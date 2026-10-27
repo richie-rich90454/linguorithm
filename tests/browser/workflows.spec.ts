@@ -1,20 +1,29 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { readFile } from "node:fs/promises";
+import { approvePossibleRevision, waitForAnalysis } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("button", { name: "Apply correction" })).toBeVisible({
-        timeout: 30_000,
-    });
+    await waitForAnalysis(page);
 });
 test("source-linked correction, undo, persistence, and structure", async ({ page }) => {
     await expect(page.getByLabel("Annotated essay")).toContainText("details are often");
-    await expect(page.locator(".finding-detail")).toContainText("Review before applying.");
+    await expect(page.locator(".finding-detail")).toContainText(
+        "Essay findings have not met independent learner-writing accuracy gates.",
+    );
+    await expect(page.locator(".correction-preview")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Apply this revision" })).toHaveCount(0);
+    await expect(page.locator(".learner-review-prompt")).toContainText("Try your own revision");
+    await page.getByRole("button", { name: "Show possible revision" }).click();
+    const applyRevision = page.getByRole("button", { name: "Apply this revision" });
+    await expect(applyRevision).toBeDisabled();
+    await page.getByRole("checkbox", { name: "I checked that this preserves my meaning" }).check();
+    await expect(applyRevision).toBeEnabled();
     await expect(page.locator(".finding-detail")).toContainText(
         "Your text changes only when you choose an edit.",
     );
-    await page.getByRole("button", { name: "Apply correction" }).click();
+    await page.getByRole("button", { name: "Apply this revision" }).click();
     await expect(page.getByLabel("Annotated essay")).toContainText("details is often");
     await page.getByRole("button", { name: "Undo change" }).click();
     await expect(page.getByLabel("Annotated essay")).toContainText("details are often");
@@ -103,8 +112,9 @@ test("DOCX and PDF extraction, scanned-page abstention", async ({ page }) => {
             .setInputFiles(`tests/fixtures/essay.${extension}`);
         await expect(page.getByLabel("Essay title")).toHaveValue("essay");
         await expect(page.getByLabel("Annotated essay")).toContainText("She has wrote an essay.");
-        await expect(page.getByRole("button", { name: "Apply correction" })).toBeVisible();
-        await page.getByRole("button", { name: "Apply correction" }).click();
+        await expect(page.getByRole("button", { name: "Show possible revision" })).toBeVisible();
+        await approvePossibleRevision(page.locator(".finding-detail"));
+        await page.getByRole("button", { name: "Apply this revision" }).click();
         await expect(page.getByLabel("Annotated essay")).toContainText("She has written an essay.");
     }
     await page.locator('input[type="file"]').first().setInputFiles("tests/fixtures/blank.pdf");
@@ -216,5 +226,5 @@ test("cached shell and essay remain available offline", async ({ page, context }
     await page.reload();
     await expect(page.getByLabel("Annotated essay")).toContainText("Good writing begins");
     await page.getByRole("button", { name: "Analyze again" }).click();
-    await expect(page.getByRole("button", { name: "Apply correction" })).toBeVisible();
+    await waitForAnalysis(page);
 });
