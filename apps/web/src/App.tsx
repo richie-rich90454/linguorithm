@@ -443,10 +443,11 @@ export default function App() {
     }
     async function answer(
         q: Exercise,
-        selectedAnswer: number,
+        selectedAnswer: number | undefined,
         hints: number,
         durationMs = 0,
         responseText?: string,
+        reviewRequired = false,
     ) {
         const services = await loadFeatureEngine();
         if ((await db.attempts.count()) >= 50_000)
@@ -455,33 +456,53 @@ export default function App() {
             );
         const active = assessment();
         const updated = active
-            ? new services.AssessmentService().answer(active, q, selectedAnswer)
+            ? new services.AssessmentService().answer(
+                  active,
+                  q,
+                  selectedAnswer,
+                  new Date(),
+                  reviewRequired,
+              )
             : undefined;
         const attempt: Attempt = {
             id: crypto.randomUUID(),
             exerciseId: q.id,
             skill: q.skill,
-            answer: selectedAnswer,
-            correct: q.answer === selectedAnswer,
+            ...(selectedAnswer === undefined ? {} : { answer: selectedAnswer }),
+            correct: !reviewRequired && q.answer === selectedAnswer,
+            ...(reviewRequired ? { reviewRequired: true } : {}),
             hints,
             at: new Date().toISOString(),
-            attemptNumber: attempts().filter((a) => a.exerciseId === q.id).length + 1,
+            ...(reviewRequired
+                ? {}
+                : {
+                      attemptNumber:
+                          attempts().filter(
+                              (a) =>
+                                  a.exerciseId === q.id &&
+                                  !a.reviewRequired &&
+                                  (a.phase ?? "practice") === "practice",
+                          ).length + 1,
+                  }),
             phase: active?.phase ?? "practice",
             difficulty: q.difficulty,
             durationMs: Math.min(durationMs, 3_600_000),
             responseText,
         };
         const mastery = new services.MasteryModel();
-        const state = mastery.update(
-            states().find((s) => s.skill === q.skill) ?? mastery.initial(q.skill),
-            attempt,
-        );
+        const state = reviewRequired
+            ? undefined
+            : mastery.update(
+                  states().find((s) => s.skill === q.skill) ?? mastery.initial(q.skill),
+                  attempt,
+              );
         await db.transaction("rw", [db.skills, db.attempts, db.assessments], async () => {
             if ((await db.attempts.count()) >= 50_000)
                 throw new Error(
                     "This workspace has reached its limit of 50,000 recorded attempts. Export your records before starting a new workspace.",
                 );
-            if (!active && contributesToGrammarMastery(q.id)) await db.skills.put(state);
+            if (!active && !reviewRequired && contributesToGrammarMastery(q.id))
+                await db.skills.put(state!);
             await db.attempts.add(attempt);
             if (updated) await db.assessments.put(updated);
         });
