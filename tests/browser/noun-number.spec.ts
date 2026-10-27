@@ -20,7 +20,7 @@ test("the production local parser reviews count noun number without rewriting th
     await expect(finding).toBeVisible({ timeout: 30_000 });
     await expect(finding).toContainText("three");
     await expect(finding).toContainText("dog");
-    await expect(finding.getByRole("button", { name: "Apply correction" })).toHaveCount(0);
+    await expect(finding.getByRole("button", { name: "Apply this revision" })).toHaveCount(0);
     await page.getByRole("button", { name: "Edit text" }).click();
     await expect(editor).toHaveValue("We saw three dog on the trail.");
 
