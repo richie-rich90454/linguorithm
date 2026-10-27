@@ -1548,6 +1548,7 @@ export function documentRelationships(
             previous = sentences[i - 1]!;
         const pronoun = current.tokens[0];
         if (
+            style &&
             pronoun &&
             /^(he|she|it|they)$/iu.test(pronoun.text) &&
             !previous.ambiguous &&
@@ -1587,11 +1588,11 @@ export function documentRelationships(
                         "pronoun-reference",
                         "pronouns",
                         pronoun,
-                        "Grammar",
+                        "Style",
                         "Review the pronoun’s reference",
                         "The preceding sentence contains multiple grammatically compatible noun phrases. Context may resolve the reference; use the intended noun explicitly if a reader could be unsure.",
                         [],
-                        "Possible issue",
+                        "Style suggestion",
                         antecedents.map((t) => ({
                             start: t.start,
                             end: t.end,
