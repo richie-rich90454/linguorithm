@@ -54,6 +54,11 @@ db.version(2)
         attempts.sort((a, b) => Date.parse(a.at) - Date.parse(b.at) || a.id.localeCompare(b.id));
         const counts = new Map<string, number>();
         for (const record of attempts) {
+            if (record.reviewRequired) {
+                delete record.attemptNumber;
+                record.phase ??= "practice";
+                continue;
+            }
             const count = (counts.get(record.exerciseId) ?? 0) + 1;
             counts.set(record.exerciseId, count);
             record.phase ??= "practice";
@@ -78,7 +83,7 @@ async function replayGrammarMastery(
     for (const attempt of allAttempts.filter((a) => (a.phase ?? "practice") === "practice")) {
         practiceCounts.set(attempt.skill, (practiceCounts.get(attempt.skill) ?? 0) + 1);
         if (!contributesToGrammarMastery(attempt.exerciseId)) factualSkills.add(attempt.skill);
-        else
+        else if (!attempt.reviewRequired)
             replay.set(
                 attempt.skill,
                 mastery.update(
