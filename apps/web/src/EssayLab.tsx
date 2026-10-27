@@ -1,4 +1,4 @@
-import { For, Show, createMemo, createSignal } from "solid-js";
+import { For, Show, createEffect, createMemo, createSignal } from "solid-js";
 import type {
     AnalysisReport,
     Diagnostic,
@@ -84,6 +84,14 @@ interface Props {
 }
 export function EssayLab(props: Props) {
     const [filter, setFilter] = createSignal("All findings");
+    const [revealedSuggestions, setRevealedSuggestions] = createSignal<string[]>([]);
+    const [meaningChecked, setMeaningChecked] = createSignal<string[]>([]);
+    createEffect(() => {
+        if (props.report?.revision !== undefined) {
+            setRevealedSuggestions([]);
+            setMeaningChecked([]);
+        }
+    });
     const filtered = createMemo(() =>
         props.diagnostics.filter((d) => filter() === "All findings" || d.category === filter()),
     );
@@ -164,6 +172,20 @@ export function EssayLab(props: Props) {
         });
     };
     const activeIndex = createMemo(() => filtered().findIndex((d) => d.id === active()?.id));
+    const suggestionRevealed = (d: Diagnostic) => revealedSuggestions().includes(d.id);
+    const meaningPreserved = (d: Diagnostic) => meaningChecked().includes(d.id);
+    const revealSuggestion = (d: Diagnostic) =>
+        setRevealedSuggestions((current) =>
+            current.includes(d.id) ? current : [...current, d.id],
+        );
+    const confirmMeaning = (d: Diagnostic, checked: boolean) =>
+        setMeaningChecked((current) =>
+            checked
+                ? current.includes(d.id)
+                    ? current
+                    : [...current, d.id]
+                : current.filter((id) => id !== d.id),
+        );
     return (
         <>
             <div class="lab-toolbar">
@@ -578,7 +600,13 @@ export function EssayLab(props: Props) {
                                                     class="finding-detail"
                                                     id={`finding-detail-${d.id}`}
                                                 >
-                                                    <Show when={correctionPreview(d)}>
+                                                    <Show
+                                                        when={
+                                                            (!d.proposals.length ||
+                                                                suggestionRevealed(d)) &&
+                                                            correctionPreview(d)
+                                                        }
+                                                    >
                                                         {(preview) => (
                                                             <div
                                                                 class="correction-preview"
@@ -602,7 +630,9 @@ export function EssayLab(props: Props) {
                                                                 <Show when={preview().after}>
                                                                     {(suggestion) => (
                                                                         <div class="correction-version corrected">
-                                                                            <span>Suggested</span>
+                                                                            <span>
+                                                                                Possible revision
+                                                                            </span>
                                                                             <p>{suggestion()}</p>
                                                                         </div>
                                                                     )}
@@ -611,13 +641,56 @@ export function EssayLab(props: Props) {
                                                         )}
                                                     </Show>
                                                     <p>{d.explanation}</p>
-                                                    <Show when={d.proposals.length}>
+                                                    <Show
+                                                        when={
+                                                            d.proposals.length &&
+                                                            !suggestionRevealed(d)
+                                                        }
+                                                    >
+                                                        <div class="learner-review-prompt">
+                                                            <p>
+                                                                First, use the evidence above to
+                                                                decide whether anything should
+                                                                change. Try your own revision, then
+                                                                reveal one possible revision to
+                                                                compare. Essay findings have not met
+                                                                independent learner-writing accuracy
+                                                                gates.
+                                                            </p>
+                                                            <button
+                                                                class="button secondary"
+                                                                onClick={() => revealSuggestion(d)}
+                                                            >
+                                                                Show possible revision
+                                                            </button>
+                                                        </div>
+                                                    </Show>
+                                                    <Show
+                                                        when={
+                                                            d.proposals.length &&
+                                                            suggestionRevealed(d)
+                                                        }
+                                                    >
                                                         <p class="confidence-note">
-                                                            Review before applying. This pattern’s
-                                                            accuracy has not yet been independently
-                                                            validated. Your text changes only when
-                                                            you choose an edit.
+                                                            Compare it with your meaning. This
+                                                            pattern has not passed independent
+                                                            learner-writing validation; the revision
+                                                            may be wrong. Your text changes only
+                                                            when you choose an edit.
                                                         </p>
+                                                        <label class="meaning-check">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={meaningPreserved(d)}
+                                                                onChange={(event) =>
+                                                                    confirmMeaning(
+                                                                        d,
+                                                                        event.currentTarget.checked,
+                                                                    )
+                                                                }
+                                                            />
+                                                            I checked that this preserves my meaning
+                                                        </label>
                                                     </Show>
                                                     <div class="evidence-label">
                                                         The relationship
@@ -648,12 +721,18 @@ export function EssayLab(props: Props) {
                                                         </For>
                                                     </div>
                                                     <div class="finding-buttons">
-                                                        <Show when={d.proposals.length}>
+                                                        <Show
+                                                            when={
+                                                                d.proposals.length &&
+                                                                suggestionRevealed(d)
+                                                            }
+                                                        >
                                                             <button
                                                                 class="button blue"
+                                                                disabled={!meaningPreserved(d)}
                                                                 onClick={() => props.onApply(d)}
                                                             >
-                                                                Apply correction{" "}
+                                                                Apply this revision{" "}
                                                                 <Icon name="check" size={15} />
                                                             </button>
                                                         </Show>
@@ -666,16 +745,22 @@ export function EssayLab(props: Props) {
                                                             Keep my wording
                                                         </button>
                                                     </div>
-                                                    <Show when={d.proposals.length > 1}>
+                                                    <Show
+                                                        when={
+                                                            d.proposals.length > 1 &&
+                                                            suggestionRevealed(d)
+                                                        }
+                                                    >
                                                         <For each={d.proposals.slice(1)}>
                                                             {(p, i) => (
                                                                 <button
                                                                     class="text-button"
+                                                                    disabled={!meaningPreserved(d)}
                                                                     onClick={() =>
                                                                         props.onApply(d, i() + 1)
                                                                     }
                                                                 >
-                                                                    {p.label}
+                                                                    Apply: {p.label}
                                                                 </button>
                                                             )}
                                                         </For>
