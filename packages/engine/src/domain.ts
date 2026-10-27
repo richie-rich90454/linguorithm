@@ -257,20 +257,31 @@ export const skillStateSchema = z
     })
     .refine((s) => s.correct <= s.attempts);
 export type SkillState = z.infer<typeof skillStateSchema>;
-export const attemptSchema = z.object({
-    id: z.string(),
-    exerciseId: z.string(),
-    skill: skillStateSchema.shape.skill,
-    answer: z.number().int().nonnegative(),
-    correct: z.boolean(),
-    hints: z.number().int().nonnegative(),
-    at: z.string().datetime(),
-    attemptNumber: z.number().int().min(1).optional(),
-    phase: z.enum(["practice", "pretest", "posttest", "delayed", "transfer"]).optional(),
-    difficulty: z.number().int().min(1).max(3).optional(),
-    durationMs: z.number().finite().min(0).max(3_600_000).optional(),
-    responseText: z.string().max(10_000).optional(),
-});
+export const attemptSchema = z
+    .object({
+        id: z.string(),
+        exerciseId: z.string(),
+        skill: skillStateSchema.shape.skill,
+        answer: z.number().int().nonnegative().optional(),
+        correct: z.boolean(),
+        hints: z.number().int().nonnegative(),
+        at: z.string().datetime(),
+        attemptNumber: z.number().int().min(1).optional(),
+        phase: z.enum(["practice", "pretest", "posttest", "delayed", "transfer"]).optional(),
+        difficulty: z.number().int().min(1).max(3).optional(),
+        durationMs: z.number().finite().min(0).max(3_600_000).optional(),
+        responseText: z.string().max(10_000).optional(),
+        // The local checker cannot judge an unseen free-text rewrite. Preserve it without
+        // treating the response as positive or negative mastery evidence.
+        reviewRequired: z.boolean().optional(),
+    })
+    .refine(
+        (attempt) =>
+            attempt.reviewRequired
+                ? attempt.answer === undefined && !attempt.correct
+                : attempt.answer !== undefined,
+        { message: "Review-required responses cannot carry a scored answer." },
+    );
 export type Attempt = z.infer<typeof attemptSchema>;
 export interface Exercise {
     id: string;
@@ -314,9 +325,10 @@ export const assessmentSchema = z
             .array(
                 z.object({
                     exerciseId: z.string().max(200),
-                    answer: z.number().int().nonnegative(),
+                    answer: z.number().int().nonnegative().optional(),
                     correct: z.boolean(),
                     at: z.string().datetime(),
+                    reviewRequired: z.boolean().optional(),
                 }),
             )
             .max(100),
@@ -335,7 +347,13 @@ export const assessmentSchema = z
             (s.completedAt !== null &&
                 (s.answers.length !== s.exerciseIds.length ||
                     Date.parse(s.completedAt) < Date.parse(s.startedAt))) ||
-            s.answers.some((a) => Date.parse(a.at) < Date.parse(s.startedAt))
+            s.answers.some(
+                (a) =>
+                    Date.parse(a.at) < Date.parse(s.startedAt) ||
+                    (a.reviewRequired
+                        ? a.answer !== undefined || a.correct
+                        : a.answer === undefined),
+            )
         )
             ctx.addIssue({
                 code: "custom",
