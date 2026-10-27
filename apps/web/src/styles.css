@@ -1356,6 +1356,26 @@ h1 {
 .answer-feedback-correct {
     border-top-color: var(--blue);
 }
+.answer-feedback-review {
+    border: 1px solid var(--line);
+    background: var(--soft);
+    padding-inline: 16px;
+}
+.repair-review {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: #fff;
+}
+.repair-review span {
+    color: var(--muted);
+    font-size: 12px;
+}
+.repair-review blockquote {
+    margin: 8px 0;
+    font-size: 15px;
+}
 .answer-feedback h3 {
     font-size: 17px;
     font-weight: 500;
