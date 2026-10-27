@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { waitForAnalysis } from "./helpers";
 import { readdirSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 
 test("real local models initialize and browser emissions match Python ONNX", async ({
@@ -78,7 +79,7 @@ test("model failure remains explicit while deterministic analysis works", async 
     await page.route("**/models/registry.json", (route) => route.abort());
     await page.goto("/");
     await expect(page.getByTestId("model-status")).toHaveText("Deterministic fallback");
-    await expect(page.getByRole("button", { name: "Apply correction" })).toBeVisible();
+    await waitForAnalysis(page);
 });
 
 test.describe("model integrity", () => {
