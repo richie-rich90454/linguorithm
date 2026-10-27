@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { waitForAnalysis } from "./helpers";
 import { readFile } from "node:fs/promises";
 
 test("sentence repairs store typed evidence and first-attempt metadata", async ({ page }) => {
@@ -69,7 +70,7 @@ test("restoring a newer active document cannot be overwritten by its stale scree
     page,
 }) => {
     await page.goto("/");
-    await expect(page.getByRole("button", { name: "Apply correction" })).toBeVisible();
+    await waitForAnalysis(page);
     await page.getByRole("button", { name: "Your progress" }).click();
     const firstDownload = page.waitForEvent("download");
     await page.getByRole("button", { name: "Export backup" }).click();
