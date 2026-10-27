@@ -106,6 +106,7 @@ export class MasteryModel {
     }
     update(state: SkillState, attempt: Attempt): SkillState {
         if (state.skill !== attempt.skill) throw new Error("Attempt belongs to a different skill.");
+        if (attempt.reviewRequired) return state;
         const prior = state.mastery;
         const numerator = attempt.correct ? prior * (1 - this.slip) : prior * this.slip;
         const denominator =
