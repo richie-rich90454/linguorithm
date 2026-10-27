@@ -32,6 +32,9 @@ export interface ContextualTables {
     discount?: number;
     ranking?: { coefficients: number[]; intercept: number; scope: string };
 }
+
+const minimumSpellingContextGain = -2.3;
+
 export class CandidateRanker {
     private readonly vocabularySize: number;
     constructor(private readonly tables: ContextualTables) {
@@ -40,10 +43,23 @@ export class CandidateRanker {
     features(sentence: Sentence, proposal: CorrectionProposal): number[] {
         const edit = proposal.edits[0];
         if (!edit) return [0, 0, 0];
-        const index = sentence.tokens.findIndex((t) => t.start >= edit.start),
+        const word = edit.replacement.toLowerCase();
+        return [
+            Math.log1p(this.tables.unigrams[word] ?? 0),
+            this.contextualScore(sentence, edit.start, word),
+            -editDistance(edit.expected.slice(0, 40), edit.replacement.slice(0, 40)),
+        ];
+    }
+    contextualGain(sentence: Sentence, start: number, observed: string, candidate: string): number {
+        return (
+            this.contextualScore(sentence, start, candidate.toLowerCase()) -
+            this.contextualScore(sentence, start, observed.toLowerCase())
+        );
+    }
+    private contextualScore(sentence: Sentence, start: number, word: string): number {
+        const index = sentence.tokens.findIndex((token) => token.start >= start),
             previous = sentence.tokens[index - 1]?.text.toLowerCase() ?? "<s>",
             next = sentence.tokens[index + 1]?.text.toLowerCase() ?? "</s>",
-            word = edit.replacement.toLowerCase(),
             smoothing = this.tables.smoothing;
         const probability = (a: string, b: string) => {
             const count = this.tables.bigrams[a + "\0" + b] ?? 0,
@@ -64,11 +80,7 @@ export class CandidateRanker {
             }
             return Math.log((count + smoothing) / (total + smoothing * this.vocabularySize));
         };
-        return [
-            Math.log1p(this.tables.unigrams[word] ?? 0),
-            probability(previous, word) + probability(word, next),
-            -editDistance(edit.expected.slice(0, 40), edit.replacement.slice(0, 40)),
-        ];
+        return probability(previous, word) + probability(word, next);
     }
     rank(sentence: Sentence, proposals: readonly CorrectionProposal[]): CorrectionProposal[] {
         if (!this.tables.ranking) return [...proposals];
@@ -92,6 +104,18 @@ export interface AsyncSyntax {
     contextual?: ContextualTables;
     metadata: { version: string; limitations: string[] };
 }
+
+const standaloneDependentClause =
+    /^(?:although|because|unless|whereas|though|while|when|after|before|since)\b/iu;
+
+function answersPreviousQuestion(previous: Sentence | undefined, current: Sentence): boolean {
+    return Boolean(
+        previous &&
+        /\?[”"')\]]*\s*$/u.test(previous.text) &&
+        standaloneDependentClause.test(current.text.trimStart()),
+    );
+}
+
 export class HybridAnalysisPipeline {
     private readonly fallback = createPipeline();
     private readonly constraints: GrammarConstraintEngine;
@@ -129,7 +153,11 @@ export class HybridAnalysisPipeline {
             diagnostics: Diagnostic[] = [];
         const personal = new Set(personalDictionary.map((w) => w.toLowerCase()));
         let lexicalAbstentions = 0;
-        for (const original of report.sentences) {
+        for (const [sentenceIndex, original] of report.sentences.entries()) {
+            const contextualDependentAnswer = answersPreviousQuestion(
+                report.sentences[sentenceIndex - 1],
+                original,
+            );
             let local = this.cache.get(original.text);
             if (!local) {
                 local = await this.syntax.sentence({
@@ -219,7 +247,18 @@ export class HybridAnalysisPipeline {
                     continue;
                 }
                 if (baselineSpelling || token.pos === "PROPN") continue;
-                if (candidates.length)
+                const contextSupportedCandidates = this.ranker
+                    ? candidates.filter(
+                          (candidate) =>
+                              this.ranker!.contextualGain(
+                                  sentence,
+                                  token.start,
+                                  token.text,
+                                  candidate,
+                              ) >= minimumSpellingContextGain,
+                      )
+                    : candidates;
+                if (contextSupportedCandidates.length)
                     extra.push(
                         finding(
                             sentence,
@@ -229,7 +268,7 @@ export class HybridAnalysisPipeline {
                             "Spelling",
                             "Review an unfamiliar word",
                             "This word is absent from the installed American English dictionary and has nearby common-word candidates. Names, technical vocabulary, and uncommon valid words may be absent; dismiss or add them to your personal dictionary.",
-                            candidates,
+                            contextSupportedCandidates,
                             "Possible issue",
                         ),
                     );
@@ -294,6 +333,10 @@ export class HybridAnalysisPipeline {
                 ...baseline.filter((item) => !replacedSpellings.has(item)),
                 ...extra,
             ]) {
+                // A dependent clause can be a complete answer in context, such as
+                // “Why did they leave? Because it was late.” The sentence-only
+                // fragment rules cannot see that context, so abstain here.
+                if (contextualDependentAnswer && d.ruleId === "dependent-fragment") continue;
                 const safe: CorrectionProposal[] = [];
                 for (const p of (this.ranker?.rank(sentence, d.proposals) ?? d.proposals).slice(
                     0,
