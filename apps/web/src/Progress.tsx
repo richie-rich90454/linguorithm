@@ -26,6 +26,7 @@ export function Progress(props: {
             (a) =>
                 a.hints === 0 &&
                 (a.attemptNumber ?? 1) === 1 &&
+                !a.reviewRequired &&
                 contributesToGrammarMastery(a.exerciseId) &&
                 (a.phase ?? "practice") === "practice",
         ),
@@ -55,7 +56,9 @@ export function Progress(props: {
                                 onClick={() => props.onAssessment(s.phase as Assessment["phase"])}
                             >
                                 {s.phase} ·{" "}
-                                {s.total ? `${s.correct}/${s.total}` : "Start or resume"}
+                                {s.total || s.reviewRequired
+                                    ? `${s.correct}/${s.total} reviewed${s.reviewRequired ? ` · ${s.reviewRequired} need review` : ""}`
+                                    : "Start or resume"}
                             </button>
                         )}
                     </For>
@@ -178,16 +181,20 @@ export function Progress(props: {
                     <For each={props.attempts.slice(-12).reverse()}>
                         {(a) => (
                             <div>
-                                <span classList={{ "attempt-mark": true, wrong: !a.correct }}>
-                                    {a.correct ? "✓" : "↗"}
+                                <span
+                                    classList={{
+                                        "attempt-mark": true,
+                                        wrong: !a.correct && !a.reviewRequired,
+                                    }}
+                                >
+                                    {a.reviewRequired ? "?" : a.correct ? "✓" : "↗"}
                                 </span>
                                 <span>
                                     {skills.find((s) => s.id === a.skill)?.name}
                                     <small>
-                                        {a.correct ? "Correct" : "Keep exploring"}
-                                        {a.hints > 0
-                                            ? ` · ${a.hints} hints`
-                                            : " · Independent answer"}
+                                        {a.reviewRequired
+                                            ? "Needs educator review · not scored"
+                                            : `${a.correct ? "Correct" : "Keep exploring"}${a.hints > 0 ? ` · ${a.hints} hints` : " · Independent answer"}`}
                                     </small>
                                 </span>
                                 <time datetime={a.at}>{new Date(a.at).toLocaleString()}</time>
