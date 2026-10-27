@@ -28,6 +28,46 @@ function parsed(text: string, comparisons = 0): Sentence {
     };
 }
 
+function parsedDependentClause(text: string): Sentence {
+    const result = parsed(text),
+        index = (word: string) =>
+            result.tokens.findIndex((token) => token.text.toLowerCase() === word),
+        tokens = result.tokens.map((token) => {
+            if (token.text === "was")
+                return {
+                    ...token,
+                    pos: "AUX" as const,
+                    analyses: [
+                        {
+                            lemma: "be",
+                            pos: "AUX" as const,
+                            finite: true,
+                            tense: "Past",
+                            verbForm: "Fin",
+                        },
+                    ],
+                };
+            if (token.text === "late")
+                return {
+                    ...token,
+                    pos: "ADJ" as const,
+                    analyses: [{ lemma: "late", pos: "ADJ" as const }],
+                };
+            return token;
+        }),
+        late = index("late");
+    return {
+        ...result,
+        tokens,
+        graph: [
+            { head: late, dependent: late, relation: "root" },
+            { head: late, dependent: index("was"), relation: "cop" },
+            { head: late, dependent: index("it"), relation: "nsubj" },
+            { head: late, dependent: index("because"), relation: "mark" },
+        ],
+    };
+}
+
 function pipeline(options: Partial<AsyncSyntax> = {}) {
     return new HybridAnalysisPipeline({
         lexicon: { frequency: {} },
@@ -171,6 +211,35 @@ describe("hybrid proposal safety across analysis stages", () => {
         ).toEqual([]);
     });
 
+    it("accepts a dependent clause as an answer to the preceding question", async () => {
+        const report = await pipeline({
+            sentence: async (sentence) =>
+                sentence.text.startsWith("Because")
+                    ? parsedDependentClause(sentence.text)
+                    : parsed(sentence.text),
+        }).analyze("Why did they leave? Because it was late.");
+
+        expect(
+            report.diagnostics.filter((diagnostic) => diagnostic.ruleId === "dependent-fragment"),
+        ).toEqual([]);
+    });
+
+    it("continues to review a standalone dependent clause without question context", async () => {
+        const report = await pipeline({
+            sentence: async (sentence) =>
+                sentence.text.startsWith("Because")
+                    ? parsedDependentClause(sentence.text)
+                    : parsed(sentence.text),
+        }).analyze("They waited. Because it was late.");
+
+        const [issue] = report.diagnostics.filter(
+            (diagnostic) => diagnostic.ruleId === "dependent-fragment",
+        );
+        expect(issue).toBeDefined();
+        expect(issue!.start).toBe(report.text.indexOf("Because"));
+        expect(report.text.slice(issue!.start, issue!.end)).toBe("Because it was late.");
+    });
+
     it("withholds a fallback repair when its neural reparse reveals a new constraint", async () => {
         const report = await pipeline({
             sentence: async (s) => parsed(s.text, s.text.includes(" are ") ? 1 : 0),
@@ -194,6 +263,46 @@ describe("hybrid proposal safety across analysis stages", () => {
         expect(issue).toBeDefined();
         expect(reparses).toContain("This reads more better.");
         expect(issue!.proposals).toEqual([]);
+    });
+
+    it("abstains when local corpus context strongly favors the observed spelling", async () => {
+        const report = await pipeline({
+            dictionary: ["the", "quaternion", "appears"],
+            lexicon: { frequency: { the: 1_000, quaternion: 100, appears: 100 } },
+            contextual: {
+                smoothing: 0.1,
+                unigrams: { the: 1_000, quaterinon: 10, quaternion: 100, appears: 100 },
+                bigrams: {
+                    "the\u0000quaterinon": 100,
+                    "quaterinon\u0000appears": 10,
+                },
+            },
+        }).analyze("The quaterinon appears.");
+
+        expect(
+            report.diagnostics.some((diagnostic) => diagnostic.ruleId === "dictionary-spelling"),
+        ).toBe(false);
+    });
+
+    it("keeps a spelling suggestion when the corpus context supports its correction", async () => {
+        const report = await pipeline({
+            dictionary: ["I", "study", "quaternion", "daily"],
+            lexicon: { frequency: { i: 1_000, study: 50, quaternion: 100, daily: 50 } },
+            contextual: {
+                smoothing: 0.1,
+                unigrams: { i: 1_000, study: 50, quaternion: 100, quaterinon: 1, daily: 50 },
+                bigrams: {
+                    "i\u0000study": 500,
+                    "study\u0000quaternion": 20,
+                    "quaternion\u0000daily": 40,
+                },
+            },
+        }).analyze("I study quaterinon daily.");
+
+        const issue = report.diagnostics.find(
+            (diagnostic) => diagnostic.ruleId === "dictionary-spelling",
+        );
+        expect(issue?.proposals[0]?.edits[0]?.replacement).toBe("quaternion");
     });
 
     it("rejects an increased finding count even when the same rule already existed", async () => {
