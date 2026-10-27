@@ -47,6 +47,7 @@ At exactly 50% precision, false positives equal true positives, so total token e
 - A category-aware BiLSTM with word, character-CNN, and shape features reached 228 true positives at its best-recall operating point below the false-positive ceiling, with 22.4% precision. Its development oracle threshold still had negative net detections.
 - Precision-first rule filtering improved precision but reduced recall; it was reverted under the no-regression gate.
 - A sentence-initial missing-article rule found 4 true positives and 14 false positives on development; it was rejected.
+- A parser-feature MLP trained on 291,580 REALEC training tokens found 24 true positives and 46 false positives at its max-net threshold on 58,385 retained development rows (34.3% precision, 0.6% recall); its best-recall threshold found 146/609 (19.3% precision, 3.65% recall). No threshold reached 50% precision. It is not integrated; see `reports/realec-context-model.json`.
 - Harper.js 2.13.0 (browser WASM) found 77 true positives and 516 false positives on the first 20 development documents: 12.98% precision, 19.25% recall, 10.46% false-positive rate.
 - LingoTweaker 0.2.8 (browser WASM, LanguageTool rules) found 38 true positives and 153 false positives on the same sample: 19.90% precision, 9.50% recall, 3.10% false-positive rate.
 - Both browser grammar engines were removed; neither beat the production rules.

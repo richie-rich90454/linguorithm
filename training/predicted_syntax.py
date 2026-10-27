@@ -66,8 +66,8 @@ class PredictedSyntaxFeatures:
             ]
         }
 
-    def extract(self, tokens):
-        key = tuple(tokens)
+    def extract(self, tokens, strict=True):
+        key = (tuple(tokens), strict)
         if key in self.cache:
             return self.cache[key]
         self.statistics["uniqueSequences"] += 1
@@ -76,13 +76,13 @@ class PredictedSyntaxFeatures:
             self.statistics["excludedTokenizerOrLength"] += 1
             result = None
         else:
-            result = self._predict(tokens)
+            result = self._predict(tokens, strict=strict)
         self.cache[key] = result
         if len(self.cache) > 512:
             self.cache.popitem(last=False)
         return result
 
-    def _predict(self, tokens):
+    def _predict(self, tokens, strict=True):
         vocabulary, characters = (
             self.metadata["vocabulary"],
             self.metadata["characters"],
@@ -115,7 +115,11 @@ class PredictedSyntaxFeatures:
         heads, relations = state[2], state[3]
         if any(head < 0 for head in heads):
             self.statistics["excludedParserFailure"] += 1
-            return None
+            if strict:
+                return None
+            heads = [-1] * len(tokens)
+            relations = ["dep"] * len(tokens)
+        self.last_syntax = (predicted, heads, relations)
         output = []
         for index, word in enumerate(tokens):
             head = -1 if relations[index] == "root" else heads[index]
@@ -132,7 +136,9 @@ class PredictedSyntaxFeatures:
                 entries = self.lexicon["forms"].get(tokens[subject].lower())
                 if entries is None:
                     self.statistics["excludedSubjectNeedsBrowserFallback"] += 1
-                    return None
+                    if strict:
+                        return None
+                    entries = []
                 numbers = {
                     entry["number"]
                     for entry in entries

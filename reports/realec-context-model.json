@@ -1,0 +1,83 @@
+{
+    "dataset": {
+        "documents": 1054,
+        "rows": 291580,
+        "positive": 19738
+    },
+    "coverage": {
+        "retainedRows": 291580,
+        "statistics": {
+            "uniqueSequences": 17046,
+            "excludedSubjectNeedsBrowserFallback": 8257,
+            "retainedSequences": 14888,
+            "excludedTokenizerOrLength": 2158
+        }
+    },
+    "holdout": {
+        "rows": 38000,
+        "selected": {
+            "counts": {
+                "TP": 6,
+                "FP": 32,
+                "FN": 3044,
+                "TN": 34918
+            },
+            "precision": 0.15789473684210525,
+            "recall": 0.0019672131147540984,
+            "falsePositiveRate": 0.0009155937052932761,
+            "totalMisclassificationRate": 0.08094736842105263,
+            "netDetections": -26,
+            "threshold": 0.947432039320467
+        },
+        "bestRecall": {
+            "counts": {
+                "TP": 73,
+                "FP": 412,
+                "FN": 2977,
+                "TN": 34538
+            },
+            "precision": 0.15051546391752577,
+            "recall": 0.023934426229508195,
+            "falsePositiveRate": 0.01178826895565093,
+            "totalMisclassificationRate": 0.0891842105263158,
+            "netDetections": -339,
+            "threshold": 0.8618172445025378
+        },
+        "bestPrecision": null
+    },
+    "development": {
+        "rows": 58385,
+        "selected": {
+            "counts": {
+                "TP": 24,
+                "FP": 46,
+                "FN": 3974,
+                "TN": 54341
+            },
+            "precision": 0.34285714285714286,
+            "recall": 0.006003001500750375,
+            "falsePositiveRate": 0.0008457903543126115,
+            "totalMisclassificationRate": 0.0688533013616511,
+            "netDetections": -22,
+            "threshold": 0.947432039320467
+        },
+        "bestRecall": {
+            "counts": {
+                "TP": 146,
+                "FP": 609,
+                "FN": 3852,
+                "TN": 53778
+            },
+            "precision": 0.19337748344370861,
+            "recall": 0.03651825912956478,
+            "falsePositiveRate": 0.01119752882122566,
+            "totalMisclassificationRate": 0.07640661128714567,
+            "netDetections": -463,
+            "threshold": 0.8618172445025378
+        },
+        "bestPrecision": null
+    },
+    "generatedAt": "2026-10-27T13:48:03.7723761Z",
+    "experiment": "realec-parser-feature-token-model",
+    "scope": "Development-only candidate; fixed test split not opened. Aggregate counts only. Model rejected: no threshold reached 50% precision; best-recall operating point did not improve production."
+}
