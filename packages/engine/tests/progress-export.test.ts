@@ -15,9 +15,18 @@ it("exports complete attempt evidence while neutralizing spreadsheet formulas", 
         durationMs: 1234,
         phase: "practice",
     };
-    const csv = new ProgressExporter().csv([attempt]);
+    const reviewAttempt: Attempt = {
+        ...attempt,
+        id: "review-needed",
+        correct: false,
+        reviewRequired: true,
+        answer: 1,
+    };
+    const csv = new ProgressExporter().csv([attempt, reviewAttempt]);
     expect(csv).toContain('"\'=formula()"');
     expect(csv).toContain('"quoted,""question"""');
     expect(csv).toContain('"difficulty","durationMs"');
     expect(csv).toContain('"1","2","1234"');
+    expect(csv.split("\r\n")[0]).toContain('"reviewRequired"');
+    expect(csv.split("\r\n")[2]).toContain('"false","true"');
 });
