@@ -40,6 +40,83 @@ const wilson = (successes, total) => {
         half = (z * Math.sqrt((p * (1 - p)) / total + (z * z) / (4 * total * total))) / denominator;
     return [Math.max(0, center - half), Math.min(1, center + half)];
 };
+const latestTargets = ({ TP, FP, FN, TN }, tokens) => {
+    const negativeTokens = FP + TN,
+        precision = TP + FP ? TP / (TP + FP) : null,
+        errorRate = tokens ? (FP + FN) / tokens : null,
+        falsePositiveRate = negativeTokens ? FP / negativeTokens : null,
+        maxTotalErrors = Math.floor(tokens * 0.05),
+        maxFalsePositives = Math.ceil(negativeTokens * 0.0121) - 1;
+    const gates = {
+        precision: {
+            target: ">= 50%",
+            observed: precision,
+            passed: precision !== null && precision >= 0.5,
+        },
+        totalTokenMisclassificationRate: {
+            target: "<= 5%",
+            observed: errorRate,
+            passed: errorRate !== null && errorRate <= 0.05,
+            totalErrorsAllowedAtMost: maxTotalErrors,
+        },
+        falsePositiveRate: {
+            target: "< 1.21%",
+            observed: falsePositiveRate,
+            passed: falsePositiveRate !== null && falsePositiveRate < 0.0121,
+            falsePositivesAllowedAtMost: maxFalsePositives,
+        },
+    };
+    return {
+        definitions: {
+            precision: "TP / (TP + FP) at least 50%",
+            totalTokenMisclassificationRate: "(FP + FN) divided by all source tokens at most 5%",
+            falsePositiveRate: "FP / (FP + TN) strictly below 1.21%",
+        },
+        referencePolicy:
+            "Aggregate confusion counts use REALEC annotation overlap as the binary reference; unannotated tokens are treated as negative.",
+        ...gates,
+        allPassed: Object.values(gates).every((gate) => gate.passed),
+    };
+};
+
+const targetFeasibility = ({ TP, FP }, tokens, goldErrorTokens) => {
+    const prevalence = goldErrorTokens / tokens,
+        maxTotalErrors = Math.floor(tokens * 0.05),
+        minimumNet = Math.max(0, goldErrorTokens - maxTotalErrors),
+        minimumRecallAtPerfectPrecision = minimumNet / goldErrorTokens,
+        minimumPrecisionAtPerfectRecall = goldErrorTokens / (goldErrorTokens + 0.05 * tokens),
+        ratio = (0.05 * tokens) / goldErrorTokens,
+        neededPrecision = (recall) => {
+            const denominator = ratio - 1 + 2 * recall;
+            return denominator > 0 ? recall / denominator : null;
+        },
+        currentNet = TP - FP;
+    return {
+        scope: "Exact consequence of the corpus gold prevalence, not a model estimate. Corpus annotations may be incomplete.",
+        tokens,
+        goldErrorTokens,
+        goldPrevalence: prevalence,
+        minimumNetDetectionsForFivePercentErrors: minimumNet,
+        minimumRecallAtPerfectPrecision,
+        minimumPrecisionAtPerfectRecall,
+        atFiftyPercentPrecision: {
+            totalErrors: goldErrorTokens,
+            totalErrorRate: prevalence,
+            meetsFivePercentLimit: goldErrorTokens <= maxTotalErrors,
+        },
+        precisionNeededAtRecall: Object.fromEntries(
+            [0.25, 0.5, 1].map((recall) => [
+                `${(recall * 100).toFixed(0)}%`,
+                neededPrecision(recall),
+            ]),
+        ),
+        currentNetDetections: currentNet,
+        netDetectionsGap: minimumNet - currentNet,
+        conclusion:
+            "At exactly 50% precision the false positives equal the true positives, so total token errors equal the gold error count; the 5% limit therefore requires precision above the stated minimum at perfect recall, and more at lower recall. The 50% precision request is necessary but not sufficient.",
+    };
+};
+
 const ratios = ({ TP, FP, FN, TN }) => {
     const precision = TP + FP ? TP / (TP + FP) : null,
         recall = TP + FN ? TP / (TP + FN) : null,
@@ -499,6 +576,8 @@ const result = {
         goldErrorTokens: total.goldErrorTokens,
         detectedErrorTokens: total.counts.TP + total.counts.FP,
         ...ratios(total.counts),
+        latestRequestedTargets: latestTargets(total.counts, total.tokens),
+        targetFeasibility: targetFeasibility(total.counts, total.tokens, total.goldErrorTokens),
         requestedQualityTargets: (() => {
             const rates = ratios(total.counts),
                 falsePositiveLimit = 0.005,

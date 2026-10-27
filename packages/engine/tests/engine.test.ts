@@ -145,6 +145,8 @@ describe("grammar constraints and valid controls", () => {
         ["It is a hour away.", "article-sound", "an"],
         ["It is an useful book.", "article-sound", "a"],
         ["I recieve letters.", "spelling", "receive"],
+        ["This advertisment is long.", "spelling", "advertisement"],
+        ["This explanation is simplier.", "spelling", "simpler"],
         ["However the work continues.", "introductory-comma", ","],
         ["I work, she works.", "comma-splice", ";"],
     ];

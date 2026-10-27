@@ -742,12 +742,29 @@ const subordinateFragments: GrammarRule = {
             /[?!:;—–]/u.test(s.text)
         )
             return [];
+        // "After that time ..." and "Since that day ..." are prepositional
+        // adverbials with a following main clause, not subordinate clauses.
+        // The parser can still attach "that" as a mark. Keep the error when
+        // "that" is followed by another determiner ("since that the plot").
+        const markerText = s.tokens[marker.dependent]!.text.toLowerCase(),
+            afterMarker = s.tokens[marker.dependent + 1],
+            afterThat = s.tokens[marker.dependent + 2];
+        if (
+            /^(after|before|since)$/u.test(markerText) &&
+            afterMarker?.text.toLowerCase() === "that" &&
+            afterThat &&
+            !/^(the|a|an|this|these|those)$/iu.test(afterThat.text) &&
+            (afterThat.pos === "NOUN" ||
+                afterThat.pos === "PROPN" ||
+                /^(my|your|his|her|its|our|their)$/iu.test(afterThat.text))
+        )
+            return [];
         return [
             finding(
                 s,
                 this.id,
                 this.skill,
-                s,
+                s.tokens[marker.dependent]!,
                 "Grammar",
                 "Review this dependent clause as a sentence",
                 "The parse identifies a finite clause introduced by a subordinating marker, without an independent main clause. Join it to its main clause if a complete prose sentence is intended. Answers, headings, and deliberate fragments may stand alone.",
@@ -935,7 +952,7 @@ const neuralAgreement = (inflections?: PresentVerbInflections): GrammarRule => (
                 if (
                     !stableEdge(s, edge) ||
                     (hasCoordination && !coordinatedNumber) ||
-                    /^(there|who|what|which|none|all|some|most|data|news|series|species|means|police|staff|team|family|committee|number|lot|percent|pair|part|half|majority|people|cattle|fish|sheep|deer|offspring)$/iu.test(
+                    /^(there|that|who|what|which|none|all|some|most|data|news|series|species|means|police|staff|team|family|committee|number|lot|percent|pair|part|half|majority|people|cattle|fish|sheep|deer|offspring)$/iu.test(
                         subject.text,
                     )
                 )

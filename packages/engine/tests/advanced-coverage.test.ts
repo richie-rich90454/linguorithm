@@ -157,6 +157,25 @@ describe("parsed coordinated-subject agreement", () => {
         );
     });
 
+    it("does not treat a relative that as an agreement subject", () => {
+        const sentence = parsed("The books that are interesting.", [["are", "that", "nsubj"]], 0, {
+            that: { lemma: "that", pos: "PRON" as const, number: "singular" as const },
+            are: {
+                lemma: "be",
+                pos: "AUX" as const,
+                finite: true,
+                verbForm: "Fin" as const,
+                tense: "Pres" as const,
+                number: "plural" as const,
+            },
+            books: { lemma: "book", pos: "NOUN" as const, number: "plural" as const },
+            interesting: { lemma: "interesting", pos: "ADJ" as const },
+        });
+        expect(
+            agreement.evaluate(sentence).filter((item) => item.ruleId === "neural-agreement"),
+        ).toEqual([]);
+    });
+
     it.each([
         ["The student and the teacher walk home.", "and", "walk"],
         ["The student or the teacher walks home.", "or", "walks"],
@@ -667,6 +686,96 @@ describe("parsed subordinate-root fragment reviews", () => {
         expect(result[0]?.ruleId).toBe("dependent-fragment");
         expect(result[0]?.proposals).toEqual([]);
         expect(result[0]?.certainty).toBe("Possible issue");
+    });
+
+    it("does not treat a temporal that-phrase as a subordinate clause", () => {
+        const forms = {
+            since: { lemma: "since", pos: "SCONJ" as const },
+            that: { lemma: "that", pos: "DET" as const },
+            time: { lemma: "time", pos: "NOUN" as const, number: "singular" as const },
+            people: { lemma: "people", pos: "NOUN" as const, number: "plural" as const },
+            changed: {
+                lemma: "change",
+                pos: "VERB" as const,
+                finite: true,
+                verbForm: "Fin" as const,
+                tense: "Past" as const,
+            },
+        };
+        expect(
+            issues(
+                parsed(
+                    "Since that time people changed.",
+                    [
+                        ["changed", "changed", "root"],
+                        ["changed", "people", "nsubj"],
+                        ["changed", "Since", "mark"],
+                    ],
+                    0,
+                    forms,
+                ),
+            ),
+        ).toEqual([]);
+        const afterForms = {
+            ...forms,
+            after: { lemma: "after", pos: "SCONJ" as const },
+            his: { lemma: "his", pos: "DET" as const },
+            family: {
+                lemma: "family",
+                pos: "NOUN" as const,
+                number: "singular" as const,
+            },
+            left: {
+                lemma: "leave",
+                pos: "VERB" as const,
+                finite: true,
+                verbForm: "Fin" as const,
+                tense: "Past" as const,
+            },
+        };
+        expect(
+            issues(
+                parsed(
+                    "After that his family left.",
+                    [
+                        ["left", "left", "root"],
+                        ["left", "family", "nsubj"],
+                        ["left", "After", "mark"],
+                    ],
+                    0,
+                    afterForms,
+                ),
+            ),
+        ).toEqual([]);
+    });
+
+    it("keeps a double determiner after that as a fragment error", () => {
+        const result = issues(
+            parsed(
+                "Since that the plot changed.",
+                [
+                    ["changed", "changed", "root"],
+                    ["changed", "plot", "nsubj"],
+                    ["changed", "Since", "mark"],
+                ],
+                0,
+                {
+                    since: { lemma: "since", pos: "SCONJ" as const },
+                    that: { lemma: "that", pos: "DET" as const },
+                    the: { lemma: "the", pos: "DET" as const },
+                    plot: { lemma: "plot", pos: "NOUN" as const, number: "singular" as const },
+                    changed: {
+                        lemma: "change",
+                        pos: "VERB" as const,
+                        finite: true,
+                        verbForm: "Fin" as const,
+                        tense: "Past" as const,
+                    },
+                },
+            ),
+        );
+        expect(result).toHaveLength(1);
+        expect(result[0]?.ruleId).toBe("dependent-fragment");
     });
 
     it("does not mistake a following main clause for a fragment", () => {

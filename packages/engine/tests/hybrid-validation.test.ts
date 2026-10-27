@@ -237,7 +237,10 @@ describe("hybrid proposal safety across analysis stages", () => {
         );
         expect(issue).toBeDefined();
         expect(issue!.start).toBe(report.text.indexOf("Because"));
-        expect(report.text.slice(issue!.start, issue!.end)).toBe("Because it was late.");
+        expect(report.text.slice(issue!.start, issue!.end)).toBe("Because");
+        expect(issue!.evidence.map((evidence) => evidence.label)).toEqual(
+            expect.arrayContaining(["Subordinating marker", "Dependent predicate"]),
+        );
     });
 
     it("withholds a fallback repair when its neural reparse reveals a new constraint", async () => {
