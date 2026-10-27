@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { approvePossibleRevision } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
     await page.goto("/");
@@ -43,7 +44,7 @@ test("writing evidence cues stay optional and never offer automatic corrections"
     await analyze().click();
     const cue = page.locator(".finding-item").filter({ hasText: "Review a writing cue" });
     await expect(cue.first()).toBeVisible({ timeout: 30_000 });
-    await expect(cue.first().getByRole("button", { name: "Apply correction" })).toHaveCount(0);
+    await expect(cue.first().getByRole("button", { name: "Apply this revision" })).toHaveCount(0);
     await expect(cue.first().locator(".correction-preview")).toContainText(
         "The survey may suggest a change.",
     );
@@ -58,8 +59,10 @@ test("the production analyzer offers a supported correction for a merged word", 
     await page.getByRole("button", { name: "Analyze essay" }).click();
     const finding = page.locator(".finding-item").filter({ hasText: "Separate the words" });
     await expect(finding).toBeVisible({ timeout: 30_000 });
+    await expect(finding.locator(".learner-review-prompt")).toBeVisible();
+    await approvePossibleRevision(finding);
     await expect(finding.locator(".correction-preview")).toContainText("We should finish today.");
-    await expect(finding.getByRole("button", { name: "Apply correction" })).toBeVisible();
+    await expect(finding.getByRole("button", { name: "Apply this revision" })).toBeVisible();
 });
 
 test("previously imported materials show source structure on the first visit", async ({ page }) => {
@@ -111,6 +114,7 @@ test("the production analyzer distinguishes a comma splice from coordinated clau
     await page.getByRole("button", { name: "Analyze essay" }).click();
     const splice = boundaryFinding();
     await expect(splice).toBeVisible({ timeout: 30_000 });
+    await approvePossibleRevision(splice);
     await expect(splice.locator(".correction-preview")).toContainText(";");
     await expect(splice.locator(".correction-version").nth(0)).toContainText(
         "I work hard, she studies daily.",
@@ -118,7 +122,7 @@ test("the production analyzer distinguishes a comma splice from coordinated clau
     await expect(splice.locator(".correction-version").nth(1)).toContainText(
         "I work hard; she studies daily.",
     );
-    await splice.getByRole("button", { name: "Apply correction" }).click();
+    await splice.getByRole("button", { name: "Apply this revision" }).click();
     await expect(page.getByLabel("Annotated essay")).toContainText(
         "I work hard; she studies daily.",
     );
