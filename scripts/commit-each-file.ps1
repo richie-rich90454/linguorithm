@@ -276,6 +276,8 @@ packages/engine/tests/progress-export.test.ts|test|progress|verify repair review
 reports/verification.md|docs|verification|record repair review safety and unmet accuracy gates|Document the measured development-only REALEC results with confidence intervals, preserve fixed test results and limitations, and record the unscored repair workflow and its actual verification.
 tests/browser/learning.spec.ts|test|learning|verify unmatched repair answers remain unscored|Exercise an alternate agreement rewrite through Chromium, inspect its verified comparison and rule, confirm backup persistence without an option index, and ensure it creates no mastery penalty.
 scripts/commit-each-file.ps1|chore|git|describe review-required repair commits precisely|Add detailed one-file Conventional Commit messages for the unscored repair workflow, backward-compatible evidence, regression coverage, and current verification limits.
+reports/verification.md|docs|verification|record the rejected REALEC token-classifier experiment|Document the exact development-only classifier metrics, calculate the minimum recall and true-positive counts required by the latest requested targets, and explain why the available corpus evidence cannot support promoting this generic candidate.
+scripts/commit-each-file.ps1|chore|git|describe classifier experiment evidence precisely|Add a detailed one-file Conventional Commit message for the rejected development-only REALEC classifier study, its frozen test boundary, and the measured accuracy gap.
 '@ -split "`n" | ForEach-Object {
     $line = $_.Trim()
     if ($line) {
