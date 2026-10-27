@@ -19,10 +19,11 @@ export function Practice(props: {
     onRepairs: () => void;
     onAnswer: (
         q: Exercise,
-        answer: number,
+        answer: number | undefined,
         hints: number,
         durationMs: number,
         responseText?: string,
+        reviewRequired?: boolean,
     ) => Promise<void>;
     onError: (e: unknown) => void;
 }) {
@@ -32,30 +33,29 @@ export function Practice(props: {
     const [answered, setAnswered] = createSignal(false);
     const [hints, setHints] = createSignal(0);
     const [saving, setSaving] = createSignal(false);
-    const [session, setSession] = createSignal({ attempted: 0, correct: 0 });
+    const [reviewRequired, setReviewRequired] = createSignal(false);
+    const [session, setSession] = createSignal({ attempted: 0, correct: 0, needsReview: 0 });
     createEffect(() => {
         const id = props.question?.id;
         if (id) {
             setSelected(undefined);
             setAnswered(false);
+            setReviewRequired(false);
             setHints(0);
             setResponse("");
             started = performance.now();
         }
     });
     async function submit() {
-        const q = props.question,
-            answer =
-                q?.type === "repair"
-                    ? q.acceptedAnswers?.some(
-                          (a) =>
-                              a.trim().replace(/\s+/gu, " ") ===
-                              response().trim().replace(/\s+/gu, " "),
-                      )
-                        ? q.answer
-                        : q.options.findIndex((_, i) => i !== q.answer)
-                    : selected();
-        if (!q || answer === undefined || answered() || saving()) return;
+        const q = props.question;
+        const repairMatches =
+            q?.type === "repair" &&
+            q.acceptedAnswers?.some(
+                (a) => a.trim().replace(/\s+/gu, " ") === response().trim().replace(/\s+/gu, " "),
+            );
+        const needsReview = q?.type === "repair" && !repairMatches;
+        const answer = q?.type === "repair" ? (repairMatches ? q.answer : undefined) : selected();
+        if (!q || (answer === undefined && !needsReview) || answered() || saving()) return;
         setSaving(true);
         try {
             setSelected(answer);
@@ -65,12 +65,15 @@ export function Practice(props: {
                 hints(),
                 performance.now() - started,
                 q.type === "repair" ? response() : undefined,
+                needsReview,
             );
             if (props.question !== q) return;
             setAnswered(true);
+            setReviewRequired(needsReview);
             setSession({
                 attempted: session().attempted + 1,
-                correct: session().correct + Number(answer === q.answer),
+                correct: session().correct + Number(!needsReview && answer === q.answer),
+                needsReview: session().needsReview + Number(needsReview),
             });
         } catch (e) {
             props.onError(e);
@@ -122,7 +125,7 @@ export function Practice(props: {
                     </span>
                     <span>
                         {session().attempted
-                            ? `${session().correct} of ${session().attempted} correct this session`
+                            ? `${session().correct} correct of ${session().attempted - session().needsReview} scored · ${session().needsReview} ${session().needsReview === 1 ? "response needs" : "responses need"} human review`
                             : "Take your time. Reason it through."}
                     </span>
                 </div>
@@ -175,7 +178,7 @@ export function Practice(props: {
                                         target error. Other valid rewrites may require human review.
                                     </p>
                                 </Show>
-                                <Show when={q().type !== "repair" || answered()}>
+                                <Show when={q().type !== "repair"}>
                                     <fieldset
                                         class="answer-options"
                                         disabled={answered() || saving()}
@@ -223,16 +226,31 @@ export function Practice(props: {
                                     <div
                                         classList={{
                                             "answer-feedback": true,
-                                            "answer-feedback-correct": selected() === q().answer,
+                                            "answer-feedback-correct":
+                                                !reviewRequired() && selected() === q().answer,
+                                            "answer-feedback-review": reviewRequired(),
                                         }}
                                         role="status"
                                     >
                                         <h3>
-                                            {selected() === q().answer
-                                                ? "That’s the relationship."
-                                                : "Let’s look at the relationship."}
+                                            {reviewRequired()
+                                                ? "This response needs a human check."
+                                                : selected() === q().answer
+                                                  ? "That’s the relationship."
+                                                  : "Let’s look at the relationship."}
                                         </h3>
-                                        <p>{q().feedback[selected()!]}</p>
+                                        <p>
+                                            {reviewRequired()
+                                                ? "This checker recognizes listed examples only. A different rewrite may also be valid, so this response has not counted for or against mastery or assessment accuracy. Compare it with the verified example and the rule; do not change your sentence only to match the example."
+                                                : q().feedback[selected()!]}
+                                        </p>
+                                        <Show when={reviewRequired() && q().type === "repair"}>
+                                            <div class="repair-review">
+                                                <span>One verified example</span>
+                                                <blockquote>{q().options[q().answer]}</blockquote>
+                                                <p>{q().explanation}</p>
+                                            </div>
+                                        </Show>
                                         <Show when={hints() > 0}>
                                             <small>
                                                 A hinted answer is recorded separately from
