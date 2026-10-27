@@ -743,8 +743,11 @@ describe("modifier, parallelism and reference evidence", () => {
                 { smiled: verb("smile") },
                 40,
             );
-            const issues = documentRelationships([previous, current], false);
+            expect(documentRelationships([previous, current], false)).toEqual([]);
+            const issues = documentRelationships([previous, current], true);
             expect(issues).toHaveLength(1);
+            expect(issues[0]!.category).toBe("Style");
+            expect(issues[0]!.certainty).toBe("Style suggestion");
             expect(issues[0]!.evidence).toHaveLength(2);
             expect(issues[0]!.proposals).toEqual([]);
         }
