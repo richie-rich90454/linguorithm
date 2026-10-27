@@ -21,7 +21,7 @@ Keep the product general across writing levels and intents. Preserve the current
 
 Repository: `C:\Users\rjian\Desktop\grammar-practice`.
 
-The latest no-regression change is committed in `NO_REGRESSION_COMMIT_HASH`. A precision-first candidate had improved precision and false-positive rate but reduced recall; it was reverted. The retained changes are a temporal “after/before/since that” guard for parsed fragment reviews, an expanded curated misspelling list, and latest-target/feasibility reporting in `scripts/evaluate-realec.mjs`. Read [reports/verification.md](reports/verification.md), the [model card](docs/model-card.md), [detector coverage](docs/detector-coverage.md), and the [training guide](training/README.md) before changing detector behavior.
+The latest no-regression change is committed in `b4901ab`. A precision-first candidate had improved precision and false-positive rate but reduced recall; it was reverted. The retained changes are a temporal “after/before/since that” guard for parsed fragment reviews, an expanded curated misspelling list, and latest-target/feasibility reporting in `scripts/evaluate-realec.mjs`. Read [reports/verification.md](reports/verification.md), the [model card](docs/model-card.md), [detector coverage](docs/detector-coverage.md), and the [training guide](training/README.md) before changing detector behavior.
 
 ## Measured state
 
