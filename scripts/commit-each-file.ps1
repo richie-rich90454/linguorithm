@@ -278,6 +278,8 @@ tests/browser/learning.spec.ts|test|learning|verify unmatched repair answers rem
 scripts/commit-each-file.ps1|chore|git|describe review-required repair commits precisely|Add detailed one-file Conventional Commit messages for the unscored repair workflow, backward-compatible evidence, regression coverage, and current verification limits.
 reports/verification.md|docs|verification|record the rejected REALEC token-classifier experiment|Document the exact development-only classifier metrics, calculate the minimum recall and true-positive counts required by the latest requested targets, and explain why the available corpus evidence cannot support promoting this generic candidate.
 scripts/commit-each-file.ps1|chore|git|describe classifier experiment evidence precisely|Add a detailed one-file Conventional Commit message for the rejected development-only REALEC classifier study, its frozen test boundary, and the measured accuracy gap.
+HANDOFF.md|docs|handoff|guide the next local accuracy investigation|Record the current learner-writing metrics, rejected classifier approach, project constraints, fixed-test boundary, and evidence-backed steps for further detector work.
+scripts/commit-each-file.ps1|chore|git|describe accuracy handoff commits precisely|Add detailed single-file Conventional Commit messages for the model-accuracy handoff and its commit-script entry, preserving the current metrics, failure evidence, and project constraints.
 '@ -split "`n" | ForEach-Object {
     $line = $_.Trim()
     if ($line) {
