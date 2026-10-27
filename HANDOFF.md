@@ -45,6 +45,9 @@ At exactly 50% precision, false positives equal true positives, so total token e
 - A category-aware BiLSTM with word, character-CNN, and shape features reached 228 true positives at its best-recall operating point below the false-positive ceiling, with 22.4% precision. Its development oracle threshold still had negative net detections.
 - Precision-first rule filtering improved precision but reduced recall; it was reverted under the no-regression gate.
 - A sentence-initial missing-article rule found 4 true positives and 14 false positives on development; it was rejected.
+- Harper.js 2.13.0 (browser WASM) found 77 true positives and 516 false positives on the first 20 development documents: 12.98% precision, 19.25% recall, 10.46% false-positive rate.
+- LingoTweaker 0.2.8 (browser WASM, LanguageTool rules) found 38 true positives and 153 false positives on the same sample: 19.90% precision, 9.50% recall, 3.10% false-positive rate.
+- Both browser grammar engines were removed; neither beat the production rules.
 
 Do not repeat generic token-feature, sequence-tagger, threshold, or rule-filter sweeps as the proposed solution.
 
