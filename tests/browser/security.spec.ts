@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { waitForAnalysis } from "./helpers";
 import { readFile } from "node:fs/promises";
 import { crc32, deflateRawSync } from "node:zlib";
 import type { Backup } from "../../packages/engine/src/domain";
@@ -212,7 +213,7 @@ test("rejects actual DOCX expansion above 30 MB despite a small claimed size bef
         }),
     );
     await page.goto("/");
-    await expect(page.getByRole("button", { name: "Apply correction" })).toBeVisible();
+    await waitForAnalysis(page);
     const before = await page.getByLabel("Annotated essay").innerText();
     const title = await page.getByLabel("Essay title").inputValue();
     const input = page.locator('input[type="file"]').first();
@@ -243,7 +244,7 @@ test("extracts mixed HTML text in source order while scripts and subresources re
         route.fulfill({ body: "Unexpected imported resource request" }),
     );
     await page.goto("/");
-    await expect(page.getByRole("button", { name: "Apply correction" })).toBeVisible();
+    await waitForAnalysis(page);
     const html = `Lead outside block. <span>Inline lead.</span>
 <script>globalThis.__importExecuted = true; fetch("/import-leak/script");</script>
 <style>@import url("/import-leak/css"); .secret { background: url("/import-leak/background") }</style>
