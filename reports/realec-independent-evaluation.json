@@ -1,5 +1,5 @@
 {
-    "generatedAt": "2026-10-27T02:19:40.190Z",
+    "generatedAt": "2026-10-27T08:26:53.994Z",
     "dataset": {
         "name": "Russian Error-Annotated Learner English Corpus",
         "license": "CC-BY-SA-4.0",
@@ -142,8 +142,8 @@
                 "classifierWeights": "580a0205b0018541be7d207d2bdf7cc5458c6b6b6d7d1a9d0f43af879e73f132",
                 "dictionary": "26f2b4b2b612a8107586cff814c4af77f32a08e1dd20f706a04d1d380b864da9"
             },
-            "worker": "analysis.worker-vkDYptU_.js",
-            "workerSha256": "14c3c0bf91ce7700f3d61e1253467b2224fe9c3234fdde344cccd8ab559071ce"
+            "worker": "analysis.worker-ByrXr1ec.js",
+            "workerSha256": "6869c30ac135ce507d01590a1970422306af41e0eb0282f2ff6549c1caa9d5d2"
         }
     },
     "evaluation": {
@@ -151,23 +151,23 @@
         "tokenization": "Source tokens are Unicode words with internal apostrophes plus individual non-whitespace punctuation. Gold error spans and production finding offsets are projected by overlap; zero-width insertion findings map to the following token, or the preceding final token.",
         "counts": {
             "TP": 128,
-            "FP": 705,
+            "FP": 688,
             "FN": 3889,
-            "TN": 56103
+            "TN": 56120
         },
         "tokens": 60825,
         "goldErrorTokens": 4017,
-        "detectedErrorTokens": 833,
-        "precision": 0.15366146458583432,
+        "detectedErrorTokens": 816,
+        "precision": 0.1568627450980392,
         "recall": 0.03186457555389594,
-        "accuracy": 0.924471845458282,
-        "errorRate": 0.07552815454171805,
+        "accuracy": 0.9247513357994246,
+        "errorRate": 0.07524866420057542,
         "missedErrorRate": 0.968135424446104,
-        "f0_5": 0.08708667845965437,
-        "falsePositiveRate": 0.012410223912125052,
-        "precisionWilson95": [0.1307663973517284, 0.1797362146805096],
+        "f0_5": 0.08790001373437716,
+        "falsePositiveRate": 0.012110970285875228,
+        "precisionWilson95": [0.13352482830381265, 0.18341627783939782],
         "recallWilson95": [0.026864535397146956, 0.03775911651299455],
-        "falsePositiveRateWilson95": [0.011532249988021676, 0.013354136767202554],
+        "falsePositiveRateWilson95": [0.011243915168182017, 0.013044004803939531],
         "requestedQualityTargets": {
             "definitions": {
                 "falsePositiveRate": "FP / (FP + TN), strictly below 0.5%",
@@ -177,13 +177,13 @@
             "referencePolicy": "Aggregate confusion counts use REALEC annotation overlap as the binary reference; unannotated tokens are treated as negative. This is not pattern-specific valid-control performance.",
             "falsePositiveRate": {
                 "target": "< 0.5%",
-                "observed": 0.012410223912125052,
+                "observed": 0.012110970285875228,
                 "passed": false,
                 "falsePositivesAllowedAtMost": 284
             },
             "totalTokenMisclassificationRate": {
                 "target": "< 0.5%",
-                "observed": 0.07552815454171805,
+                "observed": 0.07524866420057542,
                 "passed": false,
                 "totalErrorsAllowedAtMost": 304
             },
@@ -934,20 +934,20 @@
         },
         "documentClusterBootstrap95": {
             "precision": {
-                "lower": 0.11727842435094002,
-                "upper": 0.19754768392370572
+                "lower": 0.11971830985915492,
+                "upper": 0.20160213618157544
             },
             "recall": {
                 "lower": 0.02473410833539451,
                 "upper": 0.03889747552807831
             },
             "f0_5": {
-                "lower": 0.06969157769869515,
-                "upper": 0.10547925810562087
+                "lower": 0.07022471910112359,
+                "upper": 0.10636865490776896
             },
             "falsePositiveRate": {
-                "lower": 0.010091902202184845,
-                "upper": 0.015017846319617483
+                "lower": 0.009803383630544124,
+                "upper": 0.014722284184697747
             }
         },
         "bootstrap": {
