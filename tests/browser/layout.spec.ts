@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { waitForAnalysis } from "./helpers";
 
 for (const viewport of [
     { width: 1440, height: 900 },
@@ -9,9 +10,7 @@ for (const viewport of [
         async ({ page }) => {
             await page.setViewportSize(viewport);
             await page.goto("/");
-            await expect(page.getByRole("button", { name: "Apply correction" })).toBeVisible({
-                timeout: 30_000,
-            });
+            await waitForAnalysis(page);
             await expect(page.getByRole("button", { name: "Analyze again" })).toBeInViewport({
                 ratio: 1,
             });
