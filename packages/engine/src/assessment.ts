@@ -70,23 +70,34 @@ export class AssessmentService {
             answers: [],
         });
     }
-    answer(session: Assessment, question: Exercise, answer: number, now = new Date()): Assessment {
+    answer(
+        session: Assessment,
+        question: Exercise,
+        answer: number | undefined,
+        now = new Date(),
+        reviewRequired = false,
+    ): Assessment {
+        const invalidAnswer = reviewRequired
+            ? answer !== undefined || question.type !== "repair"
+            : answer === undefined ||
+              !Number.isInteger(answer) ||
+              answer < 0 ||
+              answer >= question.options.length;
         if (
             session.completedAt ||
             !session.exerciseIds.includes(question.id) ||
             session.answers.some((a) => a.exerciseId === question.id) ||
-            !Number.isInteger(answer) ||
-            answer < 0 ||
-            answer >= question.options.length
+            invalidAnswer
         )
             throw new Error("Invalid or repeated assessment answer.");
         const answers = [
             ...session.answers,
             {
                 exerciseId: question.id,
-                answer,
-                correct: answer === question.answer,
+                ...(answer === undefined ? {} : { answer }),
+                correct: !reviewRequired && answer === question.answer,
                 at: now.toISOString(),
+                ...(reviewRequired ? { reviewRequired: true } : {}),
             },
         ];
         return assessmentSchema.parse({
@@ -100,18 +111,21 @@ export class AssessmentService {
         completed: number;
         correct: number;
         total: number;
+        reviewRequired: number;
         accuracy: number | null;
     }[] {
         return (["pretest", "posttest", "delayed", "transfer"] as const).map((phase) => {
             const completed = sessions.filter((s) => s.phase === phase && s.completedAt),
                 answers = completed.flatMap((s) => s.answers),
+                reviewed = answers.filter((a) => !a.reviewRequired),
                 correct = answers.filter((a) => a.correct).length;
             return {
                 phase,
                 completed: completed.length,
                 correct,
-                total: answers.length,
-                accuracy: answers.length ? correct / answers.length : null,
+                total: reviewed.length,
+                reviewRequired: answers.length - reviewed.length,
+                accuracy: reviewed.length ? correct / reviewed.length : null,
             };
         });
     }
