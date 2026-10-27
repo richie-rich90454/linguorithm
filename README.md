@@ -43,7 +43,7 @@ The preview runs at [127.0.0.1:4317](http://127.0.0.1:4317). A fresh clone needs
 
 ## What you can do
 
-- **Revise an essay.** Follow diagnostics back to source spans, compare revisions, undo changes, review contextual spelling candidates, and maintain a personal dictionary.
+- **Revise an essay.** Follow review prompts back to source spans, try your own revision before revealing an optional engine suggestion, check that it preserves your meaning, undo changes, review contextual spelling candidates, and maintain a personal dictionary.
 - **Choose a writing lens.** Set an intent for the draft, use optional reflection prompts, and browse a general progression from emergent writing to advanced transferable skills.
 - **Explore a sentence.** Inspect predicted parts of speech and dependency diagrams, including alternative analyses and visible model/fallback status.
 - **Practice deliberately.** Work through seven skills with progressive hints, free-response repairs, and a validated bank of 106 questions.
@@ -51,6 +51,8 @@ The preview runs at [127.0.0.1:4317](http://127.0.0.1:4317). A fresh clone needs
 - **Track your work.** Review pre/post/delayed/transfer assessment records, export CSV, and back up or restore local data.
 
 Goal-map entries distinguish unvalidated rule coverage from goals without a detector. Assessment records support reflection; they do not establish a measured learning benefit. Read the [writing progression and source mapping](docs/writing-progression.md) for scope and limitations.
+
+For independent practice, learners should treat essay findings as prompts to inspect, not confirmed diagnoses. Suggestions remain hidden until the learner chooses to reveal them and cannot be applied until the learner confirms they preserve the intended meaning. The essay detectors have not met independent accuracy gates, so this workflow adds learner control but does not certify the feedback as dependable tutoring or replace educator review.
 
 ## How analysis works
 
