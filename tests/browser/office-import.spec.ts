@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { waitForAnalysis } from "./helpers";
 import { crc32, deflateRawSync } from "node:zlib";
 import { readFile } from "node:fs/promises";
 
@@ -63,7 +64,7 @@ const workbook = (): Record<string, string> => ({
 });
 async function upload(page: Page, name: string, parts: Record<string, string>) {
     await page.goto("/");
-    await expect(page.getByRole("button", { name: "Apply correction" })).toBeVisible();
+    await waitForAnalysis(page);
     await page
         .locator('input[type="file"]')
         .first()
@@ -141,7 +142,7 @@ for (const attack of [
                 '<worksheet><row><c r="XFE1"><v>2</v></c></row></worksheet>';
         if (attack === "shared-index") parts["xl/sharedStrings.xml"] = "<sst/>";
         await page.goto("/");
-        await expect(page.getByRole("button", { name: "Apply correction" })).toBeVisible();
+        await waitForAnalysis(page);
         const before = await page.getByLabel("Annotated essay").innerText();
         await page
             .locator('input[type="file"]')
