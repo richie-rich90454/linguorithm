@@ -1,0 +1,712 @@
+{
+    "generatedAt": "2026-11-17T00:23:32.589Z",
+    "total": 107,
+    "passed": 107,
+    "failed": 0,
+    "cases": [
+        {
+            "id": "aave-habitual-be",
+            "label": "AAVE habitual be",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "aave-habitual-be-plural",
+            "label": "AAVE habitual be with plural subject",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "aave-copula-deletion",
+            "label": "AAVE copula deletion",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "aave-stressed-been",
+            "label": "AAVE stressed been",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "aave-finna",
+            "label": "AAVE finna",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "aave-yall",
+            "label": "AAVE y'all",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "aave-leveled-was",
+            "label": "AAVE leveled past be",
+            "passed": true,
+            "emissions": [
+                {
+                    "ruleId": "agreement",
+                    "category": "Grammar",
+                    "certainty": "Possible issue"
+                }
+            ]
+        },
+        {
+            "id": "aave-gon",
+            "label": "AAVE gon",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "aave-aint",
+            "label": "AAVE ain't",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "aave-negative-concord",
+            "label": "AAVE negative concord",
+            "passed": true,
+            "emissions": [
+                {
+                    "ruleId": "agreement",
+                    "category": "Grammar",
+                    "certainty": "Possible issue"
+                }
+            ]
+        },
+        {
+            "id": "brit-organise",
+            "label": "British -ise spelling",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "brit-colour",
+            "label": "British -our spelling",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "brit-travelled",
+            "label": "British doubled l",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "brit-whilst",
+            "label": "British whilst",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "brit-amongst",
+            "label": "British amongst",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "brit-licence-noun",
+            "label": "British licence as noun",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "brit-defence",
+            "label": "British defence",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "brit-centre",
+            "label": "British centre",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "brit-programme",
+            "label": "British programme",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "brit-cheque",
+            "label": "British cheque",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "brit-practise-verb",
+            "label": "British practise as verb",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "brit-maths",
+            "label": "British maths",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "ind-prepone",
+            "label": "Indian English prepone",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "ind-do-the-needful",
+            "label": "Indian English do the needful",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "ind-cousin-brother",
+            "label": "Indian English cousin-brother",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "ind-good-name",
+            "label": "Indian English good name",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "ind-out-of-station",
+            "label": "Indian English out of station",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "ind-passed-out",
+            "label": "Indian English passed out",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "ind-revert",
+            "label": "Indian English revert",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "ind-lakh",
+            "label": "Indian English lakh",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "acad-passive",
+            "label": "Academic passive voice",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "acad-nominalisation",
+            "label": "Academic nominalisation",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "acad-data-are",
+            "label": "Academic plural data",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "acad-hedge",
+            "label": "Academic hedging",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "acad-citation",
+            "label": "Academic citation",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "acad-impersonal",
+            "label": "Academic impersonal construction",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "acad-methods",
+            "label": "Academic methods passive",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "acad-literature",
+            "label": "Academic literature framing",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "acad-abstract-noun",
+            "label": "Academic abstract nouns",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "acad-eg",
+            "label": "Academic e.g. punctuation",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "fic-fragment",
+            "label": "Fiction sentence fragment",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "fic-second-person",
+            "label": "Fiction second person",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "fic-dialogue",
+            "label": "Fiction dialogue punctuation",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "fic-dialogue-question",
+            "label": "Fiction dialogue question",
+            "passed": true,
+            "emissions": [
+                {
+                    "ruleId": "sentence-capitalization",
+                    "category": "Punctuation",
+                    "certainty": "Possible issue"
+                }
+            ]
+        },
+        {
+            "id": "fic-dialogue-emdash",
+            "label": "Fiction interrupted dialogue",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "fic-contraction",
+            "label": "Fiction contractions",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "fic-speech-tag",
+            "label": "Fiction speech tag",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "fic-fragment-list",
+            "label": "Fiction fragment list",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "fic-free-indirect",
+            "label": "Fiction free indirect style",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "fic-inversion",
+            "label": "Fiction locative inversion",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "po-lowercase",
+            "label": "Poetry lowercase line",
+            "passed": true,
+            "emissions": [
+                {
+                    "ruleId": "sentence-capitalization",
+                    "category": "Punctuation",
+                    "certainty": "Possible issue"
+                },
+                {
+                    "ruleId": "missing-terminal-mark",
+                    "category": "Punctuation",
+                    "certainty": "Possible issue"
+                }
+            ]
+        },
+        {
+            "id": "po-fragment",
+            "label": "Poetry fragment",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "po-no-punctuation",
+            "label": "Poetry without punctuation",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "po-second-person",
+            "label": "Poetry second person",
+            "passed": true,
+            "emissions": [
+                {
+                    "ruleId": "sentence-capitalization",
+                    "category": "Punctuation",
+                    "certainty": "Possible issue"
+                },
+                {
+                    "ruleId": "missing-terminal-mark",
+                    "category": "Punctuation",
+                    "certainty": "Possible issue"
+                },
+                {
+                    "ruleId": "sentence-capitalization",
+                    "category": "Punctuation",
+                    "certainty": "Possible issue"
+                },
+                {
+                    "ruleId": "missing-terminal-mark",
+                    "category": "Punctuation",
+                    "certainty": "Possible issue"
+                }
+            ]
+        },
+        {
+            "id": "po-repetition",
+            "label": "Poetry repetition",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "po-short-line",
+            "label": "Poetry short lines",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "po-catalogue",
+            "label": "Poetry catalogue",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "po-slant-rhyme",
+            "label": "Poetry slant rhyme",
+            "passed": true,
+            "emissions": [
+                {
+                    "ruleId": "sentence-capitalization",
+                    "category": "Punctuation",
+                    "certainty": "Possible issue"
+                },
+                {
+                    "ruleId": "missing-terminal-mark",
+                    "category": "Punctuation",
+                    "certainty": "Possible issue"
+                }
+            ]
+        },
+        {
+            "id": "punc-serial-comma",
+            "label": "Punctuation serial comma",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "punc-no-serial-comma",
+            "label": "Punctuation without serial comma",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "punc-em-dash",
+            "label": "Punctuation em dash",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "punc-semicolon",
+            "label": "Punctuation semicolon",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "punc-comma-coordinator",
+            "label": "Punctuation comma before coordinator",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "punc-colon-list",
+            "label": "Punctuation colon list",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "punc-parentheses",
+            "label": "Punctuation parentheses",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "punc-hyphen",
+            "label": "Punctuation compound hyphen",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "punc-possessive-s",
+            "label": "Punctuation possessive of name ending in s",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "punc-question-mark",
+            "label": "Punctuation question mark",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "use-singular-they",
+            "label": "Usage singular they",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "use-data-is",
+            "label": "Usage data is",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "use-split-infinitive",
+            "label": "Usage split infinitive",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "use-initial-and",
+            "label": "Usage sentence-initial And",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "use-initial-but",
+            "label": "Usage sentence-initial But",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "use-who-object",
+            "label": "Usage who in object position",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "use-whom",
+            "label": "Usage whom",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "use-less-mass",
+            "label": "Usage less with mass noun",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "use-which-nonrestrictive",
+            "label": "Usage nonrestrictive which",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "use-that-restrictive",
+            "label": "Usage restrictive that",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "use-hopefully",
+            "label": "Usage sentence adverb hopefully",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "use-none-are",
+            "label": "Usage none are",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "use-between-you-and-me",
+            "label": "Usage between you and me",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "use-different-from",
+            "label": "Usage different from",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "num-date",
+            "label": "Numbers and dates",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "num-measure",
+            "label": "Numbers and units",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "num-url",
+            "label": "URL",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "num-email",
+            "label": "Email and ISO date",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "num-negative-temperature",
+            "label": "Negative temperature",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "num-distance",
+            "label": "Distance with conversion",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "num-money",
+            "label": "Currency",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "num-percent",
+            "label": "Percentage",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "num-decade",
+            "label": "Decade",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "num-time",
+            "label": "Time and platform",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "learn-existential-coordination",
+            "label": "Learner-correct existential coordination",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "learn-each",
+            "label": "Learner-correct each",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "learn-neither",
+            "label": "Learner-correct neither",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "learn-number-of",
+            "label": "Learner-correct the number of",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "learn-a-number-of",
+            "label": "Learner-correct a number of",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "learn-distance",
+            "label": "Learner-correct distance as subject",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "learn-math",
+            "label": "Learner-correct arithmetic",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "learn-police",
+            "label": "Learner-correct police",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "learn-mathematics",
+            "label": "Learner-correct mathematics",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "learn-either",
+            "label": "Learner-correct either",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "learn-not-only",
+            "label": "Learner-correct not only inversion",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "learn-hardly",
+            "label": "Learner-correct hardly inversion",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "learn-predicate-nominative",
+            "label": "Learner-correct predicate nominative",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "learn-subjunctive",
+            "label": "Learner-correct subjunctive",
+            "passed": true,
+            "emissions": []
+        },
+        {
+            "id": "learn-inversion",
+            "label": "Learner-correct conditional inversion",
+            "passed": true,
+            "emissions": []
+        }
+    ],
+    "openLimitations": []
+}

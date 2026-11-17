@@ -40,6 +40,11 @@ jobs:
                   make build
                   make bundle
                   make validate-models
+            - name: Build the documentation site
+              env:
+                  DOCS_BASE: /linguorithm/docs/
+                  APP_URL: https://richie-rich90454.github.io/linguorithm/
+              run: make docs-build
             - uses: actions/configure-pages@v5
             - uses: actions/upload-pages-artifact@v3
               with:

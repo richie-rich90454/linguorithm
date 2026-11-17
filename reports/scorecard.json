@@ -1,0 +1,96 @@
+{
+    "format": "linguorithm-scorecard-v1",
+    "generatedAt": "2026-11-17T00:23:40.064Z",
+    "summary": {
+        "pass": 8,
+        "fail": 0,
+        "pending": 3
+    },
+    "rows": [
+        {
+            "id": "legacy-precision",
+            "label": "Legacy fixed-test precision",
+            "target": ">= 15.69% (no regression)",
+            "observed": 0.1568627450980392,
+            "status": "pass",
+            "source": "reports/realec-independent-evaluation.json"
+        },
+        {
+            "id": "legacy-recall",
+            "label": "Legacy fixed-test recall",
+            "target": ">= 3.19% (no regression)",
+            "observed": 0.03186457555389594,
+            "status": "pass",
+            "source": "reports/realec-independent-evaluation.json"
+        },
+        {
+            "id": "legacy-error",
+            "label": "Legacy total token error",
+            "target": "<= 7.525% (no regression)",
+            "observed": 0.07524866420057542,
+            "status": "pass",
+            "source": "reports/realec-independent-evaluation.json"
+        },
+        {
+            "id": "legacy-fpr",
+            "label": "Legacy false-positive rate",
+            "target": "<= 1.211% (no regression)",
+            "observed": 0.012110970285875228,
+            "status": "pass",
+            "source": "reports/realec-independent-evaluation.json"
+        },
+        {
+            "id": "controls",
+            "label": "Valid-English control suite",
+            "target": "0 confirmed false positives",
+            "observed": "0 failed of 107",
+            "status": "pass",
+            "source": "reports/language-controls.json"
+        },
+        {
+            "id": "offline",
+            "label": "Verifiable offline behaviour",
+            "target": "0 external requests; offline reload renders",
+            "observed": "0 external requests",
+            "status": "pass",
+            "source": "reports/offline-verification.json"
+        },
+        {
+            "id": "parity",
+            "label": "Python/browser model parity",
+            "target": "max difference <= 0.0001",
+            "observed": 0.0000019073486328125,
+            "status": "pass",
+            "source": "reports/classifier-score-parity.json"
+        },
+        {
+            "id": "v2-splits",
+            "label": "Benchmark v2 splits frozen",
+            "target": "deduplicated, writer-separated, sealed test",
+            "observed": "180 test documents; 36 duplicates dropped",
+            "status": "pass",
+            "source": "reports/benchmark-v2-manifest.json"
+        },
+        {
+            "id": "v2-precision",
+            "label": "Benchmark v2 precision at emission",
+            "target": ">= 60% (Wilson LB >= 55%)",
+            "status": "pending",
+            "source": "not measured"
+        },
+        {
+            "id": "v2-recall",
+            "label": "Benchmark v2 objective recall",
+            "target": ">= 25%",
+            "status": "pending",
+            "source": "not measured"
+        },
+        {
+            "id": "v2-calibration",
+            "label": "Benchmark v2 calibration",
+            "target": "ECE <= 0.05",
+            "status": "pending",
+            "source": "not measured"
+        }
+    ]
+}

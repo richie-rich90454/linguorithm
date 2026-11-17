@@ -1,0 +1,62 @@
+{
+    "format": "linguorithm-realec-benchmark-v2-report",
+    "generatedAt": "2026-11-17T00:06:40Z",
+    "limitations": "REALEC publishes no author or prompt identifiers (authorIdentityAvailable is false), so writer clusters are inferred from function-word frequencies and mean sentence/token length; the proxy can merge different writers and split one writer. Near-duplicate detection uses exact word 5-gram Jaccard overlap and cannot catch paraphrase or translation reuse; cross-split duplicates are dropped rather than reassigned. Split sizes target 70/15/15 by document, not by writer or token, and whole writer clusters move together only within the proxy's accuracy. The test split is evaluation-only and must not be used for training or tuning.",
+    "nearDuplicates": {
+        "components": 42,
+        "crossSplitComponents": 18,
+        "droppedDocuments": 36,
+        "droppedPerSplit": {
+            "development": 8,
+            "test": 11,
+            "train": 17
+        },
+        "jaccardThreshold": 0.8,
+        "shingleSize": 5
+    },
+    "recallProbe": {
+        "documents": 180,
+        "sentences": 200
+    },
+    "source": {
+        "archiveSha256": "bb3be91a6bd1673f058316f033dcaeb43421f0cda11549329f919cb24fbb342d",
+        "benchmarkSha256": "b49a5a9b0eebb5a47ed2ed104aaee4cd602c2b9af2f7ef2e238e28406656223f",
+        "format": "linguorithm-realec-local-benchmark-v1",
+        "inputDocuments": 1238,
+        "inputDocumentsPerSplit": {
+            "development": 198,
+            "test": 184,
+            "train": 856
+        },
+        "license": "CC-BY-SA-4.0",
+        "preparedDataSha256": null,
+        "source": "https://rpractice.itorubarov.me/realec_download.tar.gz"
+    },
+    "v2": {
+        "development": {
+            "annotationRecords": 2366,
+            "annotationSpans": 2368,
+            "documents": 180,
+            "tokens": 58862
+        },
+        "test": {
+            "annotationRecords": 2308,
+            "annotationSpans": 2308,
+            "documents": 180,
+            "tokens": 57956
+        },
+        "train": {
+            "annotationRecords": 11371,
+            "annotationSpans": 11378,
+            "documents": 842,
+            "tokens": 281820
+        }
+    },
+    "writerProxy": {
+        "clusters": 1152,
+        "largestCluster": 5,
+        "note": "Proxy only: REALEC has no author ids, so clusters come from function-word frequencies plus mean sentence and token length.",
+        "singletonClusters": 1107,
+        "threshold": 0.985
+    }
+}

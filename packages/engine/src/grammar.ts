@@ -97,6 +97,15 @@ const agreement: GrammarRule = {
             )
         )
             return [];
+        const tail = s.text.slice(verb.end - s.start);
+        // Negative concord is grammatical in several English varieties. It is
+        // indistinguishable from a learner agreement error without writer
+        // context, so keep the observation opt-in rather than accusatory.
+        let dialectAmbiguous =
+            (/(?:n't|not)$/u.test(vw) || /^\s*n't\b/iu.test(tail)) &&
+            /(?:n't|\bnot\b|\bno\b|\bnothing\b|\bnobody\b|\bnone\b|\bnever\b|\bneither\b|\bnowhere\b)/iu.test(
+                tail,
+            );
         let replacement: string | undefined;
         const plural = subject.analyses.some((a) => a.number === "plural");
         if (sw === "i")
@@ -143,6 +152,10 @@ const agreement: GrammarRule = {
             )
         )
             return [];
+        // Leveled past be with a personal pronoun is systematic in some
+        // varieties and indistinguishable from a learner error without writer
+        // context.
+        if (plural && /^(they|we)$/u.test(sw) && vw === "was") dialectAmbiguous = true;
         return [
             finding(
                 s,
@@ -151,9 +164,13 @@ const agreement: GrammarRule = {
                 verb,
                 "Grammar",
                 "Match the verb to its subject",
-                `“${subject.text}” is the subject of “${verb.text}”. The verb agrees with that subject, even when a prepositional phrase comes between them.`,
+                `“${subject.text}” is the subject of “${verb.text}”. The verb agrees with that subject, even when a prepositional phrase comes between them.${
+                    dialectAmbiguous
+                        ? " This pattern is grammatical in some English varieties; review it as a register question."
+                        : ""
+                }`,
                 [preserveCase(verb.text, replacement)],
-                "Likely error",
+                dialectAmbiguous ? "Possible issue" : "Likely error",
                 [
                     { start: subject.start, end: subject.end, label: "Grammatical subject" },
                     { start: verb.start, end: verb.end, label: "Finite verb" },

@@ -1,0 +1,662 @@
+[
+    {
+        "id": "aave-habitual-be",
+        "label": "AAVE habitual be",
+        "text": "She be working late at the clinic most evenings.",
+        "note": "Habitual aspect marked by invariant be; standard English would use an adverb of frequency.",
+        "dialect": true
+    },
+    {
+        "id": "aave-habitual-be-plural",
+        "label": "AAVE habitual be with plural subject",
+        "text": "They be playing basketball after school when the weather is warm.",
+        "note": "Invariant be with a plural subject is grammatical in AAVE.",
+        "dialect": true
+    },
+    {
+        "id": "aave-copula-deletion",
+        "label": "AAVE copula deletion",
+        "text": "They at the store right now, so leave a message.",
+        "note": "Present-tense copula deletion is systematic in AAVE.",
+        "dialect": true
+    },
+    {
+        "id": "aave-stressed-been",
+        "label": "AAVE stressed been",
+        "text": "I been told you already: the deadline is Friday.",
+        "note": "Stressed been marks a remote past state; the form is grammatical in AAVE.",
+        "dialect": true
+    },
+    {
+        "id": "aave-finna",
+        "label": "AAVE finna",
+        "text": "We finna leave before the rain starts.",
+        "note": "Finna is a grammatical future marker in AAVE.",
+        "dialect": true
+    },
+    {
+        "id": "aave-yall",
+        "label": "AAVE y'all",
+        "text": "Y'all coming to the cookout on Saturday?",
+        "note": "Y'all is an established second-person plural pronoun.",
+        "dialect": true
+    },
+    {
+        "id": "aave-leveled-was",
+        "label": "AAVE leveled past be",
+        "text": "They was talking about it all night.",
+        "note": "Leveled was with a plural subject occurs systematically in AAVE.",
+        "dialect": true
+    },
+    {
+        "id": "aave-gon",
+        "label": "AAVE gon",
+        "text": "I'm gon call you when I get home.",
+        "note": "Gon is a reduced future marker in AAVE speech.",
+        "dialect": true
+    },
+    {
+        "id": "aave-aint",
+        "label": "AAVE ain't",
+        "text": "He ain't finished the report yet.",
+        "note": "Ain't is an established negative auxiliary in informal and dialectal English.",
+        "dialect": true
+    },
+    {
+        "id": "aave-negative-concord",
+        "label": "AAVE negative concord",
+        "text": "She don't need no help with that.",
+        "note": "Negative concord is grammatical in AAVE; it is not a double-negative error.",
+        "dialect": true
+    },
+    {
+        "id": "brit-organise",
+        "label": "British -ise spelling",
+        "text": "Please organise the files before the meeting.",
+        "note": "Organise is the standard British and Commonwealth spelling."
+    },
+    {
+        "id": "brit-colour",
+        "label": "British -our spelling",
+        "text": "The colour of the sky changed quickly.",
+        "note": "Colour is standard outside American English."
+    },
+    {
+        "id": "brit-travelled",
+        "label": "British doubled l",
+        "text": "She travelled through Scotland by train.",
+        "note": "Travelled is the standard British spelling."
+    },
+    {
+        "id": "brit-whilst",
+        "label": "British whilst",
+        "text": "Whilst the kettle boiled, he read the paper.",
+        "note": "Whilst is standard British usage."
+    },
+    {
+        "id": "brit-amongst",
+        "label": "British amongst",
+        "text": "The decision was popular amongst the staff.",
+        "note": "Amongst is standard British usage."
+    },
+    {
+        "id": "brit-licence-noun",
+        "label": "British licence as noun",
+        "text": "You need a licence to drive that vehicle.",
+        "note": "Licence is the British noun; license is the verb."
+    },
+    {
+        "id": "brit-defence",
+        "label": "British defence",
+        "text": "The defence team requested more time.",
+        "note": "Defence is the standard British spelling."
+    },
+    {
+        "id": "brit-centre",
+        "label": "British centre",
+        "text": "The community centre opens at nine.",
+        "note": "Centre is the standard British spelling."
+    },
+    {
+        "id": "brit-programme",
+        "label": "British programme",
+        "text": "The programme includes three short films.",
+        "note": "Programme is the standard British spelling for a schedule or broadcast."
+    },
+    {
+        "id": "brit-cheque",
+        "label": "British cheque",
+        "text": "He paid the deposit by cheque.",
+        "note": "Cheque is the standard British spelling for a bank draft."
+    },
+    {
+        "id": "brit-practise-verb",
+        "label": "British practise as verb",
+        "text": "I practise the piano every morning.",
+        "note": "Practise is the British verb; practice is the noun."
+    },
+    {
+        "id": "brit-maths",
+        "label": "British maths",
+        "text": "She studied maths and physics at university.",
+        "note": "Maths is the standard British abbreviation."
+    },
+    {
+        "id": "ind-prepone",
+        "label": "Indian English prepone",
+        "text": "We had to prepone the meeting to ten o'clock.",
+        "note": "Prepone is established Indian English for moving an event earlier.",
+        "dialect": true
+    },
+    {
+        "id": "ind-do-the-needful",
+        "label": "Indian English do the needful",
+        "text": "Kindly do the needful and send the signed copy.",
+        "note": "Do the needful is a conventional Indian English request.",
+        "dialect": true
+    },
+    {
+        "id": "ind-cousin-brother",
+        "label": "Indian English cousin-brother",
+        "text": "My cousin-brother lives in Pune.",
+        "note": "Cousin-brother is an established Indian English kinship term.",
+        "dialect": true
+    },
+    {
+        "id": "ind-good-name",
+        "label": "Indian English good name",
+        "text": "What is your good name, sir?",
+        "note": "Good name is a conventional Indian English politeness formula.",
+        "dialect": true
+    },
+    {
+        "id": "ind-out-of-station",
+        "label": "Indian English out of station",
+        "text": "The manager is out of station until Monday.",
+        "note": "Out of station is established Indian English for being away from one's posting.",
+        "dialect": true
+    },
+    {
+        "id": "ind-passed-out",
+        "label": "Indian English passed out",
+        "text": "She passed out of college in 2019.",
+        "note": "Passed out of college is standard Indian English for graduating.",
+        "dialect": true
+    },
+    {
+        "id": "ind-revert",
+        "label": "Indian English revert",
+        "text": "Please revert at the earliest with your comments.",
+        "note": "Revert meaning reply is established Indian business English.",
+        "dialect": true
+    },
+    {
+        "id": "ind-lakh",
+        "label": "Indian English lakh",
+        "text": "The plot measures about two lakh square feet.",
+        "note": "Lakh is a standard Indian numbering unit.",
+        "dialect": true
+    },
+    {
+        "id": "acad-passive",
+        "label": "Academic passive voice",
+        "text": "The samples were collected at dawn and stored in sealed containers.",
+        "note": "Agentless passive is conventional in methods writing."
+    },
+    {
+        "id": "acad-nominalisation",
+        "label": "Academic nominalisation",
+        "text": "The implementation of the policy required extensive consultation.",
+        "note": "Nominalisation is a standard academic register feature."
+    },
+    {
+        "id": "acad-data-are",
+        "label": "Academic plural data",
+        "text": "The data are consistent with the earlier findings.",
+        "note": "Plural agreement with data is standard in formal academic usage."
+    },
+    {
+        "id": "acad-hedge",
+        "label": "Academic hedging",
+        "text": "The results may suggest a modest effect, although the sample was small.",
+        "note": "Hedged claims are appropriate academic caution."
+    },
+    {
+        "id": "acad-citation",
+        "label": "Academic citation",
+        "text": "Recent work (Smith, 2020; Jones et al., 2022) supports this interpretation.",
+        "note": "Parenthetical author-date citation is standard academic style."
+    },
+    {
+        "id": "acad-impersonal",
+        "label": "Academic impersonal construction",
+        "text": "It has been demonstrated that the treatment reduces inflammation.",
+        "note": "Impersonal passive framing is conventional in research writing."
+    },
+    {
+        "id": "acad-methods",
+        "label": "Academic methods passive",
+        "text": "Participants were asked to complete a short questionnaire.",
+        "note": "Passive voice is conventional when the agent is unimportant."
+    },
+    {
+        "id": "acad-literature",
+        "label": "Academic literature framing",
+        "text": "A considerable body of literature addresses this question.",
+        "note": "Collective noun with singular agreement is standard here."
+    },
+    {
+        "id": "acad-abstract-noun",
+        "label": "Academic abstract nouns",
+        "text": "The analysis foregrounds the relationship between form and function.",
+        "note": "Abstract nominal subjects are normal in academic prose."
+    },
+    {
+        "id": "acad-eg",
+        "label": "Academic e.g. punctuation",
+        "text": "Several species (e.g., the common frog) are sensitive to temperature.",
+        "note": "E.g. with a following comma is a standard citation convention."
+    },
+    {
+        "id": "fic-fragment",
+        "label": "Fiction sentence fragment",
+        "text": "Not tonight.",
+        "note": "Deliberate fragment in dialogue is a standard fictional device."
+    },
+    {
+        "id": "fic-second-person",
+        "label": "Fiction second person",
+        "text": "You walk into the room and the floorboards creak beneath you.",
+        "note": "Second-person present narration is a standard fictional mode."
+    },
+    {
+        "id": "fic-dialogue",
+        "label": "Fiction dialogue punctuation",
+        "text": "“I can't believe it,” he said, “after all this time.”",
+        "note": "Split quotation with a speech tag is correctly punctuated."
+    },
+    {
+        "id": "fic-dialogue-question",
+        "label": "Fiction dialogue question",
+        "text": "“Where are you going?” she asked.",
+        "note": "Question mark inside the quotation is correct."
+    },
+    {
+        "id": "fic-dialogue-emdash",
+        "label": "Fiction interrupted dialogue",
+        "text": "“Wait—” I began, but the door had already closed.",
+        "note": "An em dash marks an interrupted utterance."
+    },
+    {
+        "id": "fic-contraction",
+        "label": "Fiction contractions",
+        "text": "She doesn't know, and I can't tell her.",
+        "note": "Contractions are standard in fiction and informal prose."
+    },
+    {
+        "id": "fic-speech-tag",
+        "label": "Fiction speech tag",
+        "text": "He said, “Leave it,” and walked away.",
+        "note": "Comma after the speech tag is correct."
+    },
+    {
+        "id": "fic-fragment-list",
+        "label": "Fiction fragment list",
+        "text": "A chair. A window. Rain.",
+        "note": "Stylised fragments create rhythm in fiction."
+    },
+    {
+        "id": "fic-free-indirect",
+        "label": "Fiction free indirect style",
+        "text": "She would go, then. There was nothing left to say.",
+        "note": "Free indirect discourse uses past forms for present thought."
+    },
+    {
+        "id": "fic-inversion",
+        "label": "Fiction locative inversion",
+        "text": "Down the stairs came a sound she did not recognise.",
+        "note": "Locative inversion is a standard literary construction."
+    },
+    {
+        "id": "po-lowercase",
+        "label": "Poetry lowercase line",
+        "text": "the river learns\nthe shape of every stone",
+        "note": "Lowercase line openings are a standard poetic convention."
+    },
+    {
+        "id": "po-fragment",
+        "label": "Poetry fragment",
+        "text": "not the ending\nbut the pause before it",
+        "note": "Fragmentary syntax is deliberate in poetry."
+    },
+    {
+        "id": "po-no-punctuation",
+        "label": "Poetry without punctuation",
+        "text": "light falls\nacross the empty table",
+        "note": "Line breaks replace punctuation in much contemporary poetry."
+    },
+    {
+        "id": "po-second-person",
+        "label": "Poetry second person",
+        "text": "you are the door\nyou are the key",
+        "note": "Direct address is a standard poetic mode."
+    },
+    {
+        "id": "po-repetition",
+        "label": "Poetry repetition",
+        "text": "never never\nagain",
+        "note": "Repetition is a deliberate poetic device."
+    },
+    {
+        "id": "po-short-line",
+        "label": "Poetry short lines",
+        "text": "rain\non the roof\na slow drum",
+        "note": "Short lines are a deliberate prosodic choice."
+    },
+    {
+        "id": "po-catalogue",
+        "label": "Poetry catalogue",
+        "text": "salt, iron, dust,\nthe names we keep",
+        "note": "A noun catalogue is standard poetic listing."
+    },
+    {
+        "id": "po-slant-rhyme",
+        "label": "Poetry slant rhyme",
+        "text": "the moon is a coin\nthe river a vein",
+        "note": "Slant rhyme does not require identical endings."
+    },
+    {
+        "id": "punc-serial-comma",
+        "label": "Punctuation serial comma",
+        "text": "We bought bread, cheese, and apples.",
+        "note": "The serial comma is standard in many style guides."
+    },
+    {
+        "id": "punc-no-serial-comma",
+        "label": "Punctuation without serial comma",
+        "text": "We bought bread, cheese and apples.",
+        "note": "Omitting the serial comma is also standard."
+    },
+    {
+        "id": "punc-em-dash",
+        "label": "Punctuation em dash",
+        "text": "The answer—unexpected and simple—surprised everyone.",
+        "note": "Paired em dashes mark a parenthetical interruption."
+    },
+    {
+        "id": "punc-semicolon",
+        "label": "Punctuation semicolon",
+        "text": "The first experiment failed; the second succeeded.",
+        "note": "A semicolon correctly joins two independent clauses."
+    },
+    {
+        "id": "punc-comma-coordinator",
+        "label": "Punctuation comma before coordinator",
+        "text": "I wanted tea, but he preferred coffee.",
+        "note": "A comma before a coordinating conjunction is standard between clauses."
+    },
+    {
+        "id": "punc-colon-list",
+        "label": "Punctuation colon list",
+        "text": "The kit contains three items: a torch, a rope, and a whistle.",
+        "note": "A colon correctly introduces a list."
+    },
+    {
+        "id": "punc-parentheses",
+        "label": "Punctuation parentheses",
+        "text": "The results (see Table 2) were inconclusive.",
+        "note": "Parenthetical cross-reference is correctly punctuated."
+    },
+    {
+        "id": "punc-hyphen",
+        "label": "Punctuation compound hyphen",
+        "text": "She is a well-known author of short stories.",
+        "note": "The compound modifier is correctly hyphenated."
+    },
+    {
+        "id": "punc-possessive-s",
+        "label": "Punctuation possessive of name ending in s",
+        "text": "James's notebook was on the desk.",
+        "note": "James's is an accepted possessive form."
+    },
+    {
+        "id": "punc-question-mark",
+        "label": "Punctuation question mark",
+        "text": "Why did the committee postpone the decision?",
+        "note": "The question mark correctly marks a direct question."
+    },
+    {
+        "id": "use-singular-they",
+        "label": "Usage singular they",
+        "text": "Everyone should bring their own lunch.",
+        "note": "Singular they with an indefinite antecedent is standard usage."
+    },
+    {
+        "id": "use-data-is",
+        "label": "Usage data is",
+        "text": "The data is incomplete, but the trend is clear.",
+        "note": "Singular agreement with data is widespread outside formal academic style."
+    },
+    {
+        "id": "use-split-infinitive",
+        "label": "Usage split infinitive",
+        "text": "She decided to carefully review the manuscript.",
+        "note": "Split infinitives are grammatical and often preferable."
+    },
+    {
+        "id": "use-initial-and",
+        "label": "Usage sentence-initial And",
+        "text": "And then the lights went out.",
+        "note": "Sentence-initial And is a long-established stylistic option."
+    },
+    {
+        "id": "use-initial-but",
+        "label": "Usage sentence-initial But",
+        "text": "But that is another story.",
+        "note": "Sentence-initial But is standard in edited prose."
+    },
+    {
+        "id": "use-who-object",
+        "label": "Usage who in object position",
+        "text": "Who did you speak to at the conference?",
+        "note": "Who is acceptable in informal object position."
+    },
+    {
+        "id": "use-whom",
+        "label": "Usage whom",
+        "text": "To whom should I address the letter?",
+        "note": "Whom is correct after a preposition."
+    },
+    {
+        "id": "use-less-mass",
+        "label": "Usage less with mass noun",
+        "text": "There is less water in the reservoir this year.",
+        "note": "Less with a mass noun is standard."
+    },
+    {
+        "id": "use-which-nonrestrictive",
+        "label": "Usage nonrestrictive which",
+        "text": "The report, which was published in May, attracted little attention.",
+        "note": "Which introduces a nonrestrictive relative clause."
+    },
+    {
+        "id": "use-that-restrictive",
+        "label": "Usage restrictive that",
+        "text": "The report that was published in May attracted little attention.",
+        "note": "That introduces a restrictive relative clause."
+    },
+    {
+        "id": "use-hopefully",
+        "label": "Usage sentence adverb hopefully",
+        "text": "Hopefully, the train will arrive on time.",
+        "note": "Hopefully as a sentence adverb is standard usage."
+    },
+    {
+        "id": "use-none-are",
+        "label": "Usage none are",
+        "text": "None of the answers are correct.",
+        "note": "Plural agreement with none is standard in modern usage."
+    },
+    {
+        "id": "use-between-you-and-me",
+        "label": "Usage between you and me",
+        "text": "Between you and me, the plan seems risky.",
+        "note": "Me is correct after the preposition between."
+    },
+    {
+        "id": "use-different-from",
+        "label": "Usage different from",
+        "text": "Her approach is different from mine.",
+        "note": "Different from is the standard comparative form."
+    },
+    {
+        "id": "num-date",
+        "label": "Numbers and dates",
+        "text": "On 17 November 2026, the meeting starts at 09:30.",
+        "note": "Day-month-year and 24-hour time are standard formats."
+    },
+    {
+        "id": "num-measure",
+        "label": "Numbers and units",
+        "text": "The sample weighed 3.5 kg and measured 12 cm.",
+        "note": "SI units follow numerals without a plural marker."
+    },
+    {
+        "id": "num-url",
+        "label": "URL",
+        "text": "Visit https://example.com/docs?lang=en for the full guide.",
+        "note": "A URL with a query string is valid in prose."
+    },
+    {
+        "id": "num-email",
+        "label": "Email and ISO date",
+        "text": "Write to support@example.org by 2026-11-17.",
+        "note": "Email addresses and ISO 8601 dates are valid inline forms."
+    },
+    {
+        "id": "num-negative-temperature",
+        "label": "Negative temperature",
+        "text": "The temperature fell to −4 °C overnight.",
+        "note": "The Unicode minus sign and degree symbol are correct."
+    },
+    {
+        "id": "num-distance",
+        "label": "Distance with conversion",
+        "text": "The route is 12.4 km (7.7 miles) long.",
+        "note": "Metric units with a parenthetical imperial conversion are standard."
+    },
+    {
+        "id": "num-money",
+        "label": "Currency",
+        "text": "The invoice total was $1,250.00.",
+        "note": "Grouped thousands and two decimal places are standard."
+    },
+    {
+        "id": "num-percent",
+        "label": "Percentage",
+        "text": "About 50% of the participants returned the survey.",
+        "note": "The percent sign with a numeral is standard."
+    },
+    {
+        "id": "num-decade",
+        "label": "Decade",
+        "text": "The building was renovated in the 1990s.",
+        "note": "Decades are written without an apostrophe."
+    },
+    {
+        "id": "num-time",
+        "label": "Time and platform",
+        "text": "The train leaves at 12:45 p.m. from platform 6.",
+        "note": "The a.m./p.m. abbreviation and platform number are standard."
+    },
+    {
+        "id": "learn-existential-coordination",
+        "label": "Learner-correct existential coordination",
+        "text": "There is a book and two pens on the table.",
+        "note": "Existential there commonly takes singular agreement with a coordinated subject."
+    },
+    {
+        "id": "learn-each",
+        "label": "Learner-correct each",
+        "text": "Each of the students has a laptop.",
+        "note": "Each takes singular agreement."
+    },
+    {
+        "id": "learn-neither",
+        "label": "Learner-correct neither",
+        "text": "Neither of the candidates is ready.",
+        "note": "Neither takes singular agreement in formal usage."
+    },
+    {
+        "id": "learn-number-of",
+        "label": "Learner-correct the number of",
+        "text": "The number of applicants is rising.",
+        "note": "The number is the singular subject."
+    },
+    {
+        "id": "learn-a-number-of",
+        "label": "Learner-correct a number of",
+        "text": "A number of applicants are waiting outside.",
+        "note": "A number of takes plural agreement."
+    },
+    {
+        "id": "learn-distance",
+        "label": "Learner-correct distance as subject",
+        "text": "Ten miles is a long walk.",
+        "note": "A distance phrase takes singular agreement."
+    },
+    {
+        "id": "learn-math",
+        "label": "Learner-correct arithmetic",
+        "text": "Two plus two is four.",
+        "note": "An arithmetic equation takes singular agreement."
+    },
+    {
+        "id": "learn-police",
+        "label": "Learner-correct police",
+        "text": "The police are investigating the complaint.",
+        "note": "Police is a plural collective noun."
+    },
+    {
+        "id": "learn-mathematics",
+        "label": "Learner-correct mathematics",
+        "text": "Mathematics is difficult but rewarding.",
+        "note": "Mathematics is a singular subject."
+    },
+    {
+        "id": "learn-either",
+        "label": "Learner-correct either",
+        "text": "Either answer is acceptable.",
+        "note": "Either takes singular agreement."
+    },
+    {
+        "id": "learn-not-only",
+        "label": "Learner-correct not only inversion",
+        "text": "Not only did she sing, but she also danced.",
+        "note": "Fronted not only triggers subject-auxiliary inversion."
+    },
+    {
+        "id": "learn-hardly",
+        "label": "Learner-correct hardly inversion",
+        "text": "Hardly had I arrived when it started raining.",
+        "note": "Fronted hardly triggers inversion and takes when."
+    },
+    {
+        "id": "learn-predicate-nominative",
+        "label": "Learner-correct predicate nominative",
+        "text": "It was she who called last night.",
+        "note": "Formal predicate nominative after it was is correct."
+    },
+    {
+        "id": "learn-subjunctive",
+        "label": "Learner-correct subjunctive",
+        "text": "If I were you, I would wait.",
+        "note": "Were is the correct irrealis form."
+    },
+    {
+        "id": "learn-inversion",
+        "label": "Learner-correct conditional inversion",
+        "text": "Had I known, I would have come earlier.",
+        "note": "Inverted conditional omits if correctly."
+    }
+]

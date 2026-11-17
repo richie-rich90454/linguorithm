@@ -21,10 +21,17 @@
         "validate:models": "node scripts/validate-models.mjs",
         "benchmark:browser": "node scripts/benchmark-browser.mjs",
         "evaluate:ablation": "tsx scripts/ablate-browser.mts",
-        "evaluate:compare": "tsx scripts/compare-systems.mts"
+        "evaluate:compare": "tsx scripts/compare-systems.mts",
+        "docs:dev": "vitepress dev docs",
+        "docs:build": "vitepress build docs",
+        "docs:preview": "vitepress preview docs",
+        "controls": "tsx scripts/language-controls.ts",
+        "verify:offline": "node scripts/verify-offline.mjs",
+        "benchmark:v2": "tsx scripts/build-annotation-pool.mts"
     },
     "devDependencies": {
         "@axe-core/playwright": "^4.14.0",
+        "@fontsource-variable/noto-sans": "^5.3.0",
         "@playwright/test": "^1.64.1",
         "@types/node": "^26.6.5",
         "fast-check": "^4.10.2",
@@ -33,6 +40,7 @@
         "tsx": "^4.23.15",
         "typescript": "^7.0.2",
         "vite": "^8.3.5",
+        "vitepress": "^1.6.4",
         "vitest": "^5.0.5"
     },
     "packageManager": "pnpm@12.14.0"

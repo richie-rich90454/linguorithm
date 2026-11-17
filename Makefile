@@ -13,3 +13,7 @@ release check-model-release generalization prepare-errors check-classifier-featu
 
 help dev check build build-candidate preview test browser evaluate validate-models content bundle benchmark inspect train lint format typecheck install-pnpm install install-browsers install-python benchmark-browser ablation compare models social-preview:
 	"$(NODE)" scripts/task.mjs $@ $(ARGS)
+
+.PHONY: docs-dev docs-build docs-preview controls verify-offline benchmark-v2 benchmark-v2-manifest scorecard
+docs-dev docs-build docs-preview controls verify-offline benchmark-v2 benchmark-v2-manifest scorecard:
+	"$(NODE)" scripts/task.mjs $@ $(ARGS)

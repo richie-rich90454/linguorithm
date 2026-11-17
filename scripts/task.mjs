@@ -172,8 +172,32 @@ package-release-models  Promote parity-verified assets into the tracked model bu
 evaluate-quantization  Compare candidate float32 and int8 syntax assets
 seal-syntax-model  Finalize syntax provenance before preparing classifier features
 seal-classifier-model  Finalize classifier provenance before browser score parity
+docs-dev        Start the VitePress documentation site
+docs-build      Build docs into apps/web/dist/docs (DOCS_BASE selects the mount path)
+docs-preview    Preview the built documentation site
+controls        Check valid-English controls for confirmed false positives
+verify-offline  Prove the built app makes no external requests and reloads offline
+benchmark-v2    Build the developer candidate pool for benchmark v2 adjudication
+benchmark-v2-manifest  Deduplicate, writer-cluster, and split the v2 benchmark
+scorecard       Aggregate the frozen gates into reports/scorecard.json
 No command installs prerequisites implicitly. See docs/quickstart.md.`),
     "social-preview": () => script("render-social-preview.mjs"),
+    "docs-dev": () =>
+        tool("vitepress", "vitepress", ["dev", "docs", "--host", "127.0.0.1", ...extra]),
+    "docs-build": () => tool("vitepress", "vitepress", ["build", "docs", ...extra]),
+    "docs-preview": () =>
+        tool("vitepress", "vitepress", ["preview", "docs", "--host", "127.0.0.1", ...extra]),
+    controls: () => tool("tsx", "tsx", ["scripts/language-controls.ts", ...extra]),
+    "verify-offline": () => script("verify-offline.mjs", extra),
+    "benchmark-v2": () => tool("tsx", "tsx", ["scripts/build-annotation-pool.mts", ...extra]),
+    scorecard: () => script("scorecard.mjs", extra),
+    "benchmark-v2-manifest": async () => {
+        if (!existsSync(join(root, ".cache/datasets/realec/benchmark.json")))
+            throw new Error(
+                "Run make ingest-realec once to prepare the project-local REALEC benchmark.",
+            );
+        await run(python(), [join(root, "training/benchmark_v2.py"), "--build", ...extra]);
+    },
     dev: async () => {
         await tasks.models();
         await tool("vite", "vite", ["--host", "127.0.0.1", ...extra], join(root, "apps/web"));
@@ -275,6 +299,10 @@ No command installs prerequisites implicitly. See docs/quickstart.md.`),
         await tasks["validate-models"]();
         await tasks.bundle();
         await tasks.browser();
+        await tasks.controls();
+        await tasks["verify-offline"]();
+        await tasks["docs-build"]();
+        await script("scorecard.mjs", ["--check"]);
         await tasks.generalization();
     },
     bundle: () => script("check-bundle.mjs", extra),

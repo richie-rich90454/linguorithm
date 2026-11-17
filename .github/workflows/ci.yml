@@ -27,7 +27,11 @@ jobs:
             - run: make build
             - run: make validate-models
             - run: make bundle
+            - run: make docs-build
+            - run: make controls
             - run: make install-browsers ARGS="--with-deps chromium firefox webkit"
             - run: make browser
+            - run: make verify-offline
+            - run: make scorecard ARGS="--check"
             - run: make generalization
             - run: python -m py_compile training/*.py

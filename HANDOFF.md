@@ -41,6 +41,20 @@ The corpus limits what a correctness-only detector can reach. Unique-token triag
 
 At exactly 50% precision, false positives equal true positives, so total token errors equal the 4,017 gold tokens (6.604%) regardless of recall. The 5% limit requires precision above 56.91% even at perfect recall, and 97.24% at 25% recall. The current fixed-test run has 560 fewer true positives than false positives and needs 1,536 more net correct detections. These are exact consequences of the annotation prevalence, not model estimates.
 
+## Benchmark v2 and trust infrastructure
+
+The v2 measurement system is implemented and the labels are the remaining blocker.
+
+- `training/benchmark_v2.py` deduplicates at word 5-gram Jaccard ≥ 0.8, groups documents with a writer proxy, drops cross-split duplicates, and writes a sealed 70/15/15 split plus a 200-sentence recall probe. Current result: 42 duplicate components, 36 cross-split documents dropped, 842/180/180 documents.
+- `scripts/build-annotation-pool.mts` builds 124 development findings, 248 matched controls, and 200 probes (572 items) with no gold labels.
+- `tools/annotate` is an offline, dependency-free adjudication app: two independent passes, then adjudication.
+- `packages/engine/tests/language-controls.test.ts` checks 107 valid-English controls. All produce no confirmed error; dialect cases produce no likely grammar error. AAVE leveled past _be_ and negative concord are review-only possible issues, which leaves benchmark counts unchanged.
+- `scripts/verify-offline.mjs` proves zero external requests and an offline reload.
+- `scripts/scorecard.mjs` aggregates legacy gates, controls, offline proof, parity, and v2 readiness into `reports/scorecard.json`.
+- The documentation site is VitePress under `docs/.vitepress`, built into `apps/web/dist/docs`; `make docs-dev`, `make docs-build`, and `make docs-preview` are available.
+
+Current scorecard: 8 pass, 0 fail, 3 pending (v2 precision, recall, calibration). Development remains TP 165, FP 690, FN 4,556, TN 64,754; the fixed test is unchanged.
+
 ## Rejected approaches
 
 - A sparse token classifier trained on REALEC training documents using token identity, affixes, neighboring words, and punctuation reached 258 true positives at its best-recall operating point below the 1.21% false-positive ceiling, with 24.67% precision and 7.48% total error.
@@ -56,11 +70,12 @@ Do not repeat generic token-feature, sequence-tagger, threshold, or rule-filter 
 
 ## Recommended next investigation
 
-1. Build or license a materially stronger objective-error detector. The current corpus cannot support 20x from rules; a production-grade jump needs a model trained on writer-separated, adjudicated objective errors with usable corrections. Use predicted morphology/dependencies and category-specific targets; keep advisory and lexical labels separate.
-2. If using REALEC, preserve the fixed test split as untouched and use the training/documents split for fitting. The corpus lacks writer identities, valid controls, and correction-acceptability labels, so it cannot alone justify production-grade claims.
-3. Evaluate precision, recall, false-positive rate, total token misclassification, and net detections together, with sample counts and uncertainty. Reject any candidate that regresses a metric, even if it improves another.
-4. Check dialect/register controls, ambiguous and meaning-changing cases, and acceptable corrections before enabling tutoring feedback. Do not reduce false positives by suppressing valid learner language or dialects.
-5. Promote only candidates that improve all predeclared gates and pass the regression suite. Then run the fixed evaluation once for confirmation, update the model card and verification report, and preserve the released model if the candidate regresses.
+1. Collect the v2 labels. Run two independent annotation passes over the 572-item pool with `tools/annotate`, adjudicate disagreements, and publish inter-annotator agreement before reporting any v2 metric. This is the only remaining path to a defensible accuracy claim.
+2. Build or license a materially stronger objective-error detector. The current corpus cannot support 20x from rules; a production-grade jump needs a model trained on writer-separated, adjudicated objective errors with usable corrections. Use predicted morphology/dependencies and category-specific targets; keep advisory and lexical labels separate.
+3. If using REALEC, preserve the fixed test split as untouched and use the training/documents split for fitting. The corpus lacks writer identities, valid controls, and correction-acceptability labels, so it cannot alone justify production-grade claims.
+4. Evaluate precision, recall, false-positive rate, total token misclassification, and net detections together, with sample counts and uncertainty. Reject any candidate that regresses a metric, even if it improves another.
+5. Check dialect/register controls, ambiguous and meaning-changing cases, and acceptable corrections before enabling tutoring feedback. Do not reduce false positives by suppressing valid learner language or dialects.
+6. Promote only candidates that improve all predeclared gates and pass the regression suite. Then run the fixed evaluation once for confirmation, update the model card and verification report, and preserve the released model if the candidate regresses.
 
 Useful entry points: `packages/engine/src/advanced-grammar.ts`, `packages/engine/src/hybrid.ts`, `packages/engine/src/spelling.ts`, `scripts/evaluate-realec.mjs`, `training/train_errors.py`, `training/predicted_syntax.py`, and the local workflow in the training guide. Do not rely on ignored scratch files in `.cache` for reproducibility.
 

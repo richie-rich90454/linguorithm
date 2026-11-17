@@ -12,6 +12,9 @@ Changes are recorded here before a tagged release is published.
 - TXT, Markdown, HTML, DOCX, PPTX, XLSX, and text-based PDF imports with bounded extraction.
 - MIT application licensing, contribution and security guides, community policies, and issue templates.
 - GNU Make targets for development, setup, verification, and production builds on Windows, macOS, and Linux.
+- A VitePress documentation site with a light theme matching the application and a base-aware GitHub Pages mount.
+- A 107-case valid-English control suite, a verifiable offline proof, and a frozen-gate scorecard.
+- Benchmark-v2 tooling: near-duplicate removal, writer-proxy splits, recall probes, a matched-control annotation pool, and an offline adjudication app.
 
 ### Changed
 

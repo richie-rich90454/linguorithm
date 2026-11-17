@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta
+            http-equiv="Content-Security-Policy"
+            content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'"
+        />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Annotation workspace · Linguorithm</title>
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+        <header class="app-header">
+            <div>
+                <h1>Annotation workspace</h1>
+                <p class="muted">
+                    Local adjudication of candidate findings. Nothing leaves this machine.
+                </p>
+            </div>
+            <label class="annotator" for="annotator">
+                Annotator
+                <input
+                    id="annotator"
+                    name="annotator"
+                    type="text"
+                    placeholder="Your name"
+                    autocomplete="off"
+                />
+            </label>
+        </header>
+
+        <main>
+            <section id="load-panel" class="panel">
+                <div
+                    id="dropzone"
+                    class="dropzone"
+                    role="button"
+                    tabindex="0"
+                    aria-label="Load annotation pool"
+                >
+                    <strong>Load pool.json</strong>
+                    <p>Drop the annotation pool here or choose a file.</p>
+                    <input id="pool-file" type="file" accept="application/json,.json" />
+                </div>
+                <p id="load-status" class="muted" role="status"></p>
+            </section>
+
+            <section id="workspace" hidden>
+                <section class="panel progress-panel" aria-label="Progress">
+                    <div class="progress-row">
+                        <progress id="progress" max="1" value="0"></progress>
+                        <span id="progress-text">0 / 0 labeled</span>
+                    </div>
+                    <p id="label-counts" class="muted"></p>
+                </section>
+
+                <article class="panel item-panel">
+                    <div class="item-meta">
+                        <span id="item-position"></span>
+                        <span id="item-kind"></span>
+                        <span id="item-doc"></span>
+                        <span id="item-span"></span>
+                    </div>
+                    <p id="item-sentence" class="sentence"></p>
+                    <div id="finding-details" hidden>
+                        <dl class="details">
+                            <div>
+                                <dt>Rule</dt>
+                                <dd id="item-rule"></dd>
+                            </div>
+                            <div>
+                                <dt>Category</dt>
+                                <dd id="item-category"></dd>
+                            </div>
+                            <div>
+                                <dt>Certainty</dt>
+                                <dd id="item-certainty"></dd>
+                            </div>
+                        </dl>
+                        <h2>Correction proposals</h2>
+                        <ul id="proposals" class="proposals"></ul>
+                    </div>
+                </article>
+
+                <form id="annotation-form" class="panel" autocomplete="off">
+                    <fieldset class="labels">
+                        <legend>Label</legend>
+                        <button type="button" data-label="1">1 Error</button>
+                        <button type="button" data-label="2">2 Not an error</button>
+                        <button type="button" data-label="3">3 Different correction</button>
+                        <button type="button" data-label="4">4 Valid dialect/register</button>
+                        <button type="button" data-label="0">0 Skip</button>
+                    </fieldset>
+                    <div class="fields">
+                        <label>
+                            Category
+                            <select id="category">
+                                <option value="">No category</option>
+                                <option>Grammar</option>
+                                <option>Punctuation</option>
+                                <option>Spelling</option>
+                                <option>Usage</option>
+                                <option>Style</option>
+                            </select>
+                        </label>
+                        <label>
+                            Accepted corrections
+                            <input id="corrections" type="text" placeholder="comma-separated" />
+                        </label>
+                    </div>
+                    <label class="note">
+                        Note
+                        <textarea id="note" rows="2"></textarea>
+                    </label>
+                </form>
+
+                <div class="actions">
+                    <button type="button" id="prev">Previous</button>
+                    <button type="button" id="next">Next</button>
+                    <button type="button" id="undo">Undo</button>
+                    <button type="button" id="save">Save</button>
+                    <button type="button" id="export" class="primary">
+                        Export annotations.json
+                    </button>
+                    <span id="status" class="status" role="status"></span>
+                </div>
+                <p class="muted shortcuts">
+                    Keys: 1-4 and 0 label and advance, arrows navigate, Ctrl/Cmd+Z undo, S save.
+                </p>
+            </section>
+        </main>
+
+        <script src="app.js" defer></script>
+    </body>
+</html>

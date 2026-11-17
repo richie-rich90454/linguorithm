@@ -4,7 +4,9 @@
 
 Linguorithm combines an essay editor, sentence workbench, adaptive practice, and learning records in a SolidJS/TypeScript application. Compact trained models run in a browser worker. Writing stays in the browser: no accounts, essay uploads, analytics, remote fonts, or generative services.
 
-[Quick start](#start-locally) · [Features](#what-you-can-do) · [Writing progression](docs/writing-progression.md) · [Model card](docs/model-card.md) · [Contributing](CONTRIBUTING.md) · [Support](SUPPORT.md)
+[Quick start](#start-locally) · [Features](#what-you-can-do) · [Documentation](docs/index.md) · [Writing progression](docs/writing-progression.md) · [Model card](docs/model-card.md) · [Contributing](CONTRIBUTING.md) · [Support](SUPPORT.md)
+
+The documentation is a VitePress site. Run `make docs-dev` to preview it locally, or `make docs-build` to produce `apps/web/dist/docs` alongside the application.
 
 ![Linguorithm essay workspace with source-linked findings and a subject–verb agreement explanation](docs/images/workspace.png)
 

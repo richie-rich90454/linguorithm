@@ -1,0 +1,306 @@
+:root {
+    font-family: "Noto Sans Variable", "Noto Sans", system-ui, sans-serif;
+    color: #111;
+    background: #fff;
+    font-synthesis: none;
+    --accent: #174ae8;
+    --line: rgba(0, 0, 0, 0.13);
+    --muted: rgba(0, 0, 0, 0.59);
+    --panel: #fafafa;
+    --soft: rgba(0, 0, 0, 0.035);
+    font-weight: 400;
+    font-size: 14px;
+}
+* {
+    box-sizing: border-box;
+}
+body {
+    margin: 0;
+    background: #fff;
+    color: #111;
+}
+button,
+input,
+textarea,
+select {
+    font: inherit;
+    color: inherit;
+    border-radius: 5px;
+}
+button {
+    cursor: pointer;
+    border: 1px solid var(--line);
+    background: #fff;
+    padding: 8px 12px;
+}
+button:hover {
+    background: #f2f2f2;
+}
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.42;
+}
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+button.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+button.primary:hover {
+    background: #123bc0;
+}
+h1,
+h2,
+p,
+dl,
+dd {
+    margin: 0;
+}
+h1 {
+    font-size: 22px;
+    font-weight: 650;
+    letter-spacing: -0.4px;
+}
+h2 {
+    font-size: 14px;
+    font-weight: 650;
+    margin-bottom: 8px;
+}
+.muted {
+    color: var(--muted);
+}
+.app-header {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 32px 24px 20px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+}
+.app-header p {
+    margin-top: 6px;
+}
+.annotator {
+    display: grid;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--muted);
+    min-width: 200px;
+}
+.annotator input,
+.fields input,
+.fields select,
+.note textarea {
+    border: 1px solid var(--line);
+    background: #fff;
+    padding: 8px 10px;
+    width: 100%;
+}
+.annotator input {
+    color: #111;
+}
+main {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 0 24px 48px;
+    display: grid;
+    gap: 16px;
+}
+.panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 20px;
+}
+.dropzone {
+    border: 1px dashed rgba(0, 0, 0, 0.24);
+    border-radius: 5px;
+    background: #fff;
+    padding: 28px 20px;
+    text-align: center;
+    display: grid;
+    gap: 8px;
+    justify-items: center;
+}
+.dropzone.dragging {
+    border-color: var(--accent);
+    background: rgba(23, 74, 232, 0.04);
+}
+.dropzone p {
+    color: var(--muted);
+}
+.dropzone input {
+    margin-top: 8px;
+    max-width: 100%;
+}
+.progress-panel {
+    display: grid;
+    gap: 8px;
+}
+.progress-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.progress-row progress {
+    flex: 1;
+    height: 8px;
+    accent-color: var(--accent);
+}
+#progress-text {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+#label-counts {
+    font-size: 13px;
+}
+.item-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 14px;
+}
+#item-kind {
+    color: #111;
+    font-weight: 600;
+}
+.sentence {
+    font-size: 18px;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+}
+.sentence mark {
+    background: rgba(23, 74, 232, 0.14);
+    color: inherit;
+    border-radius: 3px;
+    padding: 1px 2px;
+    box-shadow: inset 0 -1px 0 var(--accent);
+}
+.sentence mark.insertion {
+    display: inline-block;
+    width: 0;
+    height: 1.1em;
+    padding: 0;
+    background: none;
+    border-radius: 0;
+    border-left: 2px solid var(--accent);
+    box-shadow: none;
+    vertical-align: text-bottom;
+}
+.details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 28px;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+    font-size: 13px;
+}
+.details div {
+    display: flex;
+    gap: 6px;
+}
+.details dt {
+    color: var(--muted);
+}
+.details dd {
+    font-weight: 600;
+}
+#finding-details h2 {
+    margin-top: 18px;
+}
+.proposals {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+}
+.proposals li {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 10px 12px;
+}
+.proposals strong {
+    display: block;
+    margin-bottom: 4px;
+}
+.replacement {
+    font-size: 13px;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+}
+.labels {
+    border: 0;
+    padding: 0;
+    margin: 0 0 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.labels legend {
+    padding: 0;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+.labels button[aria-pressed="true"] {
+    background: rgba(23, 74, 232, 0.08);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+.fields {
+    display: grid;
+    grid-template-columns: minmax(160px, 1fr) minmax(220px, 2fr);
+    gap: 14px;
+    margin-bottom: 14px;
+}
+.fields label,
+.note {
+    display: grid;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--muted);
+}
+.note textarea {
+    resize: vertical;
+}
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+.status {
+    color: var(--muted);
+    font-size: 13px;
+}
+.shortcuts {
+    font-size: 12px;
+}
+[hidden] {
+    display: none !important;
+}
+@media (max-width: 640px) {
+    .app-header {
+        flex-direction: column;
+    }
+    .annotator {
+        width: 100%;
+    }
+    .fields {
+        grid-template-columns: 1fr;
+    }
+    .sentence {
+        font-size: 16px;
+    }
+}

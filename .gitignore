@@ -2,6 +2,8 @@ node_modules/
 dist/
 test-results/
 playwright-report/
+docs/.vitepress/cache/
+docs/.vitepress/dist/
 coverage/
 .env*
 __pycache__/
